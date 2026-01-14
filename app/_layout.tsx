@@ -14,6 +14,7 @@ import { ChildProvider } from "@/contexts/child-context";
 import { EntryProvider } from "@/contexts/entry-context";
 import { FamilyProvider } from "@/contexts/family-context";
 import { MilestoneProvider } from "@/contexts/milestone-context";
+import { NotificationProvider } from "@/contexts/notification-context";
 import { UserPreferencesProvider } from "@/contexts/user-preferences-context";
 
 function RootLayoutNav() {
@@ -57,12 +58,14 @@ export default function RootLayout() {
           <FamilyProvider>
             <MilestoneProvider>
               <UserPreferencesProvider>
-                <ThemeProvider
-                  value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-                >
-                  <RootLayoutNav />
-                  <StatusBar style="auto" />
-                </ThemeProvider>
+                <NotificationProvider>
+                  <ThemeProvider
+                    value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+                  >
+                    <RootLayoutNav />
+                    <StatusBar style="auto" />
+                  </ThemeProvider>
+                </NotificationProvider>
               </UserPreferencesProvider>
             </MilestoneProvider>
           </FamilyProvider>

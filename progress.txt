@@ -447,3 +447,30 @@
 **Verification:** tsc, lint, test (84 passed), build all pass.
 
 **Next:** Push notifications (PRD Section 7) or Settings screen UI
+
+## 2026-01-15: Push Notifications Context
+
+**PRD ref:** Phase 1 Weeks 10-11, Section 7 (Notifications)
+
+**Task:** Implement NotificationContext for push notification settings and scheduling
+
+**Decisions:**
+- Created NotificationContext + useNotifications hook (TDD approach)
+- NotificationSettings type with 5 toggles per PRD Section 7.1: dailyPrompt, memories, milestoneReminder, familyActivity, storageWarning
+- All default to true (on) per PRD
+- Permission status: granted/denied/undetermined
+- requestPermissions() gets expo push token and sets up Android channel
+- scheduleDailyPrompt(time) cancels existing then schedules daily notification at specified time
+- cancelDailyPrompt() cancels all scheduled notifications
+- Uses Notifications.SchedulableTriggerInputTypes.DAILY for repeating daily trigger
+- Listeners set up for notification received and response handling
+
+**Files changed:**
+- contexts/notification-context.tsx - New: NotificationProvider, useNotifications, NotificationSettings type
+- app/_layout.tsx - Added NotificationProvider wrapper
+- __tests__/contexts/notification-context.test.tsx - New: 7 TDD tests for notification context
+- package.json - Added expo-notifications, expo-device dependencies
+
+**Verification:** tsc, lint, test (91 passed), build all pass.
+
+**Next:** Settings screen UI with notification toggles or family invitation flow
