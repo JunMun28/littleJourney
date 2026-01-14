@@ -497,3 +497,26 @@
 **Verification:** tsc, lint, test (96 passed), build all pass.
 
 **Next:** Remaining Phase 1 Week 12-13 items (Stripe payments, storage limits, polish) or Week 10-11 daily prompt scheduling integration
+
+## 2026-01-15: Daily Prompt Notification Integration
+
+**PRD ref:** Phase 1 Weeks 10-11, Section 7.2 (Implementation), Section 7.3 (Smart Frequency)
+
+**Task:** Integrate daily prompt scheduling with user preferences and notification toggle
+
+**Decisions:**
+- Settings screen now shows "Reminder Time" row with current time or "Not set"
+- Time picker modal for changing prompt time (reuses DateTimePicker from onboarding)
+- When dailyPrompt toggle changes: schedules notification if ON + time set, cancels if OFF
+- Onboarding set-prompt-time now requests permissions and schedules notification on Continue
+- formatDisplayTime, timeStringToDate, dateToTimeString helpers for time conversion
+- Schedule only when permissions granted (handles denied gracefully)
+
+**Files changed:**
+- app/(tabs)/settings.tsx - Added time picker modal, Reminder Time row, toggle schedules/cancels
+- app/(onboarding)/set-prompt-time.tsx - Integrated requestPermissions + scheduleDailyPrompt
+- __tests__/app/tabs/settings.test.tsx - Added 2 TDD tests for Reminder Time display
+
+**Verification:** tsc, lint, test (98 passed), build all pass.
+
+**Next:** Remaining Phase 1 Week 12-13 items (Stripe payments, storage limits, polish) or Photo for child profile

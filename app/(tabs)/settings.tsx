@@ -12,34 +12,108 @@ import {
   Platform,
   Alert,
 } from "react-native";
+import DateTimePicker, {
+  type DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 import { useAuth } from "@/contexts/auth-context";
 import {
   useNotifications,
   type NotificationSettings,
 } from "@/contexts/notification-context";
 import { useFamily, type PermissionLevel } from "@/contexts/family-context";
+import { useUserPreferences } from "@/contexts/user-preferences-context";
 
 const PRIMARY_COLOR = "#0a7ea4";
 
-type ModalState = "closed" | "inviteFamily";
+type ModalState = "closed" | "inviteFamily" | "timePicker";
+
+function formatDisplayTime(time: string): string {
+  const [hours, minutes] = time.split(":").map(Number);
+  const date = new Date();
+  date.setHours(hours, minutes);
+  return date.toLocaleTimeString("en-SG", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
+function timeStringToDate(time: string | null): Date {
+  const date = new Date();
+  if (time) {
+    const [hours, minutes] = time.split(":").map(Number);
+    date.setHours(hours, minutes, 0, 0);
+  } else {
+    date.setHours(20, 0, 0, 0); // Default 8 PM
+  }
+  return date;
+}
+
+function dateToTimeString(date: Date): string {
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
 
 export default function SettingsScreen() {
   const { user, signOut } = useAuth();
-  const { settings, updateSettings, permissionStatus, requestPermissions } =
-    useNotifications();
+  const {
+    settings,
+    updateSettings,
+    permissionStatus,
+    requestPermissions,
+    scheduleDailyPrompt,
+    cancelDailyPrompt,
+  } = useNotifications();
   const { familyMembers, inviteFamilyMember, removeFamilyMember } = useFamily();
+  const { dailyPromptTime, setDailyPromptTime } = useUserPreferences();
 
   const [modalState, setModalState] = useState<ModalState>("closed");
+  const [selectedTime, setSelectedTime] = useState<Date>(() =>
+    timeStringToDate(dailyPromptTime),
+  );
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRelationship, setInviteRelationship] = useState("");
   const [invitePermission, setInvitePermission] =
     useState<PermissionLevel>("view_interact");
 
-  const handleToggleNotification = (
+  const handleToggleNotification = async (
     key: keyof NotificationSettings,
     value: boolean,
   ) => {
     updateSettings({ [key]: value });
+
+    // When daily prompt toggle changes, schedule or cancel notification
+    if (key === "dailyPrompt") {
+      if (value && dailyPromptTime) {
+        await scheduleDailyPrompt(dailyPromptTime);
+      } else if (!value) {
+        await cancelDailyPrompt();
+      }
+    }
+  };
+
+  const handleTimeChange = (
+    _event: DateTimePickerEvent,
+    date: Date | undefined,
+  ) => {
+    if (Platform.OS === "android") {
+      setModalState("closed");
+    }
+    if (date) {
+      setSelectedTime(date);
+    }
+  };
+
+  const handleSaveTime = async () => {
+    const timeString = dateToTimeString(selectedTime);
+    setDailyPromptTime(timeString);
+    setModalState("closed");
+
+    // Schedule notification if dailyPrompt is enabled
+    if (settings.dailyPrompt && permissionStatus === "granted") {
+      await scheduleDailyPrompt(timeString);
+    }
   };
 
   const handleSignOut = async () => {
@@ -113,6 +187,21 @@ export default function SettingsScreen() {
             trackColor={{ false: "#767577", true: PRIMARY_COLOR }}
           />
         </View>
+
+        <Pressable
+          style={styles.settingRow}
+          onPress={() => setModalState("timePicker")}
+        >
+          <View style={styles.settingInfo}>
+            <Text style={styles.settingLabel}>Reminder Time</Text>
+            <Text style={styles.settingDescription}>
+              When to send daily prompts
+            </Text>
+          </View>
+          <Text style={styles.timeValue}>
+            {dailyPromptTime ? formatDisplayTime(dailyPromptTime) : "Not set"}
+          </Text>
+        </Pressable>
 
         <View style={styles.settingRow}>
           <View style={styles.settingInfo}>
@@ -305,6 +394,37 @@ export default function SettingsScreen() {
             </View>
           </View>
         </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Time Picker Modal */}
+      <Modal
+        visible={modalState === "timePicker"}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setModalState("closed")}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Pressable onPress={() => setModalState("closed")}>
+              <Text style={styles.modalCancel}>Cancel</Text>
+            </Pressable>
+            <Text style={styles.modalTitle}>Reminder Time</Text>
+            <Pressable onPress={handleSaveTime}>
+              <Text style={styles.modalSave}>Save</Text>
+            </Pressable>
+          </View>
+
+          <View style={styles.timePickerContainer}>
+            <DateTimePicker
+              testID="time-picker"
+              value={selectedTime}
+              mode="time"
+              display={Platform.OS === "ios" ? "spinner" : "default"}
+              onChange={handleTimeChange}
+              minuteInterval={5}
+            />
+          </View>
+        </View>
       </Modal>
     </ScrollView>
   );
@@ -503,5 +623,13 @@ const styles = StyleSheet.create({
   permissionOptionTextSelected: {
     color: PRIMARY_COLOR,
     fontWeight: "600",
+  },
+  timeValue: {
+    fontSize: 16,
+    color: PRIMARY_COLOR,
+  },
+  timePickerContainer: {
+    alignItems: "center",
+    paddingVertical: 20,
   },
 });

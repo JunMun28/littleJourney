@@ -8,6 +8,7 @@ import { router } from "expo-router";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useUserPreferences } from "@/contexts/user-preferences-context";
+import { useNotifications } from "@/contexts/notification-context";
 
 const PRIMARY_COLOR = "#0a7ea4";
 const DEFAULT_HOUR = 20; // 8:00 PM
@@ -35,6 +36,8 @@ function formatDisplayTime(date: Date): string {
 
 export default function SetPromptTimeScreen() {
   const { setDailyPromptTime } = useUserPreferences();
+  const { requestPermissions, scheduleDailyPrompt, permissionStatus } =
+    useNotifications();
 
   const [selectedTime, setSelectedTime] = useState<Date>(getDefaultTime());
   const [showPicker, setShowPicker] = useState(Platform.OS === "ios");
@@ -51,8 +54,19 @@ export default function SetPromptTimeScreen() {
     }
   };
 
-  const handleContinue = () => {
-    setDailyPromptTime(formatTime(selectedTime));
+  const handleContinue = async () => {
+    const timeString = formatTime(selectedTime);
+    setDailyPromptTime(timeString);
+
+    // Request notification permissions and schedule daily prompt
+    const status =
+      permissionStatus === "granted"
+        ? permissionStatus
+        : await requestPermissions();
+    if (status === "granted") {
+      await scheduleDailyPrompt(timeString);
+    }
+
     router.push("/(onboarding)/invite-family");
   };
 

@@ -80,4 +80,16 @@ describe("SettingsScreen", () => {
     // After toggle, value should be false
     expect(screen.getByTestId("switch-dailyPrompt").props.value).toBe(false);
   });
+
+  it("displays daily prompt time setting row", () => {
+    renderWithProviders(<SettingsScreen />);
+
+    expect(screen.getByText("Reminder Time")).toBeTruthy();
+  });
+
+  it("shows default time when no prompt time is set", () => {
+    renderWithProviders(<SettingsScreen />);
+
+    expect(screen.getByText("Not set")).toBeTruthy();
+  });
 });
