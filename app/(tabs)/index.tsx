@@ -13,6 +13,7 @@ import {
   RefreshControl,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import { router } from "expo-router";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -42,9 +43,10 @@ function EmptyState() {
 
 interface EntryCardProps {
   entry: Entry;
+  onPress: () => void;
 }
 
-function EntryCard({ entry }: EntryCardProps) {
+function EntryCard({ entry, onPress }: EntryCardProps) {
   const formattedDate = new Date(entry.date).toLocaleDateString("en-SG", {
     day: "numeric",
     month: "short",
@@ -52,11 +54,11 @@ function EntryCard({ entry }: EntryCardProps) {
   });
 
   return (
-    <View style={styles.card}>
+    <Pressable onPress={onPress} style={styles.card}>
       {entry.type === "photo" &&
         entry.mediaUris &&
         entry.mediaUris.length > 0 && (
-          <PhotoCarousel images={entry.mediaUris} />
+          <PhotoCarousel images={entry.mediaUris} onImagePress={onPress} />
         )}
       {entry.type === "video" &&
         entry.mediaUris &&
@@ -69,7 +71,7 @@ function EntryCard({ entry }: EntryCardProps) {
         <ThemedText style={styles.cardCaption}>{entry.caption}</ThemedText>
       )}
       <ThemedText style={styles.cardDate}>{formattedDate}</ThemedText>
-    </View>
+    </Pressable>
   );
 }
 
@@ -155,7 +157,12 @@ export default function FeedScreen() {
       <FlatList
         data={entries}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <EntryCard entry={item} />}
+        renderItem={({ item }) => (
+          <EntryCard
+            entry={item}
+            onPress={() => router.push(`/entry/${item.id}`)}
+          />
+        )}
         ListEmptyComponent={EmptyState}
         contentContainerStyle={
           entries.length === 0 ? styles.listEmpty : styles.list

@@ -274,3 +274,27 @@
 **Verification:** tsc, lint, test (48 passed), build all pass.
 
 **Next:** Entry detail view (full-screen on tap) or edit/delete entries per PRD Section 3.6
+
+## 2026-01-15: Entry Detail Screen (Full-Screen View)
+
+**PRD ref:** Phase 1 Weeks 5-7, Section 4.3 (Photo Carousel - Full-screen view on tap)
+
+**Task:** Implement full-screen entry detail view when tapping an entry in Feed
+
+**Decisions:**
+- Created dynamic route app/entry/[id].tsx for entry detail
+- Full-screen black background with photo carousel for multi-photo entries
+- Header overlay with back button (←) and image counter (1/N)
+- Caption + date shown in semi-transparent overlay at bottom
+- Used router.push for navigation, router.back for returning
+- EntryCard now accepts onPress prop and is wrapped in Pressable
+- PhotoCarousel onImagePress also triggers navigation to detail view
+
+**Files changed:**
+- app/entry/[id].tsx - New: Full-screen entry detail with image carousel
+- app/(tabs)/index.tsx - Added router import, onPress to EntryCard
+- __tests__/app/entry/entry-detail.test.tsx - New: 5 TDD tests for detail screen
+
+**Verification:** tsc, lint, test (53 passed), build all pass.
+
+**Next:** Edit/delete entries (PRD Section 3.6) or video playback (PRD Section 9.3)
