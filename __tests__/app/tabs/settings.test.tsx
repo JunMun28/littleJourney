@@ -1,8 +1,12 @@
 import { render, screen, fireEvent } from "@testing-library/react-native";
 import SettingsScreen from "@/app/(tabs)/settings";
 import { AuthProvider } from "@/contexts/auth-context";
+import { ChildProvider } from "@/contexts/child-context";
+import { EntryProvider } from "@/contexts/entry-context";
+import { ExportProvider } from "@/contexts/export-context";
 import { NotificationProvider } from "@/contexts/notification-context";
 import { FamilyProvider } from "@/contexts/family-context";
+import { MilestoneProvider } from "@/contexts/milestone-context";
 import { UserPreferencesProvider } from "@/contexts/user-preferences-context";
 import { StorageProvider } from "@/contexts/storage-context";
 
@@ -28,16 +32,41 @@ jest.mock("expo-device", () => ({
   isDevice: true,
 }));
 
+// Mock expo-file-system
+jest.mock("expo-file-system", () => ({
+  File: jest.fn().mockImplementation(() => ({
+    uri: "file:///mock/documents/export.json",
+    write: jest.fn().mockResolvedValue(undefined),
+  })),
+  Paths: {
+    document: { uri: "file:///mock/documents/" },
+  },
+}));
+
+// Mock expo-sharing
+jest.mock("expo-sharing", () => ({
+  isAvailableAsync: jest.fn().mockResolvedValue(true),
+  shareAsync: jest.fn().mockResolvedValue(undefined),
+}));
+
 const renderWithProviders = (component: React.ReactElement) => {
   return render(
     <AuthProvider>
-      <NotificationProvider>
-        <FamilyProvider>
-          <UserPreferencesProvider>
-            <StorageProvider>{component}</StorageProvider>
-          </UserPreferencesProvider>
-        </FamilyProvider>
-      </NotificationProvider>
+      <ChildProvider>
+        <EntryProvider>
+          <MilestoneProvider>
+            <NotificationProvider>
+              <FamilyProvider>
+                <UserPreferencesProvider>
+                  <StorageProvider>
+                    <ExportProvider>{component}</ExportProvider>
+                  </StorageProvider>
+                </UserPreferencesProvider>
+              </FamilyProvider>
+            </NotificationProvider>
+          </MilestoneProvider>
+        </EntryProvider>
+      </ChildProvider>
     </AuthProvider>,
   );
 };
@@ -49,6 +78,7 @@ describe("SettingsScreen", () => {
     expect(screen.getByText("Notifications")).toBeTruthy();
     expect(screen.getByText("Family")).toBeTruthy();
     expect(screen.getByText("Storage")).toBeTruthy();
+    expect(screen.getByText("Data & Privacy")).toBeTruthy();
     expect(screen.getByText("Account")).toBeTruthy();
   });
 
@@ -114,6 +144,23 @@ describe("SettingsScreen", () => {
 
     expect(
       screen.getByText("Upgrade for more storage and video uploads"),
+    ).toBeTruthy();
+  });
+
+  it("renders export data button", () => {
+    renderWithProviders(<SettingsScreen />);
+
+    expect(screen.getByText("Download All Memories")).toBeTruthy();
+    expect(screen.getByTestId("export-data-button")).toBeTruthy();
+  });
+
+  it("shows export description", () => {
+    renderWithProviders(<SettingsScreen />);
+
+    expect(
+      screen.getByText(
+        "Export all your entries, milestones, and child data as a JSON file.",
+      ),
     ).toBeTruthy();
   });
 });

@@ -16,6 +16,7 @@ import DateTimePicker, {
   type DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { useAuth } from "@/contexts/auth-context";
+import { useExport } from "@/contexts/export-context";
 import {
   useNotifications,
   type NotificationSettings,
@@ -83,6 +84,7 @@ export default function SettingsScreen() {
   const { familyMembers, inviteFamilyMember, removeFamilyMember } = useFamily();
   const { dailyPromptTime, setDailyPromptTime } = useUserPreferences();
   const { usedBytes, limitBytes, usagePercent, tier } = useStorage();
+  const { exportData, isExporting, lastExportDate } = useExport();
 
   const [modalState, setModalState] = useState<ModalState>("closed");
   const [selectedTime, setSelectedTime] = useState<Date>(() =>
@@ -346,6 +348,36 @@ export default function SettingsScreen() {
             </View>
           )}
         </View>
+      </View>
+
+      {/* Data & Privacy Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionHeader}>Data & Privacy</Text>
+
+        <Pressable
+          style={[
+            styles.actionButton,
+            isExporting && styles.actionButtonDisabled,
+          ]}
+          onPress={exportData}
+          disabled={isExporting}
+          testID="export-data-button"
+        >
+          <Text style={styles.actionButtonText}>
+            {isExporting ? "Exporting..." : "Download All Memories"}
+          </Text>
+        </Pressable>
+
+        {lastExportDate && (
+          <Text style={styles.exportInfo}>
+            Last exported:{" "}
+            {new Date(lastExportDate).toLocaleDateString("en-SG")}
+          </Text>
+        )}
+
+        <Text style={styles.exportDescription}>
+          Export all your entries, milestones, and child data as a JSON file.
+        </Text>
       </View>
 
       {/* Account Section */}
@@ -734,6 +766,22 @@ const styles = StyleSheet.create({
   upgradeText: {
     fontSize: 14,
     color: PRIMARY_COLOR,
+    textAlign: "center",
+  },
+  // Export styles
+  actionButtonDisabled: {
+    opacity: 0.6,
+  },
+  exportInfo: {
+    fontSize: 13,
+    color: "#666",
+    marginTop: 12,
+    textAlign: "center",
+  },
+  exportDescription: {
+    fontSize: 13,
+    color: "#999",
+    marginTop: 8,
     textAlign: "center",
   },
 });

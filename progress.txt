@@ -573,3 +573,31 @@
 **Verification:** tsc, lint, test (113 passed), build all pass.
 
 **Next:** Stripe payments integration (PRD Section 12.2) or UI polish
+
+## 2026-01-15: Data Export Feature
+
+**PRD ref:** Phase 1 Weeks 12-13, Section 11.1 (Data Export)
+
+**Task:** Implement data export functionality - "Download all memories" per PRD
+
+**Decisions:**
+- Created ExportContext + useExport hook for export functionality (TDD approach)
+- ExportData type contains: exportDate, version, child, entries, milestones
+- Uses expo-file-system new File API (Paths.document, File.write)
+- Uses expo-sharing for native share sheet integration
+- Export generates JSON file named little-journey-export-{date}.json
+- Added "Data & Privacy" section to Settings per PRD Section 11
+- Button shows "Exporting..." with disabled state during export
+- lastExportDate displayed after successful export
+
+**Files changed:**
+- contexts/export-context.tsx - New: ExportProvider, useExport, ExportData type
+- app/_layout.tsx - Added ExportProvider wrapper
+- app/(tabs)/settings.tsx - Added Data & Privacy section with export button
+- __tests__/contexts/export-context.test.tsx - New: 6 TDD tests for export context
+- __tests__/app/tabs/settings.test.tsx - Added ExportProvider, 2 tests for export UI
+- package.json - Added expo-file-system, expo-sharing dependencies
+
+**Verification:** tsc, lint, test (121 passed), build all pass.
+
+**Next:** Account deletion (PRD Section 11.2) or Stripe payments (PRD Section 12.2)

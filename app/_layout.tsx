@@ -12,6 +12,7 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
 import { ChildProvider } from "@/contexts/child-context";
 import { EntryProvider } from "@/contexts/entry-context";
+import { ExportProvider } from "@/contexts/export-context";
 import { FamilyProvider } from "@/contexts/family-context";
 import { MilestoneProvider } from "@/contexts/milestone-context";
 import { NotificationProvider } from "@/contexts/notification-context";
@@ -61,12 +62,16 @@ export default function RootLayout() {
               <UserPreferencesProvider>
                 <NotificationProvider>
                   <StorageProvider>
-                    <ThemeProvider
-                      value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-                    >
-                      <RootLayoutNav />
-                      <StatusBar style="auto" />
-                    </ThemeProvider>
+                    <ExportProvider>
+                      <ThemeProvider
+                        value={
+                          colorScheme === "dark" ? DarkTheme : DefaultTheme
+                        }
+                      >
+                        <RootLayoutNav />
+                        <StatusBar style="auto" />
+                      </ThemeProvider>
+                    </ExportProvider>
                   </StorageProvider>
                 </NotificationProvider>
               </UserPreferencesProvider>
