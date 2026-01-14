@@ -179,3 +179,28 @@
 **Verification:** tsc, lint, test (30 passed), build all pass.
 
 **Next:** First entry prompt (step 6) or core Feed features (entries, photos)
+
+## 2026-01-15: First Entry Prompt Screen
+
+**PRD ref:** Phase 1 Weeks 3-4, Section 1.3 Step 6 (First entry prompt)
+
+**Task:** Implement first entry prompt as final onboarding step (step 6)
+
+**Decisions:**
+- Installed expo-image-picker for gallery/camera access
+- Screen prompts "Add your first moment!" with camera emoji icon
+- "Choose from Gallery" button requests media library permission then launches picker
+- Skip option ("I'll do this later") completes onboarding without adding photo
+- If user selects photo, completes onboarding (entry creation deferred to Feed feature)
+- invite-family now navigates to first-entry instead of completing onboarding
+
+**Files changed:**
+- app/(onboarding)/first-entry.tsx - New: First entry prompt with image picker
+- app/(onboarding)/_layout.tsx - Added first-entry Stack.Screen
+- app/(onboarding)/invite-family.tsx - Navigate to first-entry, removed useAuth import
+- __tests__/app/onboarding/first-entry.test.tsx - New: 5 TDD tests for first-entry screen
+- package.json - Added expo-image-picker dependency
+
+**Verification:** tsc, lint, test (35 passed), build all pass.
+
+**Next:** Core Feed features (entry creation, photo upload) per PRD Phase 1 Weeks 5-7

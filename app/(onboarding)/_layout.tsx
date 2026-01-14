@@ -33,6 +33,12 @@ export default function OnboardingLayout() {
           title: "Invite Family",
         }}
       />
+      <Stack.Screen
+        name="first-entry"
+        options={{
+          title: "First Moment",
+        }}
+      />
     </Stack>
   );
 }

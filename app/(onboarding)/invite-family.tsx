@@ -9,10 +9,10 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
+import { useRouter } from "expo-router";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { useAuth } from "@/contexts/auth-context";
 import { useFamily, type PermissionLevel } from "@/contexts/family-context";
 
 const PRIMARY_COLOR = "#0a7ea4";
@@ -39,7 +39,7 @@ function isValidEmail(email: string): boolean {
 }
 
 export default function InviteFamilyScreen() {
-  const { completeOnboarding } = useAuth();
+  const router = useRouter();
   const { inviteFamilyMember } = useFamily();
 
   const [email, setEmail] = useState("");
@@ -49,7 +49,7 @@ export default function InviteFamilyScreen() {
 
   const isFormValid = isValidEmail(email) && relationship.trim().length > 0;
 
-  const handleSendInvite = async () => {
+  const handleSendInvite = () => {
     if (!isFormValid) return;
 
     inviteFamilyMember({
@@ -58,11 +58,11 @@ export default function InviteFamilyScreen() {
       permissionLevel,
     });
 
-    await completeOnboarding();
+    router.push("/first-entry");
   };
 
-  const handleSkip = async () => {
-    await completeOnboarding();
+  const handleSkip = () => {
+    router.push("/first-entry");
   };
 
   return (
