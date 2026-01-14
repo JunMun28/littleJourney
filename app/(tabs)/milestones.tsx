@@ -24,11 +24,17 @@ import { useChild } from "@/contexts/child-context";
 
 const PRIMARY_COLOR = "#0a7ea4";
 
-type ModalState = "closed" | "selectTemplate" | "addCustom";
+type ModalState = "closed" | "selectTemplate" | "addCustom" | "complete";
 
 export default function MilestonesScreen() {
-  const { milestones, upcomingMilestones, completedMilestones, addMilestone } =
-    useMilestones();
+  const {
+    milestones,
+    upcomingMilestones,
+    completedMilestones,
+    addMilestone,
+    completeMilestone,
+    deleteMilestone,
+  } = useMilestones();
   const { child } = useChild();
 
   const [modalState, setModalState] = useState<ModalState>("closed");
@@ -36,6 +42,15 @@ export default function MilestonesScreen() {
   const [customDescription, setCustomDescription] = useState("");
   const [milestoneDate, setMilestoneDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+  // Completion modal state
+  const [selectedMilestone, setSelectedMilestone] = useState<Milestone | null>(
+    null,
+  );
+  const [celebrationDate, setCelebrationDate] = useState(new Date());
+  const [showCelebrationDatePicker, setShowCelebrationDatePicker] =
+    useState(false);
+  const [completionNotes, setCompletionNotes] = useState("");
 
   // Filter templates by child's cultural tradition
   const relevantTemplates = useMemo(() => {
@@ -82,6 +97,34 @@ export default function MilestonesScreen() {
     setMilestoneDate(new Date());
   };
 
+  const handleOpenCompletion = (milestone: Milestone) => {
+    setSelectedMilestone(milestone);
+    setCelebrationDate(new Date());
+    setCompletionNotes("");
+    setModalState("complete");
+  };
+
+  const handleCompleteMilestone = () => {
+    if (!selectedMilestone) return;
+
+    completeMilestone(selectedMilestone.id, {
+      celebrationDate: celebrationDate.toISOString().split("T")[0],
+      notes: completionNotes.trim() || undefined,
+    });
+    setModalState("closed");
+    setSelectedMilestone(null);
+    setCompletionNotes("");
+  };
+
+  const handleDeleteMilestone = () => {
+    if (!selectedMilestone) return;
+
+    deleteMilestone(selectedMilestone.id);
+    setModalState("closed");
+    setSelectedMilestone(null);
+    setCompletionNotes("");
+  };
+
   const renderMilestoneCard = ({ item }: { item: Milestone }) => {
     const template = MILESTONE_TEMPLATES.find((t) => t.id === item.templateId);
     const title = item.customTitle ?? template?.title ?? "Milestone";
@@ -89,7 +132,10 @@ export default function MilestonesScreen() {
     const localTitle = template?.titleLocal;
 
     return (
-      <View style={styles.milestoneCard}>
+      <Pressable
+        style={styles.milestoneCard}
+        onPress={() => handleOpenCompletion(item)}
+      >
         <View style={styles.milestoneHeader}>
           <Text style={styles.milestoneTitle}>
             {title}
@@ -112,7 +158,7 @@ export default function MilestonesScreen() {
             : `Due: ${new Date(item.milestoneDate).toLocaleDateString("en-SG")}`}
         </Text>
         {item.notes && <Text style={styles.milestoneNotes}>{item.notes}</Text>}
-      </View>
+      </Pressable>
     );
   };
 
@@ -304,6 +350,84 @@ export default function MilestonesScreen() {
             >
               <Text style={styles.submitButtonText}>Add Milestone</Text>
             </Pressable>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Completion Modal */}
+      <Modal visible={modalState === "complete"} animationType="slide">
+        <KeyboardAvoidingView
+          style={styles.fullModal}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <View style={styles.fullModalHeader}>
+            <Pressable onPress={() => setModalState("closed")}>
+              <Text style={styles.backButton}>Cancel</Text>
+            </Pressable>
+            <ThemedText type="subtitle">Mark as Completed</ThemedText>
+            <View style={{ width: 60 }} />
+          </View>
+
+          <ScrollView style={styles.formContainer}>
+            {selectedMilestone && (
+              <>
+                <Text style={styles.completionTitle}>
+                  {selectedMilestone.customTitle ??
+                    MILESTONE_TEMPLATES.find(
+                      (t) => t.id === selectedMilestone.templateId,
+                    )?.title ??
+                    "Milestone"}
+                </Text>
+
+                <Text style={styles.label}>Celebration Date</Text>
+                <Pressable
+                  style={styles.dateButton}
+                  onPress={() => setShowCelebrationDatePicker(true)}
+                >
+                  <Text style={styles.dateButtonText}>
+                    {celebrationDate.toLocaleDateString("en-SG")}
+                  </Text>
+                </Pressable>
+                {showCelebrationDatePicker && (
+                  <DateTimePicker
+                    value={celebrationDate}
+                    mode="date"
+                    display={Platform.OS === "ios" ? "spinner" : "default"}
+                    onChange={(_, date) => {
+                      setShowCelebrationDatePicker(Platform.OS === "ios");
+                      if (date) setCelebrationDate(date);
+                    }}
+                  />
+                )}
+
+                <Text style={styles.label}>Notes</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  value={completionNotes}
+                  onChangeText={setCompletionNotes}
+                  placeholder="Add notes about this milestone..."
+                  placeholderTextColor="#999"
+                  multiline
+                  numberOfLines={4}
+                />
+
+                <Pressable
+                  style={styles.submitButton}
+                  onPress={handleCompleteMilestone}
+                >
+                  <Text style={styles.submitButtonText}>
+                    Complete Milestone
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  style={styles.deleteButton}
+                  onPress={handleDeleteMilestone}
+                >
+                  <Text style={styles.deleteButtonText}>Delete Milestone</Text>
+                </Pressable>
+              </>
+            )}
           </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
@@ -541,6 +665,27 @@ const styles = StyleSheet.create({
   },
   submitButtonText: {
     color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  completionTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    marginBottom: 24,
+    textAlign: "center",
+    color: "#333",
+  },
+  deleteButton: {
+    marginTop: 16,
+    padding: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#dc3545",
+  },
+  deleteButtonText: {
+    color: "#dc3545",
     fontSize: 16,
     fontWeight: "600",
   },

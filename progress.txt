@@ -374,3 +374,26 @@
 **Verification:** tsc, lint, test (68 passed), build all pass.
 
 **Next:** Milestone completion flow, milestone detail view, or PRD Section 8 (Search)
+
+## 2026-01-15: Milestone Completion Flow
+
+**PRD ref:** Phase 1 Weeks 8-9, Section 5.2 (Dual Date System), Section 5.3 (Milestone UI)
+
+**Task:** Implement milestone completion modal - mark milestones as completed with celebration date and notes
+
+**Decisions:**
+- Added "complete" to ModalState type for completion modal
+- Milestone cards now tappable (wrapped in Pressable) to open completion modal
+- Completion modal shows: milestone title, celebration date picker, notes input
+- completeMilestone and deleteMilestone from context now used in UI
+- Delete option available in completion modal (red outline button)
+- Celebration date defaults to today (can be changed)
+- Notes are optional
+
+**Files changed:**
+- app/(tabs)/milestones.tsx - Added completion modal, tappable cards, completion/delete handlers, new styles
+- __tests__/app/tabs/milestones.test.tsx - New: 5 TDD tests for milestone screen + completion flow
+
+**Verification:** tsc, lint, test (73 passed), build all pass.
+
+**Next:** Search feature (PRD Section 8) or video playback (PRD Section 9.3)
