@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   StyleSheet,
   FlatList,
@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  RefreshControl,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 
@@ -85,6 +86,7 @@ export default function FeedScreen() {
   const { entries, addEntry } = useEntries();
   const { child } = useChild();
 
+  const [refreshing, setRefreshing] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [createStep, setCreateStep] = useState<CreateStep>("type");
   const [selectedType, setSelectedType] = useState<EntryType | null>(null);
@@ -98,6 +100,14 @@ export default function FeedScreen() {
     setSelectedMedia([]);
     setCaption("");
   };
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    // Simulate refresh delay - will be replaced with TanStack Query invalidation
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  }, []);
 
   const handleTypeSelect = async (type: EntryType) => {
     setSelectedType(type);
@@ -158,6 +168,14 @@ export default function FeedScreen() {
           entries.length === 0 ? styles.listEmpty : styles.list
         }
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={PRIMARY_COLOR}
+            colors={[PRIMARY_COLOR]}
+          />
+        }
       />
 
       {/* Floating Action Button */}

@@ -231,3 +231,22 @@
 **Verification:** tsc, lint, test (43 passed), build all pass.
 
 **Next:** Pull-to-refresh, entry detail view, or photo carousel swipe per PRD Section 4
+
+## 2026-01-15: Pull-to-Refresh for Feed
+
+**PRD ref:** Phase 1 Weeks 5-7, Section 4.1 (Primary View: Feed - Pull-to-refresh)
+
+**Task:** Add pull-to-refresh to Feed FlatList
+
+**Decisions:**
+- Used RefreshControl component with FlatList's refreshControl prop
+- Added refreshing state + onRefresh callback with useCallback
+- Simulated 1s refresh delay (placeholder for TanStack Query invalidation)
+- tintColor/colors set to PRIMARY_COLOR for consistent branding
+
+**Files changed:**
+- app/(tabs)/index.tsx - Added RefreshControl, refreshing state, onRefresh handler
+
+**Verification:** tsc, lint, test (43 passed), build all pass.
+
+**Next:** Entry detail view, photo carousel swipe, or edit/delete entries per PRD Section 4
