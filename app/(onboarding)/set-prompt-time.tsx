@@ -3,10 +3,10 @@ import { StyleSheet, Pressable, Text, View, Platform } from "react-native";
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
+import { router } from "expo-router";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { useAuth } from "@/contexts/auth-context";
 import { useUserPreferences } from "@/contexts/user-preferences-context";
 
 const PRIMARY_COLOR = "#0a7ea4";
@@ -34,7 +34,6 @@ function formatDisplayTime(date: Date): string {
 }
 
 export default function SetPromptTimeScreen() {
-  const { completeOnboarding } = useAuth();
   const { setDailyPromptTime } = useUserPreferences();
 
   const [selectedTime, setSelectedTime] = useState<Date>(getDefaultTime());
@@ -52,14 +51,14 @@ export default function SetPromptTimeScreen() {
     }
   };
 
-  const handleContinue = async () => {
+  const handleContinue = () => {
     setDailyPromptTime(formatTime(selectedTime));
-    await completeOnboarding();
+    router.push("/(onboarding)/invite-family");
   };
 
-  const handleSkip = async () => {
+  const handleSkip = () => {
     // Skip without setting a prompt time
-    await completeOnboarding();
+    router.push("/(onboarding)/invite-family");
   };
 
   return (

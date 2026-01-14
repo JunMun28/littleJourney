@@ -27,6 +27,12 @@ export default function OnboardingLayout() {
           title: "Daily Reminder",
         }}
       />
+      <Stack.Screen
+        name="invite-family"
+        options={{
+          title: "Invite Family",
+        }}
+      />
     </Stack>
   );
 }

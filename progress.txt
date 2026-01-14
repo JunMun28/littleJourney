@@ -151,3 +151,31 @@
 **Verification:** tsc, lint, test (24 passed), build all pass. Route protection verified via Chrome MCP.
 
 **Next:** Invite family member (step 5) or first entry prompt (step 6)
+
+## 2026-01-15: Invite Family Member Screen
+
+**PRD ref:** Phase 1 Weeks 3-4, Section 1.3 Step 5 (Invite first family member)
+
+**Task:** Implement invite family member as step 5 of onboarding flow
+
+**Decisions:**
+- Created FamilyContext + useFamily hook for family member management (TDD approach)
+- FamilyMember type: id, email, relationship, permissionLevel, status, invitedAt
+- PermissionLevel: "view_only" | "view_interact" per PRD Section 6.3
+- InviteStatus: "pending" | "accepted" | "expired"
+- Form validation: valid email required, relationship required
+- Permission defaults to "view_interact" (most useful for grandparents)
+- Skip option completes onboarding without inviting
+- set-prompt-time now navigates to invite-family instead of completing onboarding
+
+**Files changed:**
+- contexts/family-context.tsx - New: FamilyProvider, useFamily hook, types
+- app/_layout.tsx - Added FamilyProvider wrapper
+- app/(onboarding)/invite-family.tsx - New: Invite form with email, relationship, permission
+- app/(onboarding)/_layout.tsx - Added invite-family Stack.Screen
+- app/(onboarding)/set-prompt-time.tsx - Navigate to invite-family instead of completeOnboarding
+- __tests__/contexts/family-context.test.tsx - New: 6 TDD tests for family context
+
+**Verification:** tsc, lint, test (30 passed), build all pass.
+
+**Next:** First entry prompt (step 6) or core Feed features (entries, photos)
