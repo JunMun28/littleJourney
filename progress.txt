@@ -344,3 +344,33 @@
 **Verification:** tsc, lint, test (61 passed), build all pass.
 
 **Next:** Video playback (PRD Section 9.3) or search/milestones features
+
+## 2026-01-15: Milestones Feature - Context and Tab UI
+
+**PRD ref:** Phase 1 Weeks 8-9, Section 5 (Milestones)
+
+**Task:** Implement MilestoneContext and Milestones tab with templates and UI
+
+**Decisions:**
+- Created MilestoneContext + useMilestones hook for milestone state management (TDD approach)
+- Milestone type: id, templateId, childId, milestoneDate, celebrationDate, customTitle/Description, isCompleted
+- MILESTONE_TEMPLATES constant with PRD Section 5.1 cultural milestones:
+  - Chinese: Full Month (满月), 100 Days (百日), Zhua Zhou (抓周), First Lunar New Year
+  - Malay: Aqiqah, Cukur Jambul, First Hari Raya
+  - Indian: Naming Ceremony, Annaprashan, First Deepavali
+  - Universal: First smile/laugh/steps/words/tooth/haircut/school
+- Templates filtered by child's cultural tradition + universal
+- daysFromBirth auto-calculates milestone date from child DOB
+- Milestones tab: empty state, upcoming/completed sections, FAB
+- Two modals: template selection (bottom sheet), custom milestone (full screen)
+- Custom milestone form: title, description, date picker
+
+**Files changed:**
+- contexts/milestone-context.tsx - New: MilestoneProvider, useMilestones, types, MILESTONE_TEMPLATES
+- app/_layout.tsx - Added MilestoneProvider wrapper
+- app/(tabs)/milestones.tsx - Full milestone UI with sections, modals, template list
+- __tests__/contexts/milestone-context.test.tsx - New: 7 TDD tests for milestone context
+
+**Verification:** tsc, lint, test (68 passed), build all pass.
+
+**Next:** Milestone completion flow, milestone detail view, or PRD Section 8 (Search)

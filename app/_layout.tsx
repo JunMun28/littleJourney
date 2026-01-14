@@ -13,6 +13,7 @@ import { AuthProvider, useAuth } from "@/contexts/auth-context";
 import { ChildProvider } from "@/contexts/child-context";
 import { EntryProvider } from "@/contexts/entry-context";
 import { FamilyProvider } from "@/contexts/family-context";
+import { MilestoneProvider } from "@/contexts/milestone-context";
 import { UserPreferencesProvider } from "@/contexts/user-preferences-context";
 
 function RootLayoutNav() {
@@ -54,14 +55,16 @@ export default function RootLayout() {
       <ChildProvider>
         <EntryProvider>
           <FamilyProvider>
-            <UserPreferencesProvider>
-              <ThemeProvider
-                value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-              >
-                <RootLayoutNav />
-                <StatusBar style="auto" />
-              </ThemeProvider>
-            </UserPreferencesProvider>
+            <MilestoneProvider>
+              <UserPreferencesProvider>
+                <ThemeProvider
+                  value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+                >
+                  <RootLayoutNav />
+                  <StatusBar style="auto" />
+                </ThemeProvider>
+              </UserPreferencesProvider>
+            </MilestoneProvider>
           </FamilyProvider>
         </EntryProvider>
       </ChildProvider>
