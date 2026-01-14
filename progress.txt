@@ -321,3 +321,26 @@
 **Verification:** tsc, lint, test (57 passed), build all pass.
 
 **Next:** Entry edit modal/screen or video playback (PRD Section 9.3)
+
+## 2026-01-15: Entry Edit Modal
+
+**PRD ref:** Phase 1 Weeks 5-7, Section 3.6 (Entry Ownership & Editing)
+
+**Task:** Implement edit modal for editing entry caption
+
+**Decisions:**
+- Added "edit" state to MenuState type (was: closed/options/confirmDelete)
+- Edit modal slides up from bottom (iOS sheet pattern)
+- Pre-fills caption from current entry on open
+- Save button calls updateEntry(id, { caption }) and closes modal
+- Cancel button closes modal without saving
+- KeyboardAvoidingView handles keyboard on iOS/Android
+- Multiline TextInput with 500 char limit for caption
+
+**Files changed:**
+- app/entry/[id].tsx - Added edit modal UI, editCaption state, save/cancel handlers
+- __tests__/app/entry/entry-detail.test.tsx - Added 4 tests for edit modal flow
+
+**Verification:** tsc, lint, test (61 passed), build all pass.
+
+**Next:** Video playback (PRD Section 9.3) or search/milestones features

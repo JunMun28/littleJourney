@@ -10,6 +10,9 @@ import {
   NativeScrollEvent,
   StatusBar,
   Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 
@@ -18,15 +21,16 @@ import { useEntries } from "@/contexts/entry-context";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-type MenuState = "closed" | "options" | "confirmDelete";
+type MenuState = "closed" | "options" | "confirmDelete" | "edit";
 
 export default function EntryDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getEntry, deleteEntry } = useEntries();
+  const { getEntry, deleteEntry, updateEntry } = useEntries();
   const entry = getEntry(id);
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [menuState, setMenuState] = useState<MenuState>("closed");
+  const [editCaption, setEditCaption] = useState(entry?.caption ?? "");
 
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -63,7 +67,18 @@ export default function EntryDetailScreen() {
   }, [entry, deleteEntry]);
 
   const handleEdit = useCallback(() => {
-    // TODO: Implement edit modal/screen
+    setEditCaption(entry?.caption ?? "");
+    setMenuState("edit");
+  }, [entry?.caption]);
+
+  const handleSaveEdit = useCallback(() => {
+    if (entry) {
+      updateEntry(entry.id, { caption: editCaption });
+    }
+    setMenuState("closed");
+  }, [entry, editCaption, updateEntry]);
+
+  const handleCancelEdit = useCallback(() => {
     setMenuState("closed");
   }, []);
 
@@ -156,7 +171,7 @@ export default function EntryDetailScreen() {
 
       {/* Options/Delete Modal */}
       <Modal
-        visible={menuState !== "closed"}
+        visible={menuState === "options" || menuState === "confirmDelete"}
         transparent
         animationType="fade"
         onRequestClose={handleCloseMenu}
@@ -201,6 +216,53 @@ export default function EntryDetailScreen() {
             )}
           </View>
         </Pressable>
+      </Modal>
+
+      {/* Edit Modal */}
+      <Modal
+        testID="edit-modal"
+        visible={menuState === "edit"}
+        transparent
+        animationType="slide"
+        onRequestClose={handleCancelEdit}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.editModalContainer}
+        >
+          <View style={styles.editModalContent}>
+            <View style={styles.editModalHeader}>
+              <Pressable
+                testID="edit-cancel-button"
+                onPress={handleCancelEdit}
+                style={styles.editHeaderButton}
+              >
+                <ThemedText style={styles.editCancelText}>Cancel</ThemedText>
+              </Pressable>
+              <ThemedText style={styles.editModalTitle}>Edit Entry</ThemedText>
+              <Pressable
+                onPress={handleSaveEdit}
+                style={styles.editHeaderButton}
+              >
+                <ThemedText style={styles.editSaveText}>Save</ThemedText>
+              </Pressable>
+            </View>
+
+            <View style={styles.editFormContainer}>
+              <ThemedText style={styles.editLabel}>Caption</ThemedText>
+              <TextInput
+                testID="caption-input"
+                value={editCaption}
+                onChangeText={setEditCaption}
+                style={styles.editInput}
+                placeholder="Add a caption..."
+                placeholderTextColor="rgba(255,255,255,0.4)"
+                multiline
+                maxLength={500}
+              />
+            </View>
+          </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -360,5 +422,59 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 16,
     paddingTop: 8,
+  },
+  editModalContainer: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  editModalContent: {
+    backgroundColor: "#1c1c1e",
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingBottom: 40,
+  },
+  editModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "rgba(255,255,255,0.1)",
+  },
+  editHeaderButton: {
+    minWidth: 60,
+  },
+  editModalTitle: {
+    color: "#fff",
+    fontSize: 17,
+    fontWeight: "600",
+  },
+  editCancelText: {
+    color: "#0a7ea4",
+    fontSize: 17,
+  },
+  editSaveText: {
+    color: "#0a7ea4",
+    fontSize: 17,
+    fontWeight: "600",
+    textAlign: "right",
+  },
+  editFormContainer: {
+    padding: 16,
+  },
+  editLabel: {
+    color: "rgba(255,255,255,0.6)",
+    fontSize: 13,
+    marginBottom: 8,
+  },
+  editInput: {
+    backgroundColor: "rgba(255,255,255,0.1)",
+    borderRadius: 10,
+    padding: 12,
+    color: "#fff",
+    fontSize: 16,
+    minHeight: 100,
+    textAlignVertical: "top",
   },
 });

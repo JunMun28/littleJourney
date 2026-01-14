@@ -139,4 +139,67 @@ describe("EntryDetailScreen", () => {
 
     expect(mockDeleteEntry).not.toHaveBeenCalled();
   });
+
+  describe("Edit Modal", () => {
+    it("opens edit modal when Edit is pressed", () => {
+      render(<EntryDetailScreen />);
+
+      // Open options menu
+      fireEvent.press(screen.getByTestId("options-button"));
+      // Press edit
+      fireEvent.press(screen.getByText("Edit"));
+
+      // Should show edit modal with caption input
+      expect(screen.getByTestId("edit-modal")).toBeTruthy();
+      expect(screen.getByTestId("caption-input")).toBeTruthy();
+    });
+
+    it("pre-fills caption in edit modal", () => {
+      render(<EntryDetailScreen />);
+
+      // Open options menu and edit modal
+      fireEvent.press(screen.getByTestId("options-button"));
+      fireEvent.press(screen.getByText("Edit"));
+
+      // Caption input should have current value
+      const captionInput = screen.getByTestId("caption-input");
+      expect(captionInput.props.value).toBe("First steps!");
+    });
+
+    it("saves edited caption and closes modal", () => {
+      render(<EntryDetailScreen />);
+
+      // Open edit modal
+      fireEvent.press(screen.getByTestId("options-button"));
+      fireEvent.press(screen.getByText("Edit"));
+
+      // Change caption
+      const captionInput = screen.getByTestId("caption-input");
+      fireEvent.changeText(captionInput, "Updated caption!");
+
+      // Save
+      fireEvent.press(screen.getByText("Save"));
+
+      expect(mockUpdateEntry).toHaveBeenCalledWith("test-entry-1", {
+        caption: "Updated caption!",
+      });
+    });
+
+    it("cancels edit without saving", () => {
+      render(<EntryDetailScreen />);
+
+      // Open edit modal
+      fireEvent.press(screen.getByTestId("options-button"));
+      fireEvent.press(screen.getByText("Edit"));
+
+      // Change caption
+      const captionInput = screen.getByTestId("caption-input");
+      fireEvent.changeText(captionInput, "Changed but not saved");
+
+      // Cancel
+      fireEvent.press(screen.getByTestId("edit-cancel-button"));
+
+      expect(mockUpdateEntry).not.toHaveBeenCalled();
+    });
+  });
 });
