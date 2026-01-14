@@ -72,3 +72,28 @@
 **Verification:** tsc, lint, test (12 passed), build all pass. UI verified via Chrome MCP.
 
 **Next:** Child form fields (name, DOB, photo) or remaining onboarding steps (culture, prompt time, invite)
+
+## 2026-01-15: Add Child Form Implementation
+
+**PRD ref:** Phase 1 Weeks 3-4, Section 2.1 (Child Profile)
+
+**Task:** Implement Add Child form with name, DOB, nickname fields and validation
+
+**Decisions:**
+- Created ChildContext + useChild hook for child state management (TDD approach)
+- Child type: name (required), dateOfBirth (ISO string, required), nickname (optional), photoUri (optional)
+- Form validation: name required, DOB required, DOB cannot be future
+- Used @react-native-community/datetimepicker for native date picking
+- Continue button disabled until form valid (visual feedback via gray color)
+- Date displayed in Singapore locale format (en-SG)
+- KeyboardAvoidingView + ScrollView for proper keyboard handling
+
+**Files changed:**
+- contexts/child-context.tsx - New: ChildProvider, useChild hook, Child type
+- app/_layout.tsx - Added ChildProvider wrapper
+- app/(onboarding)/add-child.tsx - Full form implementation with validation
+- __tests__/contexts/child-context.test.tsx - New: 5 TDD tests for child context
+
+**Verification:** tsc, lint, test (17 passed), build all pass. UI verified via Chrome MCP.
+
+**Next:** Remaining onboarding steps (culture selection, prompt time, invite family) or photo picker for child
