@@ -1,7 +1,8 @@
+import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react-native";
 import SettingsScreen from "@/app/(tabs)/settings";
 import { AuthProvider } from "@/contexts/auth-context";
-import { ChildProvider } from "@/contexts/child-context";
+import { ChildProvider, useChild } from "@/contexts/child-context";
 import { EntryProvider } from "@/contexts/entry-context";
 import { ExportProvider } from "@/contexts/export-context";
 import { NotificationProvider } from "@/contexts/notification-context";
@@ -10,6 +11,18 @@ import { MilestoneProvider } from "@/contexts/milestone-context";
 import { UserPreferencesProvider } from "@/contexts/user-preferences-context";
 import { StorageProvider } from "@/contexts/storage-context";
 import { SubscriptionProvider } from "@/contexts/subscription-context";
+
+// Mock expo-image-picker
+jest.mock("expo-image-picker", () => ({
+  launchImageLibraryAsync: jest.fn().mockResolvedValue({
+    canceled: false,
+    assets: [{ uri: "file:///mock/photo.jpg" }],
+  }),
+  MediaTypeOptions: { Images: "Images" },
+  requestMediaLibraryPermissionsAsync: jest
+    .fn()
+    .mockResolvedValue({ status: "granted" }),
+}));
 
 // Mock expo-notifications
 jest.mock("expo-notifications", () => ({
@@ -186,5 +199,79 @@ describe("SettingsScreen", () => {
     expect(screen.getByText(/30 days to cancel/)).toBeTruthy();
     expect(screen.getByTestId("delete-confirm-input")).toBeTruthy();
     expect(screen.getByTestId("confirm-delete-button")).toBeTruthy();
+  });
+
+  it("renders child profile section", () => {
+    renderWithProviders(<SettingsScreen />);
+
+    expect(screen.getByText("Child Profile")).toBeTruthy();
+  });
+
+  it("shows empty state when no child profile exists", () => {
+    renderWithProviders(<SettingsScreen />);
+
+    expect(screen.getByText("No child profile added")).toBeTruthy();
+  });
+});
+
+// Test wrapper that pre-sets child data
+function ChildSetterWrapper({ children }: { children: React.ReactNode }) {
+  const { setChild } = useChild();
+  React.useEffect(() => {
+    setChild({
+      name: "Emma",
+      dateOfBirth: "2024-06-15",
+      nickname: "Emmy",
+      culturalTradition: "chinese",
+    });
+  }, [setChild]);
+  return <>{children}</>;
+}
+
+function renderWithChild(component: React.ReactElement) {
+  return render(
+    <AuthProvider>
+      <ChildProvider>
+        <EntryProvider>
+          <MilestoneProvider>
+            <NotificationProvider>
+              <FamilyProvider>
+                <UserPreferencesProvider>
+                  <StorageProvider>
+                    <SubscriptionProvider>
+                      <ExportProvider>
+                        <ChildSetterWrapper>{component}</ChildSetterWrapper>
+                      </ExportProvider>
+                    </SubscriptionProvider>
+                  </StorageProvider>
+                </UserPreferencesProvider>
+              </FamilyProvider>
+            </NotificationProvider>
+          </MilestoneProvider>
+        </EntryProvider>
+      </ChildProvider>
+    </AuthProvider>,
+  );
+}
+
+describe("SettingsScreen - Child Profile with Data", () => {
+  it("displays child name when child exists", () => {
+    renderWithChild(<SettingsScreen />);
+
+    expect(screen.getByText("Emma")).toBeTruthy();
+  });
+
+  it("displays edit button when child exists", () => {
+    renderWithChild(<SettingsScreen />);
+
+    expect(screen.getByTestId("edit-child-button")).toBeTruthy();
+  });
+
+  it("opens edit modal when edit button is pressed", () => {
+    renderWithChild(<SettingsScreen />);
+
+    fireEvent.press(screen.getByTestId("edit-child-button"));
+
+    expect(screen.getByText("Edit Child Profile")).toBeTruthy();
   });
 });

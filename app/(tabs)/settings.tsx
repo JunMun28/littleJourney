@@ -11,11 +11,14 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Image,
 } from "react-native";
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
+import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "@/contexts/auth-context";
+import { useChild, type CulturalTradition } from "@/contexts/child-context";
 import { useExport } from "@/contexts/export-context";
 import {
   useNotifications,
@@ -37,7 +40,9 @@ type ModalState =
   | "inviteFamily"
   | "timePicker"
   | "deleteAccount"
-  | "subscription";
+  | "subscription"
+  | "editChild"
+  | "editChildDob";
 
 function formatDisplayTime(time: string): string {
   const [hours, minutes] = time.split(":").map(Number);
@@ -101,6 +106,7 @@ export default function SettingsScreen() {
   const { dailyPromptTime, setDailyPromptTime } = useUserPreferences();
   const { usedBytes, limitBytes, usagePercent, tier, setTier } = useStorage();
   const { exportData, isExporting, lastExportDate } = useExport();
+  const { child, updateChild } = useChild();
   const {
     currentPlan,
     billingCycle,
@@ -125,6 +131,16 @@ export default function SettingsScreen() {
   const [selectedPlan, setSelectedPlan] =
     useState<SubscriptionTier>("standard");
   const [selectedCycle, setSelectedCycle] = useState<BillingCycle>("monthly");
+
+  // Child profile edit state
+  const [editChildName, setEditChildName] = useState("");
+  const [editChildNickname, setEditChildNickname] = useState("");
+  const [editChildDob, setEditChildDob] = useState(new Date());
+  const [editChildPhoto, setEditChildPhoto] = useState<string | undefined>(
+    undefined,
+  );
+  const [editChildCulture, setEditChildCulture] =
+    useState<CulturalTradition>("none");
 
   const handleToggleNotification = async (
     key: keyof NotificationSettings,
@@ -250,6 +266,80 @@ export default function SettingsScreen() {
     return `$${price.toFixed(2)}${suffix}`;
   };
 
+  const handleOpenEditChild = () => {
+    if (child) {
+      setEditChildName(child.name);
+      setEditChildNickname(child.nickname || "");
+      setEditChildDob(new Date(child.dateOfBirth));
+      setEditChildPhoto(child.photoUri);
+      setEditChildCulture(child.culturalTradition || "none");
+    }
+    setModalState("editChild");
+  };
+
+  const handleSaveChild = () => {
+    if (!editChildName.trim()) return;
+
+    updateChild({
+      name: editChildName.trim(),
+      nickname: editChildNickname.trim() || undefined,
+      dateOfBirth: editChildDob.toISOString().split("T")[0],
+      photoUri: editChildPhoto,
+      culturalTradition: editChildCulture,
+    });
+    setModalState("closed");
+  };
+
+  const handleChildDobChange = (
+    _event: DateTimePickerEvent,
+    date: Date | undefined,
+  ) => {
+    if (Platform.OS === "android") {
+      setModalState("editChild");
+    }
+    if (date) {
+      setEditChildDob(date);
+    }
+  };
+
+  const handlePickChildPhoto = async () => {
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permissionResult.status !== "granted") {
+      Alert.alert(
+        "Permission Required",
+        "Please allow access to your photo library.",
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setEditChildPhoto(result.assets[0].uri);
+    }
+  };
+
+  const isChildFormValid = editChildName.trim().length > 0;
+
+  const getCultureLabel = (culture: CulturalTradition): string => {
+    switch (culture) {
+      case "chinese":
+        return "Chinese";
+      case "malay":
+        return "Malay";
+      case "indian":
+        return "Indian";
+      default:
+        return "None";
+    }
+  };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Notifications Section */}
@@ -350,6 +440,59 @@ export default function SettingsScreen() {
             trackColor={{ false: "#767577", true: PRIMARY_COLOR }}
           />
         </View>
+      </View>
+
+      {/* Child Profile Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionHeader}>Child Profile</Text>
+
+        {child ? (
+          <View style={styles.childProfileContainer}>
+            <View style={styles.childProfileInfo}>
+              {child.photoUri ? (
+                <Image
+                  source={{ uri: child.photoUri }}
+                  style={styles.childPhoto}
+                />
+              ) : (
+                <View style={styles.childPhotoPlaceholder}>
+                  <Text style={styles.childPhotoPlaceholderText}>👶</Text>
+                </View>
+              )}
+              <View style={styles.childDetails}>
+                <Text style={styles.childName}>{child.name}</Text>
+                {child.nickname && (
+                  <Text style={styles.childNickname}>
+                    &ldquo;{child.nickname}&rdquo;
+                  </Text>
+                )}
+                <Text style={styles.childDob}>
+                  Born{" "}
+                  {new Date(child.dateOfBirth).toLocaleDateString("en-SG", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </Text>
+                {child.culturalTradition &&
+                  child.culturalTradition !== "none" && (
+                    <Text style={styles.childCulture}>
+                      {getCultureLabel(child.culturalTradition)} tradition
+                    </Text>
+                  )}
+              </View>
+            </View>
+            <Pressable
+              style={styles.editChildButton}
+              onPress={handleOpenEditChild}
+              testID="edit-child-button"
+            >
+              <Text style={styles.editChildButtonText}>Edit</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <Text style={styles.noChildText}>No child profile added</Text>
+        )}
       </View>
 
       {/* Family Section */}
@@ -888,6 +1031,147 @@ export default function SettingsScreen() {
           </ScrollView>
         </View>
       </Modal>
+
+      {/* Edit Child Profile Modal */}
+      <Modal
+        visible={modalState === "editChild" || modalState === "editChildDob"}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setModalState("closed")}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalContainer}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <View style={styles.modalHeader}>
+            <Pressable onPress={() => setModalState("closed")}>
+              <Text style={styles.modalCancel}>Cancel</Text>
+            </Pressable>
+            <Text style={styles.modalTitle}>Edit Child Profile</Text>
+            <Pressable onPress={handleSaveChild} disabled={!isChildFormValid}>
+              <Text
+                style={[
+                  styles.modalSave,
+                  !isChildFormValid && styles.modalSaveDisabled,
+                ]}
+              >
+                Save
+              </Text>
+            </Pressable>
+          </View>
+
+          <ScrollView style={styles.editChildContent}>
+            {/* Photo Picker */}
+            <View style={styles.editChildPhotoSection}>
+              <Pressable
+                style={styles.editChildPhotoButton}
+                onPress={handlePickChildPhoto}
+                testID="edit-child-photo-button"
+              >
+                {editChildPhoto ? (
+                  <Image
+                    source={{ uri: editChildPhoto }}
+                    style={styles.editChildPhotoImage}
+                  />
+                ) : (
+                  <View style={styles.editChildPhotoPlaceholder}>
+                    <Text style={styles.editChildPhotoPlaceholderText}>📷</Text>
+                    <Text style={styles.editChildPhotoLabel}>Add Photo</Text>
+                  </View>
+                )}
+              </Pressable>
+              {editChildPhoto && (
+                <Pressable
+                  onPress={() => setEditChildPhoto(undefined)}
+                  style={styles.removePhotoButton}
+                >
+                  <Text style={styles.removePhotoText}>Remove Photo</Text>
+                </Pressable>
+              )}
+            </View>
+
+            {/* Name Field */}
+            <Text style={styles.inputLabel}>Name *</Text>
+            <TextInput
+              style={styles.textInput}
+              value={editChildName}
+              onChangeText={setEditChildName}
+              placeholder="Child's name"
+              autoCapitalize="words"
+              testID="edit-child-name-input"
+            />
+
+            {/* Nickname Field */}
+            <Text style={styles.inputLabel}>Nickname</Text>
+            <TextInput
+              style={styles.textInput}
+              value={editChildNickname}
+              onChangeText={setEditChildNickname}
+              placeholder="Optional nickname"
+              autoCapitalize="words"
+              testID="edit-child-nickname-input"
+            />
+
+            {/* Date of Birth */}
+            <Text style={styles.inputLabel}>Date of Birth *</Text>
+            <Pressable
+              style={styles.dateButton}
+              onPress={() => setModalState("editChildDob")}
+              testID="edit-child-dob-button"
+            >
+              <Text style={styles.dateButtonText}>
+                {editChildDob.toLocaleDateString("en-SG", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </Text>
+            </Pressable>
+
+            {modalState === "editChildDob" && (
+              <View style={styles.dobPickerContainer}>
+                <DateTimePicker
+                  testID="edit-child-dob-picker"
+                  value={editChildDob}
+                  mode="date"
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  onChange={handleChildDobChange}
+                  maximumDate={new Date()}
+                />
+              </View>
+            )}
+
+            {/* Cultural Tradition */}
+            <Text style={styles.inputLabel}>Cultural Tradition</Text>
+            <View style={styles.cultureOptions}>
+              {(["chinese", "malay", "indian", "none"] as const).map(
+                (culture) => (
+                  <Pressable
+                    key={culture}
+                    style={[
+                      styles.cultureOption,
+                      editChildCulture === culture &&
+                        styles.cultureOptionSelected,
+                    ]}
+                    onPress={() => setEditChildCulture(culture)}
+                    testID={`culture-option-${culture}`}
+                  >
+                    <Text
+                      style={[
+                        styles.cultureOptionText,
+                        editChildCulture === culture &&
+                          styles.cultureOptionTextSelected,
+                      ]}
+                    >
+                      {getCultureLabel(culture)}
+                    </Text>
+                  </Pressable>
+                ),
+              )}
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </Modal>
     </ScrollView>
   );
 }
@@ -1420,5 +1704,162 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 16,
     marginBottom: 32,
+  },
+  // Child profile styles
+  childProfileContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 8,
+  },
+  childProfileInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  childPhoto: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 12,
+  },
+  childPhotoPlaceholder: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#f0f0f0",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  childPhotoPlaceholderText: {
+    fontSize: 28,
+  },
+  childDetails: {
+    flex: 1,
+  },
+  childName: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#000",
+  },
+  childNickname: {
+    fontSize: 14,
+    color: "#666",
+    fontStyle: "italic",
+    marginTop: 2,
+  },
+  childDob: {
+    fontSize: 14,
+    color: "#666",
+    marginTop: 2,
+  },
+  childCulture: {
+    fontSize: 13,
+    color: PRIMARY_COLOR,
+    marginTop: 2,
+  },
+  editChildButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  editChildButtonText: {
+    fontSize: 16,
+    color: PRIMARY_COLOR,
+    fontWeight: "500",
+  },
+  noChildText: {
+    fontSize: 15,
+    color: "#999",
+    textAlign: "center",
+    paddingVertical: 16,
+  },
+  // Edit child modal styles
+  editChildContent: {
+    padding: 16,
+  },
+  editChildPhotoSection: {
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  editChildPhotoButton: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    overflow: "hidden",
+  },
+  editChildPhotoImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  editChildPhotoPlaceholder: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: "#f0f0f0",
+    borderWidth: 2,
+    borderColor: "#e0e0e0",
+    borderStyle: "dashed",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  editChildPhotoPlaceholderText: {
+    fontSize: 32,
+    marginBottom: 4,
+  },
+  editChildPhotoLabel: {
+    fontSize: 12,
+    color: "#666",
+  },
+  removePhotoButton: {
+    marginTop: 8,
+    paddingVertical: 4,
+  },
+  removePhotoText: {
+    fontSize: 14,
+    color: "#ff3b30",
+  },
+  dateButton: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
+  dateButtonText: {
+    fontSize: 16,
+    color: "#000",
+  },
+  dobPickerContainer: {
+    marginTop: 12,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+  },
+  cultureOptions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  cultureOption: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: "#f0f0f0",
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
+  cultureOptionSelected: {
+    backgroundColor: `${PRIMARY_COLOR}10`,
+    borderColor: PRIMARY_COLOR,
+  },
+  cultureOptionText: {
+    fontSize: 14,
+    color: "#666",
+  },
+  cultureOptionTextSelected: {
+    color: PRIMARY_COLOR,
+    fontWeight: "600",
   },
 });

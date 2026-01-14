@@ -704,3 +704,26 @@
 **Verification:** tsc, lint, test (145 passed), build all pass.
 
 **Next:** Photo book export (PRD Section 10) or Settings child profile edit
+
+## 2026-01-15: Child Profile Edit in Settings
+
+**PRD ref:** Phase 1 Weeks 12-13 (Polish), Section 2.1 (Child Profile)
+
+**Task:** Add child profile display and edit capability to Settings screen
+
+**Decisions:**
+- Added Child Profile section between Notifications and Family sections
+- Profile shows: photo (or placeholder), name, nickname, DOB, cultural tradition
+- Edit button opens modal with full profile editing (reuses onboarding patterns)
+- Edit modal includes: photo picker, name, nickname, DOB picker, cultural tradition selector
+- Used updateChild from ChildContext for partial updates
+- Empty state shows "No child profile added" when no child exists
+- TDD approach: 5 new tests added to existing settings.test.tsx
+
+**Files changed:**
+- app/(tabs)/settings.tsx - Added child profile section, edit modal, handlers, styles
+- __tests__/app/tabs/settings.test.tsx - Added 5 TDD tests for child profile, plus test helpers
+
+**Verification:** tsc, lint, test (150 passed), build all pass.
+
+**Next:** Photo book export (PRD Section 10) or UI polish
