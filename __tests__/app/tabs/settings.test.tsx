@@ -9,6 +9,7 @@ import { FamilyProvider } from "@/contexts/family-context";
 import { MilestoneProvider } from "@/contexts/milestone-context";
 import { UserPreferencesProvider } from "@/contexts/user-preferences-context";
 import { StorageProvider } from "@/contexts/storage-context";
+import { SubscriptionProvider } from "@/contexts/subscription-context";
 
 // Mock expo-notifications
 jest.mock("expo-notifications", () => ({
@@ -59,7 +60,9 @@ const renderWithProviders = (component: React.ReactElement) => {
               <FamilyProvider>
                 <UserPreferencesProvider>
                   <StorageProvider>
-                    <ExportProvider>{component}</ExportProvider>
+                    <SubscriptionProvider>
+                      <ExportProvider>{component}</ExportProvider>
+                    </SubscriptionProvider>
                   </StorageProvider>
                 </UserPreferencesProvider>
               </FamilyProvider>
@@ -77,6 +80,7 @@ describe("SettingsScreen", () => {
 
     expect(screen.getByText("Notifications")).toBeTruthy();
     expect(screen.getByText("Family")).toBeTruthy();
+    expect(screen.getByText("Subscription")).toBeTruthy();
     expect(screen.getByText("Storage")).toBeTruthy();
     expect(screen.getByText("Data & Privacy")).toBeTruthy();
     expect(screen.getByText("Account")).toBeTruthy();
@@ -130,9 +134,9 @@ describe("SettingsScreen", () => {
   it("renders storage section with tier and usage", () => {
     renderWithProviders(<SettingsScreen />);
 
-    // Free tier by default - text may be split across elements
-    expect(screen.getByText(/Free/)).toBeTruthy();
-    expect(screen.getByText(/Plan/)).toBeTruthy();
+    // Free tier by default - multiple elements contain "Free" and "Plan"
+    expect(screen.getAllByText(/Free/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Plan/).length).toBeGreaterThan(0);
     // 0 bytes used of 500MB limit
     expect(screen.getByText(/0 B/)).toBeTruthy();
     expect(screen.getByText(/500 MB/)).toBeTruthy();

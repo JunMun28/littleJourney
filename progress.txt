@@ -628,3 +628,32 @@
 **Verification:** tsc, lint, test (127 passed), build all pass.
 
 **Next:** Stripe payments integration (PRD Section 12.2) or UI polish
+
+## 2026-01-15: Subscription Context and Upgrade Flow
+
+**PRD ref:** Phase 1 Weeks 12-13, Section 12 (Monetization)
+
+**Task:** Implement subscription/payment infrastructure and upgrade UI per PRD 12.1-12.3
+
+**Decisions:**
+- Created SubscriptionContext + useSubscription hook for subscription state management (TDD approach)
+- PLAN_DETAILS constant with PRD prices: Standard $4.99/mo ($39.99/yr), Premium $9.99/mo ($79.99/yr)
+- BillingCycle type: "monthly" | "yearly"
+- subscribe() method handles plan subscription (mock, ready for Stripe integration)
+- cancelSubscription() marks subscription for cancellation (access until period ends per PRD 12.3)
+- restoreSubscription() unmarks cancelled subscription
+- Added Subscription section to Settings with plan display, cancel/restore buttons
+- Subscription modal: billing cycle toggle, plan cards with features, subscribe button
+- Storage context setTier synced with subscription changes
+- Upgrade prompt in Storage section now opens subscription modal
+
+**Files changed:**
+- contexts/subscription-context.tsx - New: SubscriptionProvider, useSubscription, PLAN_DETAILS, types
+- app/_layout.tsx - Added SubscriptionProvider wrapper
+- app/(tabs)/settings.tsx - Added subscription section, upgrade modal, cancel/restore flow
+- __tests__/contexts/subscription-context.test.tsx - New: 10 TDD tests for subscription context
+- __tests__/app/tabs/settings.test.tsx - Added SubscriptionProvider, updated tests
+
+**Verification:** tsc, lint, test (136 passed), build all pass.
+
+**Next:** UI polish or integrate with actual Stripe SDK

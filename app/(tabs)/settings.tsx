@@ -23,11 +23,21 @@ import {
 } from "@/contexts/notification-context";
 import { useFamily, type PermissionLevel } from "@/contexts/family-context";
 import { useUserPreferences } from "@/contexts/user-preferences-context";
-import { useStorage } from "@/contexts/storage-context";
+import { useStorage, type SubscriptionTier } from "@/contexts/storage-context";
+import {
+  useSubscription,
+  PLAN_DETAILS,
+  type BillingCycle,
+} from "@/contexts/subscription-context";
 
 const PRIMARY_COLOR = "#0a7ea4";
 
-type ModalState = "closed" | "inviteFamily" | "timePicker" | "deleteAccount";
+type ModalState =
+  | "closed"
+  | "inviteFamily"
+  | "timePicker"
+  | "deleteAccount"
+  | "subscription";
 
 function formatDisplayTime(time: string): string {
   const [hours, minutes] = time.split(":").map(Number);
@@ -89,8 +99,19 @@ export default function SettingsScreen() {
   } = useNotifications();
   const { familyMembers, inviteFamilyMember, removeFamilyMember } = useFamily();
   const { dailyPromptTime, setDailyPromptTime } = useUserPreferences();
-  const { usedBytes, limitBytes, usagePercent, tier } = useStorage();
+  const { usedBytes, limitBytes, usagePercent, tier, setTier } = useStorage();
   const { exportData, isExporting, lastExportDate } = useExport();
+  const {
+    currentPlan,
+    billingCycle,
+    isSubscribed,
+    cancelledAt,
+    currentPeriodEnd,
+    subscribe,
+    cancelSubscription,
+    restoreSubscription,
+    isLoading: isSubscriptionLoading,
+  } = useSubscription();
 
   const [modalState, setModalState] = useState<ModalState>("closed");
   const [selectedTime, setSelectedTime] = useState<Date>(() =>
@@ -101,6 +122,9 @@ export default function SettingsScreen() {
   const [invitePermission, setInvitePermission] =
     useState<PermissionLevel>("view_interact");
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [selectedPlan, setSelectedPlan] =
+    useState<SubscriptionTier>("standard");
+  const [selectedCycle, setSelectedCycle] = useState<BillingCycle>("monthly");
 
   const handleToggleNotification = async (
     key: keyof NotificationSettings,
@@ -189,6 +213,42 @@ export default function SettingsScreen() {
   };
 
   const isDeleteConfirmValid = deleteConfirmText === "DELETE";
+
+  const handleSubscribe = async () => {
+    await subscribe(selectedPlan, selectedCycle);
+    // Sync storage tier with subscription
+    setTier(selectedPlan);
+    setModalState("closed");
+  };
+
+  const handleCancelSubscription = async () => {
+    Alert.alert(
+      "Cancel Subscription",
+      "Your subscription will remain active until the end of your current billing period.",
+      [
+        { text: "Keep Subscription", style: "cancel" },
+        {
+          text: "Cancel",
+          style: "destructive",
+          onPress: async () => {
+            await cancelSubscription();
+          },
+        },
+      ],
+    );
+  };
+
+  const handleRestoreSubscription = async () => {
+    await restoreSubscription();
+  };
+
+  const getPrice = (plan: SubscriptionTier, cycle: BillingCycle): string => {
+    const details = PLAN_DETAILS[plan];
+    const price =
+      cycle === "monthly" ? details.monthlyPrice : details.yearlyPrice;
+    const suffix = cycle === "monthly" ? "/mo" : "/yr";
+    return `$${price.toFixed(2)}${suffix}`;
+  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -326,6 +386,66 @@ export default function SettingsScreen() {
         )}
       </View>
 
+      {/* Subscription Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionHeader}>Subscription</Text>
+
+        <View style={styles.subscriptionContainer}>
+          <View style={styles.subscriptionHeader}>
+            <Text style={styles.subscriptionPlan}>
+              {PLAN_DETAILS[currentPlan].name} Plan
+            </Text>
+            {isSubscribed && billingCycle && (
+              <Text style={styles.subscriptionCycle}>
+                {billingCycle === "monthly" ? "Monthly" : "Yearly"}
+              </Text>
+            )}
+          </View>
+
+          {isSubscribed && currentPeriodEnd && (
+            <Text style={styles.subscriptionPeriod}>
+              {cancelledAt ? "Access until" : "Renews"}{" "}
+              {new Date(currentPeriodEnd).toLocaleDateString("en-SG", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
+            </Text>
+          )}
+
+          {cancelledAt ? (
+            <View style={styles.cancelledBanner}>
+              <Text style={styles.cancelledText}>
+                Your subscription has been cancelled
+              </Text>
+              <Pressable
+                style={styles.restoreButton}
+                onPress={handleRestoreSubscription}
+                disabled={isSubscriptionLoading}
+              >
+                <Text style={styles.restoreButtonText}>Restore</Text>
+              </Pressable>
+            </View>
+          ) : isSubscribed ? (
+            <Pressable
+              style={styles.managePlanButton}
+              onPress={handleCancelSubscription}
+              disabled={isSubscriptionLoading}
+            >
+              <Text style={styles.managePlanText}>Cancel Subscription</Text>
+            </Pressable>
+          ) : (
+            <Pressable
+              style={styles.upgradeButton}
+              onPress={() => setModalState("subscription")}
+              testID="upgrade-button"
+            >
+              <Text style={styles.upgradeButtonText}>Upgrade Plan</Text>
+            </Pressable>
+          )}
+        </View>
+      </View>
+
       {/* Storage Section */}
       <View style={styles.section}>
         <Text style={styles.sectionHeader}>Storage</Text>
@@ -360,11 +480,14 @@ export default function SettingsScreen() {
           <Text style={styles.storagePercent}>{usagePercent}% used</Text>
 
           {tier === "free" && (
-            <View style={styles.upgradePrompt}>
+            <Pressable
+              style={styles.upgradePrompt}
+              onPress={() => setModalState("subscription")}
+            >
               <Text style={styles.upgradeText}>
                 Upgrade for more storage and video uploads
               </Text>
-            </View>
+            </Pressable>
           )}
         </View>
       </View>
@@ -652,6 +775,118 @@ export default function SettingsScreen() {
             </Pressable>
           </View>
         </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Subscription Modal */}
+      <Modal
+        visible={modalState === "subscription"}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setModalState("closed")}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Pressable onPress={() => setModalState("closed")}>
+              <Text style={styles.modalCancel}>Cancel</Text>
+            </Pressable>
+            <Text style={styles.modalTitle}>Choose Plan</Text>
+            <View style={{ width: 50 }} />
+          </View>
+
+          <ScrollView style={styles.subscriptionModalContent}>
+            {/* Billing Cycle Toggle */}
+            <View style={styles.billingToggle}>
+              <Pressable
+                style={[
+                  styles.billingOption,
+                  selectedCycle === "monthly" && styles.billingOptionSelected,
+                ]}
+                onPress={() => setSelectedCycle("monthly")}
+              >
+                <Text
+                  style={[
+                    styles.billingOptionText,
+                    selectedCycle === "monthly" &&
+                      styles.billingOptionTextSelected,
+                  ]}
+                >
+                  Monthly
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.billingOption,
+                  selectedCycle === "yearly" && styles.billingOptionSelected,
+                ]}
+                onPress={() => setSelectedCycle("yearly")}
+              >
+                <Text
+                  style={[
+                    styles.billingOptionText,
+                    selectedCycle === "yearly" &&
+                      styles.billingOptionTextSelected,
+                  ]}
+                >
+                  Yearly
+                </Text>
+                <Text style={styles.billingSave}>Save 33%</Text>
+              </Pressable>
+            </View>
+
+            {/* Plan Cards */}
+            {(["standard", "premium"] as const).map((plan) => (
+              <Pressable
+                key={plan}
+                style={[
+                  styles.planCard,
+                  selectedPlan === plan && styles.planCardSelected,
+                ]}
+                onPress={() => setSelectedPlan(plan)}
+                testID={`plan-${plan}`}
+              >
+                <View style={styles.planHeader}>
+                  <Text style={styles.planName}>{PLAN_DETAILS[plan].name}</Text>
+                  <Text style={styles.planPrice}>
+                    {getPrice(plan, selectedCycle)}
+                  </Text>
+                </View>
+                <View style={styles.planFeatures}>
+                  {PLAN_DETAILS[plan].features.map((feature, index) => (
+                    <Text key={index} style={styles.planFeature}>
+                      ✓ {feature}
+                    </Text>
+                  ))}
+                </View>
+                {selectedPlan === plan && (
+                  <View style={styles.planSelectedBadge}>
+                    <Text style={styles.planSelectedText}>Selected</Text>
+                  </View>
+                )}
+              </Pressable>
+            ))}
+
+            {/* Subscribe Button */}
+            <Pressable
+              style={[
+                styles.subscribeButton,
+                isSubscriptionLoading && styles.subscribeButtonDisabled,
+              ]}
+              onPress={handleSubscribe}
+              disabled={isSubscriptionLoading}
+              testID="subscribe-button"
+            >
+              <Text style={styles.subscribeButtonText}>
+                {isSubscriptionLoading
+                  ? "Processing..."
+                  : `Subscribe to ${PLAN_DETAILS[selectedPlan].name}`}
+              </Text>
+            </Pressable>
+
+            <Text style={styles.subscriptionDisclaimer}>
+              Payment will be processed via Stripe. You can cancel anytime.
+            </Text>
+          </ScrollView>
+        </View>
       </Modal>
     </ScrollView>
   );
@@ -1009,5 +1244,181 @@ const styles = StyleSheet.create({
   },
   deleteConfirmButtonTextDisabled: {
     color: "#999",
+  },
+  // Subscription styles
+  subscriptionContainer: {
+    paddingVertical: 8,
+  },
+  subscriptionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  subscriptionPlan: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#000",
+  },
+  subscriptionCycle: {
+    fontSize: 14,
+    color: "#666",
+    backgroundColor: "#f0f0f0",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  subscriptionPeriod: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 16,
+  },
+  upgradeButton: {
+    backgroundColor: PRIMARY_COLOR,
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  upgradeButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  managePlanButton: {
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  managePlanText: {
+    fontSize: 16,
+    color: "#ff3b30",
+  },
+  cancelledBanner: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#fff3cd",
+    padding: 12,
+    borderRadius: 8,
+  },
+  cancelledText: {
+    fontSize: 14,
+    color: "#856404",
+    flex: 1,
+  },
+  restoreButton: {
+    backgroundColor: "#856404",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  restoreButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  // Subscription modal styles
+  subscriptionModalContent: {
+    padding: 16,
+  },
+  billingToggle: {
+    flexDirection: "row",
+    backgroundColor: "#f0f0f0",
+    borderRadius: 8,
+    padding: 4,
+    marginBottom: 20,
+  },
+  billingOption: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: "center",
+    borderRadius: 6,
+  },
+  billingOptionSelected: {
+    backgroundColor: "#fff",
+  },
+  billingOptionText: {
+    fontSize: 15,
+    color: "#666",
+    fontWeight: "500",
+  },
+  billingOptionTextSelected: {
+    color: "#000",
+    fontWeight: "600",
+  },
+  billingSave: {
+    fontSize: 11,
+    color: PRIMARY_COLOR,
+    marginTop: 2,
+    fontWeight: "600",
+  },
+  planCard: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: "#e0e0e0",
+  },
+  planCardSelected: {
+    borderColor: PRIMARY_COLOR,
+  },
+  planHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  planName: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#000",
+  },
+  planPrice: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: PRIMARY_COLOR,
+  },
+  planFeatures: {
+    gap: 8,
+  },
+  planFeature: {
+    fontSize: 14,
+    color: "#666",
+  },
+  planSelectedBadge: {
+    position: "absolute",
+    top: -10,
+    right: 10,
+    backgroundColor: PRIMARY_COLOR,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  planSelectedText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  subscribeButton: {
+    backgroundColor: PRIMARY_COLOR,
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 8,
+  },
+  subscribeButtonDisabled: {
+    opacity: 0.6,
+  },
+  subscribeButtonText: {
+    color: "#fff",
+    fontSize: 17,
+    fontWeight: "600",
+  },
+  subscriptionDisclaimer: {
+    fontSize: 12,
+    color: "#999",
+    textAlign: "center",
+    marginTop: 16,
+    marginBottom: 32,
   },
 });
