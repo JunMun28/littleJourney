@@ -474,3 +474,26 @@
 **Verification:** tsc, lint, test (91 passed), build all pass.
 
 **Next:** Settings screen UI with notification toggles or family invitation flow
+
+## 2026-01-15: Settings Screen UI
+
+**PRD ref:** Phase 1 Weeks 10-11, Section 7.4 (Notification Settings), Section 6.1 (Invitation Flow)
+
+**Task:** Implement Settings screen with notification toggles, family member management, sign-out
+
+**Decisions:**
+- 3 sections: Notifications, Family, Account (iOS Settings app pattern)
+- Notification toggles: Daily Prompts, On This Day Memories, Milestone Reminders, Family Activity
+- Permission banner shown when notifications not granted (tappable to request)
+- Invite Family modal: email, relationship, permission level (view_interact/view_only)
+- Family members displayed in list with Remove option
+- Sign Out with Alert confirmation (destructive style)
+- ScrollView for content, KeyboardAvoidingView in modal
+
+**Files changed:**
+- app/(tabs)/settings.tsx - Full settings UI with toggles, family list, invite modal, sign out
+- __tests__/app/tabs/settings.test.tsx - New: 5 TDD tests for settings screen
+
+**Verification:** tsc, lint, test (96 passed), build all pass.
+
+**Next:** Remaining Phase 1 Week 12-13 items (Stripe payments, storage limits, polish) or Week 10-11 daily prompt scheduling integration
