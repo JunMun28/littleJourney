@@ -11,6 +11,7 @@ import {
   Platform,
   Pressable,
   RefreshControl,
+  Alert,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
@@ -25,6 +26,7 @@ import {
   type EntryType,
 } from "@/contexts/entry-context";
 import { useChild } from "@/contexts/child-context";
+import { useStorage } from "@/contexts/storage-context";
 
 const PRIMARY_COLOR = "#0a7ea4";
 
@@ -83,12 +85,14 @@ type CreateStep = "type" | "media" | "caption";
 export default function FeedScreen() {
   const { entries, addEntry } = useEntries();
   const { child } = useChild();
+  const { canUpload, canUploadVideo, addUsage, tier } = useStorage();
 
   const [refreshing, setRefreshing] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [createStep, setCreateStep] = useState<CreateStep>("type");
   const [selectedType, setSelectedType] = useState<EntryType | null>(null);
   const [selectedMedia, setSelectedMedia] = useState<string[]>([]);
+  const [selectedMediaSizes, setSelectedMediaSizes] = useState<number[]>([]);
   const [caption, setCaption] = useState("");
 
   const resetCreation = () => {
@@ -96,6 +100,7 @@ export default function FeedScreen() {
     setCreateStep("type");
     setSelectedType(null);
     setSelectedMedia([]);
+    setSelectedMediaSizes([]);
     setCaption("");
   };
 
@@ -113,7 +118,18 @@ export default function FeedScreen() {
     if (type === "text") {
       // Skip media selection for text entries
       setCreateStep("caption");
-    } else {
+    } else if (type === "video") {
+      // Check video permission for tier first
+      if (tier === "free") {
+        Alert.alert(
+          "Video Not Available",
+          "Video uploads are available on Standard and Premium plans. Upgrade to start capturing video moments!",
+          [{ text: "OK" }],
+        );
+        setSelectedType(null);
+        return;
+      }
+
       // Request permission and open picker
       const { status } =
         await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -122,19 +138,75 @@ export default function FeedScreen() {
         return;
       }
 
-      const mediaType =
-        type === "photo"
-          ? ImagePicker.MediaTypeOptions.Images
-          : ImagePicker.MediaTypeOptions.Videos;
-
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: mediaType,
-        allowsMultipleSelection: type === "photo",
+        mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+        allowsMultipleSelection: false,
         quality: 0.8,
       });
 
       if (!result.canceled && result.assets.length > 0) {
+        const video = result.assets[0];
+        const duration = video.duration ? video.duration / 1000 : 0; // ms to seconds
+        const fileSize = video.fileSize ?? 0;
+
+        // Check video duration limit
+        if (!canUploadVideo(duration)) {
+          const maxMinutes = tier === "standard" ? 2 : 10;
+          Alert.alert(
+            "Video Too Long",
+            `Your ${tier} plan allows videos up to ${maxMinutes} minutes. This video is ${Math.ceil(duration / 60)} minutes.`,
+            [{ text: "OK" }],
+          );
+          return;
+        }
+
+        // Check storage limit
+        if (!canUpload(fileSize)) {
+          Alert.alert(
+            "Storage Limit Reached",
+            "You don't have enough storage space for this video. Please upgrade your plan or free up space.",
+            [{ text: "OK" }],
+          );
+          return;
+        }
+
+        setSelectedMedia([video.uri]);
+        setSelectedMediaSizes([fileSize]);
+        setCreateStep("caption");
+      }
+    } else {
+      // Photo flow
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        alert("Permission to access media library is required.");
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsMultipleSelection: true,
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets.length > 0) {
+        const totalSize = result.assets.reduce(
+          (sum, a) => sum + (a.fileSize ?? 0),
+          0,
+        );
+
+        // Check storage limit
+        if (!canUpload(totalSize)) {
+          Alert.alert(
+            "Storage Limit Reached",
+            "You don't have enough storage space for these photos. Please upgrade your plan or free up space.",
+            [{ text: "OK" }],
+          );
+          return;
+        }
+
         setSelectedMedia(result.assets.map((a) => a.uri));
+        setSelectedMediaSizes(result.assets.map((a) => a.fileSize ?? 0));
         setCreateStep("caption");
       }
     }
@@ -151,6 +223,12 @@ export default function FeedScreen() {
       caption: caption.trim() || undefined,
       date: today,
     });
+
+    // Track storage usage for uploaded media
+    if (selectedMediaSizes.length > 0) {
+      const totalSize = selectedMediaSizes.reduce((sum, size) => sum + size, 0);
+      addUsage(totalSize);
+    }
 
     resetCreation();
   };

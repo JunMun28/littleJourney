@@ -545,3 +545,31 @@
 **Verification:** tsc, lint, test (105 passed), build all pass.
 
 **Next:** Integrate storage tracking with entry creation or Settings screen storage display
+
+## 2026-01-15: Storage Integration with Entry Creation + Settings Display
+
+**PRD ref:** Phase 1 Weeks 12-13, Section 9.1 (Video Tier Limits), Section 12.1 (Tier Structure)
+
+**Task:** Integrate storage limits with entry creation flow and display storage in Settings
+
+**Decisions:**
+- Feed screen now checks storage limits before allowing photo/video uploads
+- Video button shows "Video Not Available" alert on free tier (no video allowed)
+- Video uploads check duration limit: standard=2min, premium=10min
+- Photo/video uploads check total file size against storage limit
+- File sizes tracked from ImagePicker assets and added to storage usage on submit
+- Settings screen shows new Storage section with:
+  - Plan name (Free/Standard/Premium)
+  - Usage bar with color: green (<80%), yellow (80-90%), red (>90%)
+  - Usage text: "X B of Y MB" and "N% used"
+  - Upgrade prompt on free tier
+
+**Files changed:**
+- app/(tabs)/index.tsx - Added useStorage hook, storage/video checks in handleTypeSelect, track usage in handleSubmit
+- app/(tabs)/settings.tsx - Added Storage section with progress bar, tier display, upgrade prompt
+- __tests__/app/tabs/feed.test.tsx - New: 6 TDD tests for storage validation
+- __tests__/app/tabs/settings.test.tsx - Added StorageProvider, 2 tests for storage section
+
+**Verification:** tsc, lint, test (113 passed), build all pass.
+
+**Next:** Stripe payments integration (PRD Section 12.2) or UI polish

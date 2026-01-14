@@ -4,6 +4,7 @@ import { AuthProvider } from "@/contexts/auth-context";
 import { NotificationProvider } from "@/contexts/notification-context";
 import { FamilyProvider } from "@/contexts/family-context";
 import { UserPreferencesProvider } from "@/contexts/user-preferences-context";
+import { StorageProvider } from "@/contexts/storage-context";
 
 // Mock expo-notifications
 jest.mock("expo-notifications", () => ({
@@ -32,7 +33,9 @@ const renderWithProviders = (component: React.ReactElement) => {
     <AuthProvider>
       <NotificationProvider>
         <FamilyProvider>
-          <UserPreferencesProvider>{component}</UserPreferencesProvider>
+          <UserPreferencesProvider>
+            <StorageProvider>{component}</StorageProvider>
+          </UserPreferencesProvider>
         </FamilyProvider>
       </NotificationProvider>
     </AuthProvider>,
@@ -45,6 +48,7 @@ describe("SettingsScreen", () => {
 
     expect(screen.getByText("Notifications")).toBeTruthy();
     expect(screen.getByText("Family")).toBeTruthy();
+    expect(screen.getByText("Storage")).toBeTruthy();
     expect(screen.getByText("Account")).toBeTruthy();
   });
 
@@ -91,5 +95,25 @@ describe("SettingsScreen", () => {
     renderWithProviders(<SettingsScreen />);
 
     expect(screen.getByText("Not set")).toBeTruthy();
+  });
+
+  it("renders storage section with tier and usage", () => {
+    renderWithProviders(<SettingsScreen />);
+
+    // Free tier by default - text may be split across elements
+    expect(screen.getByText(/Free/)).toBeTruthy();
+    expect(screen.getByText(/Plan/)).toBeTruthy();
+    // 0 bytes used of 500MB limit
+    expect(screen.getByText(/0 B/)).toBeTruthy();
+    expect(screen.getByText(/500 MB/)).toBeTruthy();
+    expect(screen.getByText(/0.*% used/)).toBeTruthy();
+  });
+
+  it("shows upgrade prompt on free tier", () => {
+    renderWithProviders(<SettingsScreen />);
+
+    expect(
+      screen.getByText("Upgrade for more storage and video uploads"),
+    ).toBeTruthy();
   });
 });

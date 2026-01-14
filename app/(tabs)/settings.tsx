@@ -22,6 +22,7 @@ import {
 } from "@/contexts/notification-context";
 import { useFamily, type PermissionLevel } from "@/contexts/family-context";
 import { useUserPreferences } from "@/contexts/user-preferences-context";
+import { useStorage } from "@/contexts/storage-context";
 
 const PRIMARY_COLOR = "#0a7ea4";
 
@@ -55,6 +56,20 @@ function dateToTimeString(date: Date): string {
   return `${hours}:${minutes}`;
 }
 
+function formatBytes(bytes: number): string {
+  if (bytes === 0) return "0 B";
+  const units = ["B", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  const value = bytes / Math.pow(1024, i);
+  // Show decimal only for GB or non-round numbers
+  const decimals = i >= 3 || value % 1 !== 0 ? 1 : 0;
+  return `${value.toFixed(decimals)} ${units[i]}`;
+}
+
+function getTierDisplayName(tier: string): string {
+  return tier.charAt(0).toUpperCase() + tier.slice(1);
+}
+
 export default function SettingsScreen() {
   const { user, signOut } = useAuth();
   const {
@@ -67,6 +82,7 @@ export default function SettingsScreen() {
   } = useNotifications();
   const { familyMembers, inviteFamilyMember, removeFamilyMember } = useFamily();
   const { dailyPromptTime, setDailyPromptTime } = useUserPreferences();
+  const { usedBytes, limitBytes, usagePercent, tier } = useStorage();
 
   const [modalState, setModalState] = useState<ModalState>("closed");
   const [selectedTime, setSelectedTime] = useState<Date>(() =>
@@ -287,6 +303,49 @@ export default function SettingsScreen() {
             ))}
           </View>
         )}
+      </View>
+
+      {/* Storage Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionHeader}>Storage</Text>
+
+        <View style={styles.storageContainer}>
+          <View style={styles.storageHeader}>
+            <Text style={styles.storageTier}>
+              {getTierDisplayName(tier)} Plan
+            </Text>
+            <Text style={styles.storageUsage}>
+              {formatBytes(usedBytes)} of {formatBytes(limitBytes)}
+            </Text>
+          </View>
+
+          <View style={styles.progressBarContainer}>
+            <View
+              style={[
+                styles.progressBarFill,
+                {
+                  width: `${Math.min(usagePercent, 100)}%`,
+                  backgroundColor:
+                    usagePercent >= 90
+                      ? "#ff3b30"
+                      : usagePercent >= 80
+                        ? "#ff9500"
+                        : PRIMARY_COLOR,
+                },
+              ]}
+            />
+          </View>
+
+          <Text style={styles.storagePercent}>{usagePercent}% used</Text>
+
+          {tier === "free" && (
+            <View style={styles.upgradePrompt}>
+              <Text style={styles.upgradeText}>
+                Upgrade for more storage and video uploads
+              </Text>
+            </View>
+          )}
+        </View>
       </View>
 
       {/* Account Section */}
@@ -631,5 +690,50 @@ const styles = StyleSheet.create({
   timePickerContainer: {
     alignItems: "center",
     paddingVertical: 20,
+  },
+  // Storage styles
+  storageContainer: {
+    paddingVertical: 8,
+  },
+  storageHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  storageTier: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#000",
+  },
+  storageUsage: {
+    fontSize: 14,
+    color: "#666",
+  },
+  progressBarContainer: {
+    height: 8,
+    backgroundColor: "#e0e0e0",
+    borderRadius: 4,
+    overflow: "hidden",
+  },
+  progressBarFill: {
+    height: "100%",
+    borderRadius: 4,
+  },
+  storagePercent: {
+    fontSize: 13,
+    color: "#666",
+    marginTop: 8,
+  },
+  upgradePrompt: {
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: `${PRIMARY_COLOR}10`,
+    borderRadius: 8,
+  },
+  upgradeText: {
+    fontSize: 14,
+    color: PRIMARY_COLOR,
+    textAlign: "center",
   },
 });
