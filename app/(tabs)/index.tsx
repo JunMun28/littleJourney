@@ -16,6 +16,7 @@ import * as ImagePicker from "expo-image-picker";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { PhotoCarousel } from "@/components/photo-carousel";
 import {
   useEntries,
   type Entry,
@@ -55,10 +56,7 @@ function EntryCard({ entry }: EntryCardProps) {
       {entry.type === "photo" &&
         entry.mediaUris &&
         entry.mediaUris.length > 0 && (
-          <Image
-            source={{ uri: entry.mediaUris[0] }}
-            style={styles.cardImage}
-          />
+          <PhotoCarousel images={entry.mediaUris} />
         )}
       {entry.type === "video" &&
         entry.mediaUris &&
@@ -71,11 +69,6 @@ function EntryCard({ entry }: EntryCardProps) {
         <ThemedText style={styles.cardCaption}>{entry.caption}</ThemedText>
       )}
       <ThemedText style={styles.cardDate}>{formattedDate}</ThemedText>
-      {entry.mediaUris && entry.mediaUris.length > 1 && (
-        <ThemedText style={styles.carouselIndicator}>
-          1/{entry.mediaUris.length}
-        </ThemedText>
-      )}
     </View>
   );
 }
@@ -301,10 +294,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     backgroundColor: "rgba(128, 128, 128, 0.1)",
   },
-  cardImage: {
-    width: "100%",
-    aspectRatio: 1,
-  },
   videoPlaceholder: {
     width: "100%",
     aspectRatio: 16 / 9,
@@ -324,18 +313,6 @@ const styles = StyleSheet.create({
     paddingTop: 4,
     opacity: 0.6,
     fontSize: 14,
-  },
-  carouselIndicator: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    color: "#fff",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    fontSize: 12,
-    overflow: "hidden",
   },
   fab: {
     position: "absolute",

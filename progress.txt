@@ -250,3 +250,27 @@
 **Verification:** tsc, lint, test (43 passed), build all pass.
 
 **Next:** Entry detail view, photo carousel swipe, or edit/delete entries per PRD Section 4
+
+## 2026-01-15: Photo Carousel Component
+
+**PRD ref:** Phase 1 Weeks 5-7, Section 4.3 (Photo Carousel)
+
+**Task:** Implement swipeable photo carousel for multi-photo entries with dot indicators
+
+**Decisions:**
+- Created PhotoCarousel component with horizontal ScrollView + pagingEnabled
+- Dot indicators shown only when images.length > 1
+- Active dot opacity 1, inactive 0.4 for visual feedback
+- onImagePress callback for future full-screen view integration
+- Configurable aspectRatio prop (default 1:1 square)
+- Used onScroll with scrollEventThrottle to track active index
+- Removed old carouselIndicator text ("1/N") in favor of dots
+
+**Files changed:**
+- components/photo-carousel.tsx - New: PhotoCarousel with swipe + dots
+- __tests__/components/photo-carousel.test.tsx - New: 5 TDD tests
+- app/(tabs)/index.tsx - Integrated PhotoCarousel, removed cardImage/carouselIndicator styles
+
+**Verification:** tsc, lint, test (48 passed), build all pass.
+
+**Next:** Entry detail view (full-screen on tap) or edit/delete entries per PRD Section 3.6
