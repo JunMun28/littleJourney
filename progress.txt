@@ -123,3 +123,31 @@
 **Verification:** tsc, lint, test (19 passed), build all pass. UI verified via Chrome MCP.
 
 **Next:** Daily prompt time selection (step 4) or invite family member (step 5)
+
+## 2026-01-15: Daily Prompt Time Selection Screen
+
+**PRD ref:** Phase 1 Weeks 3-4, Section 1.3 Step 4 (Set daily prompt time)
+
+**Task:** Implement daily prompt time selection as step 4 of onboarding flow
+
+**Decisions:**
+- Created UserPreferencesContext + useUserPreferences hook for user settings (TDD approach)
+- dailyPromptTime stored as 24-hour string "HH:mm" (e.g., "20:00")
+- Default time: 8:00 PM SGT per PRD
+- Used @react-native-community/datetimepicker with 5-minute intervals
+- Platform-specific display: iOS spinner, Android default picker
+- Skip option available (completes onboarding without setting time)
+- Continue saves time and completes onboarding
+- select-culture now navigates to set-prompt-time instead of completing onboarding
+
+**Files changed:**
+- contexts/user-preferences-context.tsx - New: UserPreferencesProvider, useUserPreferences hook
+- app/_layout.tsx - Added UserPreferencesProvider wrapper
+- app/(onboarding)/set-prompt-time.tsx - New: Time picker screen with skip option
+- app/(onboarding)/_layout.tsx - Added set-prompt-time Stack.Screen
+- app/(onboarding)/select-culture.tsx - Navigate to set-prompt-time instead of completeOnboarding
+- __tests__/contexts/user-preferences-context.test.tsx - New: 5 TDD tests for user preferences
+
+**Verification:** tsc, lint, test (24 passed), build all pass. Route protection verified via Chrome MCP.
+
+**Next:** Invite family member (step 5) or first entry prompt (step 6)

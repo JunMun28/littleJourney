@@ -21,6 +21,12 @@ export default function OnboardingLayout() {
           title: "Cultural Traditions",
         }}
       />
+      <Stack.Screen
+        name="set-prompt-time"
+        options={{
+          title: "Daily Reminder",
+        }}
+      />
     </Stack>
   );
 }

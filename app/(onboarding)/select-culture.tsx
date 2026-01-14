@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { StyleSheet, Pressable, Text, View } from "react-native";
+import { router } from "expo-router";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { useAuth } from "@/contexts/auth-context";
 import { useChild, type CulturalTradition } from "@/contexts/child-context";
 import { useThemeColor } from "@/hooks/use-theme-color";
 
@@ -39,18 +39,17 @@ const CULTURE_OPTIONS: CultureOption[] = [
 ];
 
 export default function SelectCultureScreen() {
-  const { completeOnboarding } = useAuth();
   const { updateChild } = useChild();
   const borderColor = useThemeColor({}, "icon");
 
   const [selectedCulture, setSelectedCulture] =
     useState<CulturalTradition | null>(null);
 
-  const handleContinue = async () => {
+  const handleContinue = () => {
     if (!selectedCulture) return;
 
     updateChild({ culturalTradition: selectedCulture });
-    await completeOnboarding();
+    router.push("/(onboarding)/set-prompt-time");
   };
 
   const isFormValid = selectedCulture !== null;
