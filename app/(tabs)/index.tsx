@@ -27,8 +27,13 @@ import {
 } from "@/contexts/entry-context";
 import { useChild } from "@/contexts/child-context";
 import { useStorage } from "@/contexts/storage-context";
-
-const PRIMARY_COLOR = "#0a7ea4";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import {
+  PRIMARY_COLOR,
+  Colors,
+  SemanticColors,
+  Shadows,
+} from "@/constants/theme";
 
 function EmptyState() {
   return (
@@ -50,6 +55,9 @@ interface OnThisDayCardProps {
 }
 
 function OnThisDayCard({ memories, onPress }: OnThisDayCardProps) {
+  const colorScheme = useColorScheme() ?? "light";
+  const colors = Colors[colorScheme];
+
   if (memories.length === 0) return null;
 
   const yearsAgo = (date: string) => {
@@ -85,7 +93,12 @@ function OnThisDayCard({ memories, onPress }: OnThisDayCardProps) {
                 style={styles.onThisDayImage}
               />
             ) : (
-              <View style={styles.onThisDayTextPlaceholder}>
+              <View
+                style={[
+                  styles.onThisDayTextPlaceholder,
+                  { backgroundColor: colors.backgroundTertiary },
+                ]}
+              >
                 <ThemedText style={styles.onThisDayPlaceholderIcon}>
                   ✏️
                 </ThemedText>
@@ -107,6 +120,9 @@ interface EntryCardProps {
 }
 
 function EntryCard({ entry, onPress }: EntryCardProps) {
+  const colorScheme = useColorScheme() ?? "light";
+  const colors = Colors[colorScheme];
+
   const formattedDate = new Date(entry.date).toLocaleDateString("en-SG", {
     day: "numeric",
     month: "short",
@@ -114,7 +130,10 @@ function EntryCard({ entry, onPress }: EntryCardProps) {
   });
 
   return (
-    <Pressable onPress={onPress} style={styles.card}>
+    <Pressable
+      onPress={onPress}
+      style={[styles.card, { backgroundColor: colors.backgroundSecondary }]}
+    >
       {entry.type === "photo" &&
         entry.mediaUris &&
         entry.mediaUris.length > 0 && (
@@ -143,6 +162,8 @@ export default function FeedScreen() {
   const { entries, addEntry, getOnThisDayEntries } = useEntries();
   const { child } = useChild();
   const { canUpload, canUploadVideo, addUsage, tier } = useStorage();
+  const colorScheme = useColorScheme() ?? "light";
+  const colors = Colors[colorScheme];
   const onThisDayMemories = getOnThisDayEntries();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -343,9 +364,14 @@ export default function FeedScreen() {
       >
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.modalContainer}
+          style={[
+            styles.modalContainer,
+            { backgroundColor: colors.background },
+          ]}
         >
-          <View style={styles.modalHeader}>
+          <View
+            style={[styles.modalHeader, { borderBottomColor: colors.border }]}
+          >
             <Pressable onPress={resetCreation}>
               <ThemedText style={styles.cancelButton}>Cancel</ThemedText>
             </Pressable>
@@ -360,21 +386,30 @@ export default function FeedScreen() {
               </ThemedText>
               <View style={styles.typeOptions}>
                 <TouchableOpacity
-                  style={styles.typeOption}
+                  style={[
+                    styles.typeOption,
+                    { backgroundColor: colors.backgroundSecondary },
+                  ]}
                   onPress={() => handleTypeSelect("photo")}
                 >
                   <ThemedText style={styles.typeIcon}>📷</ThemedText>
                   <ThemedText>Photo</ThemedText>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.typeOption}
+                  style={[
+                    styles.typeOption,
+                    { backgroundColor: colors.backgroundSecondary },
+                  ]}
                   onPress={() => handleTypeSelect("video")}
                 >
                   <ThemedText style={styles.typeIcon}>🎬</ThemedText>
                   <ThemedText>Video</ThemedText>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.typeOption}
+                  style={[
+                    styles.typeOption,
+                    { backgroundColor: colors.backgroundSecondary },
+                  ]}
                   onPress={() => handleTypeSelect("text")}
                 >
                   <ThemedText style={styles.typeIcon}>✏️</ThemedText>
@@ -393,9 +428,15 @@ export default function FeedScreen() {
                 />
               )}
               <TextInput
-                style={styles.captionInput}
+                style={[
+                  styles.captionInput,
+                  {
+                    borderColor: colors.inputBorder,
+                    color: colors.text,
+                  },
+                ]}
                 placeholder={`What's ${child?.nickname || child?.name || "your little one"} up to?`}
-                placeholderTextColor="#999"
+                placeholderTextColor={colors.placeholder}
                 value={caption}
                 onChangeText={setCaption}
                 multiline
@@ -446,7 +487,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderRadius: 12,
     overflow: "hidden",
-    backgroundColor: "rgba(128, 128, 128, 0.1)",
   },
   cardCaption: {
     padding: 12,
@@ -468,11 +508,7 @@ const styles = StyleSheet.create({
     backgroundColor: PRIMARY_COLOR,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+    ...Shadows.large,
   },
   fabIcon: {
     fontSize: 32,
@@ -481,7 +517,6 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: "#fff",
   },
   modalHeader: {
     flexDirection: "row",
@@ -489,7 +524,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#ccc",
   },
   cancelButton: {
     color: PRIMARY_COLOR,
@@ -512,7 +546,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     borderRadius: 12,
-    backgroundColor: "rgba(128, 128, 128, 0.1)",
     minWidth: 100,
   },
   typeIcon: {
@@ -535,7 +568,6 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
     padding: 12,
     borderWidth: 1,
-    borderColor: "#ddd",
     borderRadius: 8,
     marginBottom: 16,
   },
@@ -551,7 +583,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   onThisDayCard: {
-    backgroundColor: "rgba(255, 215, 0, 0.15)",
+    backgroundColor: SemanticColors.goldLight,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -591,7 +623,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 8,
-    backgroundColor: "rgba(128, 128, 128, 0.2)",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 4,

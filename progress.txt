@@ -757,3 +757,33 @@
 **Verification:** tsc, lint, test (157 passed), build all pass.
 
 **Next:** UI polish, dark mode improvements, or actual PDF generation implementation
+
+## 2026-01-15: UI Polish - Theme System Extension
+
+**PRD ref:** Phase 1 Weeks 12-13 (Polish)
+
+**Task:** Extend theme system with comprehensive colors, update Feed screen to use theme colors
+
+**Decisions:**
+- Extended constants/theme.ts with comprehensive color palette:
+  - PRIMARY_COLOR exported constant (replaces local definitions)
+  - Colors.light/dark: textSecondary, textMuted, backgroundSecondary, backgroundTertiary, border, borderLight, inputBorder, placeholder, card, cardBorder, overlay, overlayLight
+  - SemanticColors: success, warning, error, info, gold (and light variants)
+  - Spacing scale: xs(4), sm(8), md(12), lg(16), xl(24), xxl(32)
+  - Shadows presets: small, medium, large
+- Feed screen (index.tsx) updated to use theme colors:
+  - Import PRIMARY_COLOR, Colors, SemanticColors, Shadows from theme
+  - Modal, header, type options now use colors.background/border/backgroundSecondary
+  - Caption input uses colors.inputBorder, colors.placeholder, colors.text
+  - EntryCard uses colors.backgroundSecondary
+  - OnThisDayCard uses SemanticColors.goldLight, colors.backgroundTertiary
+  - FAB uses Shadows.large instead of inline shadow styles
+- Removed hardcoded colors: #fff, #ccc, #ddd, #999, rgba(128,128,128,0.1), etc.
+
+**Files changed:**
+- constants/theme.ts - Extended with PRIMARY_COLOR, textSecondary/muted, backgroundSecondary/tertiary, border colors, SemanticColors, Spacing, Shadows
+- app/(tabs)/index.tsx - Updated to use theme imports and theme-aware styles
+
+**Verification:** tsc, lint, test (157 passed), build all pass.
+
+**Next:** Continue UI polish for other screens (milestones, search, settings, entry detail)
