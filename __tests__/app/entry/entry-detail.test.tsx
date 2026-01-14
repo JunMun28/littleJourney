@@ -16,6 +16,8 @@ jest.mock("expo-router", () => ({
 
 // Mock entry context
 const mockGetEntry = jest.fn();
+const mockUpdateEntry = jest.fn();
+const mockDeleteEntry = jest.fn();
 const mockEntries = [
   {
     id: "test-entry-1",
@@ -32,6 +34,8 @@ jest.mock("@/contexts/entry-context", () => ({
   useEntries: () => ({
     getEntry: mockGetEntry,
     entries: mockEntries,
+    updateEntry: mockUpdateEntry,
+    deleteEntry: mockDeleteEntry,
   }),
 }));
 
@@ -91,5 +95,48 @@ describe("EntryDetailScreen", () => {
 
     expect(screen.getByText("Slept through the night!")).toBeTruthy();
     expect(screen.queryByTestId("image-counter")).toBeNull();
+  });
+
+  it("shows options menu button", () => {
+    render(<EntryDetailScreen />);
+
+    expect(screen.getByTestId("options-button")).toBeTruthy();
+  });
+
+  it("opens options menu with edit and delete actions", () => {
+    render(<EntryDetailScreen />);
+
+    const optionsButton = screen.getByTestId("options-button");
+    fireEvent.press(optionsButton);
+
+    expect(screen.getByText("Edit")).toBeTruthy();
+    expect(screen.getByText("Delete")).toBeTruthy();
+  });
+
+  it("deletes entry and navigates back when delete is confirmed", () => {
+    render(<EntryDetailScreen />);
+
+    // Open options menu
+    fireEvent.press(screen.getByTestId("options-button"));
+    // Press delete
+    fireEvent.press(screen.getByText("Delete"));
+    // Confirm deletion
+    fireEvent.press(screen.getByText("Delete Entry"));
+
+    expect(mockDeleteEntry).toHaveBeenCalledWith("test-entry-1");
+    expect(mockBack).toHaveBeenCalled();
+  });
+
+  it("cancels delete and closes menu", () => {
+    render(<EntryDetailScreen />);
+
+    // Open options menu
+    fireEvent.press(screen.getByTestId("options-button"));
+    // Press delete
+    fireEvent.press(screen.getByText("Delete"));
+    // Cancel deletion
+    fireEvent.press(screen.getByText("Cancel"));
+
+    expect(mockDeleteEntry).not.toHaveBeenCalled();
   });
 });

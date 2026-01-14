@@ -298,3 +298,26 @@
 **Verification:** tsc, lint, test (53 passed), build all pass.
 
 **Next:** Edit/delete entries (PRD Section 3.6) or video playback (PRD Section 9.3)
+
+## 2026-01-15: Entry Edit/Delete UI
+
+**PRD ref:** Phase 1 Weeks 5-7, Section 3.6 (Entry Ownership & Editing)
+
+**Task:** Add edit/delete actions to entry detail screen
+
+**Decisions:**
+- EntryContext already had updateEntry/deleteEntry methods (implemented earlier)
+- Added options button (⋮) to entry detail header next to back button
+- Used Modal with two states: "options" menu and "confirmDelete" confirmation
+- iOS-style dark menu with Edit and Delete options
+- Delete shows confirmation dialog with red "Delete Entry" button
+- On delete: calls deleteEntry(id) then router.back()
+- Edit is placeholder (TODO: implement edit modal/screen)
+
+**Files changed:**
+- app/entry/[id].tsx - Added options button, modal with edit/delete, delete confirmation
+- __tests__/app/entry/entry-detail.test.tsx - Added 4 tests for options menu and delete flow
+
+**Verification:** tsc, lint, test (57 passed), build all pass.
+
+**Next:** Entry edit modal/screen or video playback (PRD Section 9.3)

@@ -9,6 +9,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
   StatusBar,
+  Modal,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 
@@ -17,12 +18,15 @@ import { useEntries } from "@/contexts/entry-context";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
+type MenuState = "closed" | "options" | "confirmDelete";
+
 export default function EntryDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getEntry } = useEntries();
+  const { getEntry, deleteEntry } = useEntries();
   const entry = getEntry(id);
 
   const [activeIndex, setActiveIndex] = useState(0);
+  const [menuState, setMenuState] = useState<MenuState>("closed");
 
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -37,6 +41,30 @@ export default function EntryDetailScreen() {
 
   const handleBack = useCallback(() => {
     router.back();
+  }, []);
+
+  const handleOpenOptions = useCallback(() => {
+    setMenuState("options");
+  }, []);
+
+  const handleCloseMenu = useCallback(() => {
+    setMenuState("closed");
+  }, []);
+
+  const handleDeletePrompt = useCallback(() => {
+    setMenuState("confirmDelete");
+  }, []);
+
+  const handleConfirmDelete = useCallback(() => {
+    if (entry) {
+      deleteEntry(entry.id);
+      router.back();
+    }
+  }, [entry, deleteEntry]);
+
+  const handleEdit = useCallback(() => {
+    // TODO: Implement edit modal/screen
+    setMenuState("closed");
   }, []);
 
   if (!entry) {
@@ -67,7 +95,7 @@ export default function EntryDetailScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      {/* Header with back button */}
+      {/* Header with back button and options */}
       <View style={styles.header}>
         <Pressable
           testID="back-button"
@@ -76,13 +104,22 @@ export default function EntryDetailScreen() {
         >
           <ThemedText style={styles.backButtonIcon}>←</ThemedText>
         </Pressable>
-        {isMultiPhoto && (
-          <View testID="image-counter" style={styles.imageCounter}>
-            <ThemedText style={styles.imageCounterText}>
-              {activeIndex + 1}/{entry.mediaUris!.length}
-            </ThemedText>
-          </View>
-        )}
+        <View style={styles.headerRight}>
+          {isMultiPhoto && (
+            <View testID="image-counter" style={styles.imageCounter}>
+              <ThemedText style={styles.imageCounterText}>
+                {activeIndex + 1}/{entry.mediaUris!.length}
+              </ThemedText>
+            </View>
+          )}
+          <Pressable
+            testID="options-button"
+            onPress={handleOpenOptions}
+            style={styles.optionsButton}
+          >
+            <ThemedText style={styles.optionsButtonIcon}>⋮</ThemedText>
+          </Pressable>
+        </View>
       </View>
 
       {/* Full-screen image carousel */}
@@ -116,6 +153,55 @@ export default function EntryDetailScreen() {
           <ThemedText style={styles.date}>{formattedDate}</ThemedText>
         </View>
       </View>
+
+      {/* Options/Delete Modal */}
+      <Modal
+        visible={menuState !== "closed"}
+        transparent
+        animationType="fade"
+        onRequestClose={handleCloseMenu}
+      >
+        <Pressable style={styles.modalOverlay} onPress={handleCloseMenu}>
+          <View style={styles.menuContainer}>
+            {menuState === "options" && (
+              <>
+                <Pressable style={styles.menuItem} onPress={handleEdit}>
+                  <ThemedText style={styles.menuItemText}>Edit</ThemedText>
+                </Pressable>
+                <Pressable
+                  style={[styles.menuItem, styles.menuItemDanger]}
+                  onPress={handleDeletePrompt}
+                >
+                  <ThemedText style={styles.menuItemTextDanger}>
+                    Delete
+                  </ThemedText>
+                </Pressable>
+              </>
+            )}
+            {menuState === "confirmDelete" && (
+              <>
+                <ThemedText style={styles.confirmTitle}>
+                  Delete this entry?
+                </ThemedText>
+                <ThemedText style={styles.confirmMessage}>
+                  This action cannot be undone.
+                </ThemedText>
+                <Pressable
+                  style={[styles.menuItem, styles.menuItemDanger]}
+                  onPress={handleConfirmDelete}
+                >
+                  <ThemedText style={styles.menuItemTextDanger}>
+                    Delete Entry
+                  </ThemedText>
+                </Pressable>
+                <Pressable style={styles.menuItem} onPress={handleCloseMenu}>
+                  <ThemedText style={styles.menuItemText}>Cancel</ThemedText>
+                </Pressable>
+              </>
+            )}
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -153,6 +239,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: 60,
     paddingHorizontal: 16,
+  },
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
   },
   backButton: {
     width: 44,
@@ -209,5 +300,65 @@ const styles = StyleSheet.create({
   date: {
     color: "rgba(255,255,255,0.7)",
     fontSize: 14,
+  },
+  optionsButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  optionsButtonIcon: {
+    color: "#fff",
+    fontSize: 24,
+    fontWeight: "bold",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  menuContainer: {
+    backgroundColor: "#1c1c1e",
+    borderRadius: 14,
+    width: 280,
+    overflow: "hidden",
+  },
+  menuItem: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "rgba(255,255,255,0.1)",
+  },
+  menuItemDanger: {
+    // No additional styling, just marker for semantic meaning
+  },
+  menuItemText: {
+    color: "#fff",
+    fontSize: 17,
+    textAlign: "center",
+  },
+  menuItemTextDanger: {
+    color: "#ff453a",
+    fontSize: 17,
+    textAlign: "center",
+  },
+  confirmTitle: {
+    color: "#fff",
+    fontSize: 17,
+    fontWeight: "600",
+    textAlign: "center",
+    paddingTop: 20,
+    paddingHorizontal: 20,
+  },
+  confirmMessage: {
+    color: "rgba(255,255,255,0.6)",
+    fontSize: 13,
+    textAlign: "center",
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+    paddingTop: 8,
   },
 });
