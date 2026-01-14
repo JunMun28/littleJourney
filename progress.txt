@@ -97,3 +97,29 @@
 **Verification:** tsc, lint, test (17 passed), build all pass. UI verified via Chrome MCP.
 
 **Next:** Remaining onboarding steps (culture selection, prompt time, invite family) or photo picker for child
+
+## 2026-01-15: Cultural Tradition Selection Screen
+
+**PRD ref:** Phase 1 Weeks 3-4, Section 1.3 Step 3 (Select cultural tradition)
+
+**Task:** Implement cultural tradition selection as step 3 of onboarding flow
+
+**Decisions:**
+- Added CulturalTradition type: "chinese" | "malay" | "indian" | "none"
+- Added culturalTradition optional field to Child interface
+- Added updateChild method to ChildContext for partial updates
+- Created select-culture.tsx with radio button selection UI
+- add-child now navigates to select-culture instead of completing onboarding
+- select-culture completes onboarding after selection
+- Culture options show milestone examples (Full Month, Aqiqah, Annaprashan, etc.)
+
+**Files changed:**
+- contexts/child-context.tsx - Added CulturalTradition type, culturalTradition field, updateChild method
+- app/(onboarding)/select-culture.tsx - New: Culture selection screen with radio options
+- app/(onboarding)/_layout.tsx - Added select-culture Stack.Screen
+- app/(onboarding)/add-child.tsx - Navigate to select-culture instead of completeOnboarding
+- __tests__/contexts/child-context.test.tsx - Added 2 tests for culturalTradition and updateChild
+
+**Verification:** tsc, lint, test (19 passed), build all pass. UI verified via Chrome MCP.
+
+**Next:** Daily prompt time selection (step 4) or invite family member (step 5)

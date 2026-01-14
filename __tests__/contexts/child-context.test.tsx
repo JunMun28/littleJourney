@@ -3,12 +3,13 @@ import { Text } from "react-native";
 import { ChildProvider, useChild, type Child } from "@/contexts/child-context";
 
 function TestConsumer() {
-  const { child, setChild, clearChild } = useChild();
+  const { child, setChild, updateChild, clearChild } = useChild();
   return (
     <>
       <Text testID="name">{child?.name ?? "none"}</Text>
       <Text testID="dob">{child?.dateOfBirth ?? "none"}</Text>
       <Text testID="nickname">{child?.nickname ?? "none"}</Text>
+      <Text testID="culture">{child?.culturalTradition ?? "none"}</Text>
       <Text
         testID="set-child"
         onPress={() =>
@@ -32,8 +33,26 @@ function TestConsumer() {
       >
         Set With Nickname
       </Text>
+      <Text
+        testID="set-child-with-culture"
+        onPress={() =>
+          setChild({
+            name: "Wei",
+            dateOfBirth: "2024-01-10",
+            culturalTradition: "chinese",
+          })
+        }
+      >
+        Set With Culture
+      </Text>
       <Text testID="clear-child" onPress={() => clearChild()}>
         Clear Child
+      </Text>
+      <Text
+        testID="update-culture"
+        onPress={() => updateChild({ culturalTradition: "malay" })}
+      >
+        Update Culture
       </Text>
     </>
   );
@@ -120,5 +139,52 @@ describe("ChildContext", () => {
     );
 
     consoleSpy.mockRestore();
+  });
+
+  it("sets child with cultural tradition", async () => {
+    render(
+      <ChildProvider>
+        <TestConsumer />
+      </ChildProvider>,
+    );
+
+    await act(async () => {
+      screen.getByTestId("set-child-with-culture").props.onPress();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("name")).toHaveTextContent("Wei");
+    });
+    expect(screen.getByTestId("dob")).toHaveTextContent("2024-01-10");
+    expect(screen.getByTestId("culture")).toHaveTextContent("chinese");
+  });
+
+  it("updates existing child with partial data", async () => {
+    render(
+      <ChildProvider>
+        <TestConsumer />
+      </ChildProvider>,
+    );
+
+    // Set child first
+    await act(async () => {
+      screen.getByTestId("set-child").props.onPress();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("name")).toHaveTextContent("Emma");
+    });
+    expect(screen.getByTestId("culture")).toHaveTextContent("none");
+
+    // Update just the cultural tradition
+    await act(async () => {
+      screen.getByTestId("update-culture").props.onPress();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("culture")).toHaveTextContent("malay");
+    });
+    // Name should remain unchanged
+    expect(screen.getByTestId("name")).toHaveTextContent("Emma");
   });
 });

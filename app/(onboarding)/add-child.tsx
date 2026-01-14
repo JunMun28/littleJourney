@@ -12,10 +12,10 @@ import {
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
+import { router } from "expo-router";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { useAuth } from "@/contexts/auth-context";
 import { useChild } from "@/contexts/child-context";
 import { useThemeColor } from "@/hooks/use-theme-color";
 
@@ -34,7 +34,6 @@ function toISODateString(date: Date): string {
 }
 
 export default function AddChildScreen() {
-  const { completeOnboarding } = useAuth();
   const { setChild } = useChild();
   const textColor = useThemeColor({}, "text");
 
@@ -76,7 +75,7 @@ export default function AddChildScreen() {
     }
   };
 
-  const handleContinue = async () => {
+  const handleContinue = () => {
     if (!validateForm()) return;
 
     setChild({
@@ -85,7 +84,7 @@ export default function AddChildScreen() {
       nickname: nickname.trim() || undefined,
     });
 
-    await completeOnboarding();
+    router.push("/(onboarding)/select-culture");
   };
 
   const isFormValid = name.trim() && dateOfBirth;

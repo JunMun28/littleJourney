@@ -6,16 +6,20 @@ import {
   type ReactNode,
 } from "react";
 
+export type CulturalTradition = "chinese" | "malay" | "indian" | "none";
+
 export interface Child {
   name: string;
   dateOfBirth: string; // ISO date string (YYYY-MM-DD)
   nickname?: string;
   photoUri?: string;
+  culturalTradition?: CulturalTradition;
 }
 
 interface ChildContextValue {
   child: Child | null;
   setChild: (child: Child) => void;
+  updateChild: (updates: Partial<Child>) => void;
   clearChild: () => void;
 }
 
@@ -33,6 +37,11 @@ export function ChildProvider({ children }: ChildProviderProps) {
     setChildState(newChild);
   }, []);
 
+  const updateChild = useCallback((updates: Partial<Child>) => {
+    // TODO: Persist to backend/storage
+    setChildState((prev) => (prev ? { ...prev, ...updates } : null));
+  }, []);
+
   const clearChild = useCallback(() => {
     // TODO: Clear from backend/storage
     setChildState(null);
@@ -41,6 +50,7 @@ export function ChildProvider({ children }: ChildProviderProps) {
   const value: ChildContextValue = {
     child,
     setChild,
+    updateChild,
     clearChild,
   };
 

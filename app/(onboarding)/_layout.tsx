@@ -15,6 +15,12 @@ export default function OnboardingLayout() {
           title: "Add Your Child",
         }}
       />
+      <Stack.Screen
+        name="select-culture"
+        options={{
+          title: "Cultural Traditions",
+        }}
+      />
     </Stack>
   );
 }
