@@ -1,0 +1,1392 @@
+{
+  "project": "Little Journey",
+  "version": "2.0",
+  "platform": "Expo (iOS + Android) + Web Viewer",
+  "lastUpdated": "2025-01-14",
+  "totalItems": 98,
+  "categories": [
+    "Authentication",
+    "Onboarding", 
+    "Child Management",
+    "Entry Creation",
+    "Timeline & Feed",
+    "Milestones",
+    "Family Sharing",
+    "Notifications",
+    "Search & Discovery",
+    "Video Handling",
+    "Photo Book Export",
+    "Data & Privacy",
+    "Monetization",
+    "Mobile Experience",
+    "Web Viewer",
+    "User Feedback",
+    "Legal & Compliance",
+    "Analytics"
+  ],
+  "items": [
+    {
+      "id": "AUTH-001",
+      "category": "Authentication",
+      "description": "Email magic link authentication",
+      "stepsToVerify": [
+        "Open app and navigate to login screen",
+        "Enter valid email address",
+        "Tap 'Send magic link' button",
+        "Verify loading indicator appears",
+        "Check email inbox - verify email received within 60 seconds",
+        "Tap magic link in email",
+        "Verify app opens and user is authenticated",
+        "Verify user lands on onboarding (new) or feed (returning)",
+        "Close and reopen app - verify session persists",
+        "Verify magic link expires after 15 minutes if unused"
+      ],
+      "acceptanceCriteria": "User can sign up and log in using only their email address without creating a password",
+      "passes": false
+    },
+    {
+      "id": "AUTH-002",
+      "category": "Authentication",
+      "description": "Google OAuth authentication",
+      "stepsToVerify": [
+        "Open app and navigate to login screen",
+        "Tap 'Continue with Google' button",
+        "Verify Google OAuth sheet opens",
+        "Complete Google sign-in flow",
+        "Verify app receives callback and user is authenticated",
+        "Verify user profile shows Google account email",
+        "Kill app and reopen - verify session persists"
+      ],
+      "acceptanceCriteria": "User can authenticate using their Google account",
+      "passes": false
+    },
+    {
+      "id": "AUTH-003",
+      "category": "Authentication",
+      "description": "Apple Sign-In authentication",
+      "stepsToVerify": [
+        "Open app on iOS device",
+        "Navigate to login screen",
+        "Tap 'Continue with Apple' button",
+        "Verify Apple Sign-In sheet appears",
+        "Complete Apple Sign-In (test Hide My Email option)",
+        "Verify app receives callback and user is authenticated",
+        "Kill app and reopen - verify session persists"
+      ],
+      "acceptanceCriteria": "User can authenticate using Apple Sign-In",
+      "passes": false
+    },
+    {
+      "id": "AUTH-004",
+      "category": "Authentication",
+      "description": "Secure token storage",
+      "stepsToVerify": [
+        "Complete authentication flow",
+        "Verify auth token stored in expo-secure-store",
+        "Kill app completely",
+        "Reopen app",
+        "Verify user is still authenticated"
+      ],
+      "acceptanceCriteria": "Auth tokens are securely stored and persist across app restarts",
+      "passes": false
+    },
+    {
+      "id": "AUTH-005",
+      "category": "Authentication",
+      "description": "Logout functionality",
+      "stepsToVerify": [
+        "Log in to app",
+        "Navigate to Settings tab",
+        "Tap 'Log out' button",
+        "Verify confirmation dialog appears",
+        "Confirm logout",
+        "Verify user is returned to login screen",
+        "Verify cannot access protected screens"
+      ],
+      "acceptanceCriteria": "User can log out and all local auth data is cleared",
+      "passes": false
+    },
+    {
+      "id": "ONBOARD-001",
+      "category": "Onboarding",
+      "description": "Guided onboarding flow initiation",
+      "stepsToVerify": [
+        "Complete authentication as new user",
+        "Verify onboarding flow starts automatically",
+        "Verify progress indicator shows step 1 of 6",
+        "Verify cannot skip to main app without required steps"
+      ],
+      "acceptanceCriteria": "New users are automatically directed to onboarding flow",
+      "passes": false
+    },
+    {
+      "id": "ONBOARD-002",
+      "category": "Onboarding",
+      "description": "Add first child step",
+      "stepsToVerify": [
+        "Reach 'Add your first child' screen",
+        "Verify name field is required",
+        "Verify date of birth picker is required",
+        "Verify display name field is optional",
+        "Verify photo upload is optional",
+        "Verify date picker blocks future dates",
+        "Enter valid name and DOB, tap continue",
+        "Verify proceeds to next step"
+      ],
+      "acceptanceCriteria": "User must provide child's name and DOB; display name and photo are optional",
+      "passes": false
+    },
+    {
+      "id": "ONBOARD-003",
+      "category": "Onboarding",
+      "description": "Cultural tradition selection",
+      "stepsToVerify": [
+        "Reach cultural tradition selection screen",
+        "Verify four options: Chinese, Malay, Indian, None/Other",
+        "Verify only single selection allowed",
+        "Tap Chinese - verify selected, others deselected",
+        "Select tradition and proceed",
+        "Verify selection saved to child profile"
+      ],
+      "acceptanceCriteria": "User must select exactly one cultural tradition",
+      "passes": false
+    },
+    {
+      "id": "ONBOARD-004",
+      "category": "Onboarding",
+      "description": "Daily prompt time selection",
+      "stepsToVerify": [
+        "Reach prompt time selection screen",
+        "Verify time picker displayed",
+        "Verify default value is 8:00 PM",
+        "Verify explanation text describes daily prompts",
+        "Change time and proceed",
+        "Verify selected time saved to preferences"
+      ],
+      "acceptanceCriteria": "User can set preferred daily prompt notification time",
+      "passes": false
+    },
+    {
+      "id": "ONBOARD-005",
+      "category": "Onboarding",
+      "description": "Invite family member step",
+      "stepsToVerify": [
+        "Reach family invitation screen",
+        "Verify email input and permission selector present",
+        "Verify 'Skip' button is visible",
+        "Tap 'Skip' without entering email",
+        "Verify proceeds to next step"
+      ],
+      "acceptanceCriteria": "User is prompted to invite family but can skip",
+      "passes": false
+    },
+    {
+      "id": "ONBOARD-006",
+      "category": "Onboarding",
+      "description": "First entry prompt step",
+      "stepsToVerify": [
+        "Reach 'Add your first moment' screen",
+        "Verify camera/gallery permission requested",
+        "Verify can create first entry directly",
+        "Verify skip option available",
+        "Tap skip - verify lands on main feed"
+      ],
+      "acceptanceCriteria": "User is encouraged to create first entry but can skip",
+      "passes": false
+    },
+    {
+      "id": "CHILD-001",
+      "category": "Child Management",
+      "description": "Child profile creation",
+      "stepsToVerify": [
+        "Create child during onboarding",
+        "Enter child name",
+        "Select date of birth via picker",
+        "Save",
+        "Verify child appears in app",
+        "Verify age calculated correctly from DOB"
+      ],
+      "acceptanceCriteria": "Child profile created with name and DOB; age auto-calculated",
+      "passes": false
+    },
+    {
+      "id": "CHILD-002",
+      "category": "Child Management",
+      "description": "Optional display name for privacy",
+      "stepsToVerify": [
+        "Create or edit child profile",
+        "Enter display name different from real name",
+        "Save profile",
+        "View entries as parent - verify display name shown",
+        "View as family member - verify display name shown"
+      ],
+      "acceptanceCriteria": "Display name shown to family instead of real name when set",
+      "passes": false
+    },
+    {
+      "id": "CHILD-003",
+      "category": "Child Management",
+      "description": "Edit child profile",
+      "stepsToVerify": [
+        "Navigate to Settings > Child profile",
+        "Tap edit button",
+        "Modify all fields",
+        "Save changes",
+        "Verify changes persisted",
+        "Verify milestone templates updated if tradition changed"
+      ],
+      "acceptanceCriteria": "All child profile fields can be edited",
+      "passes": false
+    },
+    {
+      "id": "CHILD-004",
+      "category": "Child Management",
+      "description": "Single child limit on MVP",
+      "stepsToVerify": [
+        "Complete onboarding with first child",
+        "Look for 'Add child' option",
+        "Verify option is disabled or shows upgrade prompt"
+      ],
+      "acceptanceCriteria": "MVP limits accounts to single child",
+      "passes": false
+    },
+    {
+      "id": "ENTRY-001",
+      "category": "Entry Creation",
+      "description": "Create photo entry with single image",
+      "stepsToVerify": [
+        "Tap floating '+' button on feed",
+        "Select 'Photo' option",
+        "Verify gallery picker opens",
+        "Select single image",
+        "Verify image preview displayed",
+        "Optionally add caption",
+        "Verify date auto-filled from EXIF",
+        "Tap 'Post' button",
+        "Verify entry appears in feed"
+      ],
+      "acceptanceCriteria": "User can create entry with single photo; EXIF date auto-detected",
+      "passes": false
+    },
+    {
+      "id": "ENTRY-002",
+      "category": "Entry Creation",
+      "description": "Create photo entry with multiple images",
+      "stepsToVerify": [
+        "Tap '+' button",
+        "Select 'Photo' option",
+        "Select multiple images (3-5)",
+        "Verify all shown in preview carousel",
+        "Add caption and submit",
+        "Verify entry shows as swipeable carousel in feed"
+      ],
+      "acceptanceCriteria": "Multiple photos displayed as swipeable carousel",
+      "passes": false
+    },
+    {
+      "id": "ENTRY-003",
+      "category": "Entry Creation",
+      "description": "Create video entry (Standard tier)",
+      "stepsToVerify": [
+        "As Standard tier user, tap '+'",
+        "Select 'Video' option",
+        "Select video under 2 minutes",
+        "Verify preview plays",
+        "Add caption and submit",
+        "Verify upload progress shown",
+        "Verify entry appears with playable video"
+      ],
+      "acceptanceCriteria": "Standard tier users can upload videos up to 2 minutes",
+      "passes": false
+    },
+    {
+      "id": "ENTRY-004",
+      "category": "Entry Creation",
+      "description": "Video length enforcement by tier",
+      "stepsToVerify": [
+        "As Free tier, verify video option is blocked",
+        "As Standard tier, verify >2min video blocked",
+        "As Premium tier, verify >10min video blocked"
+      ],
+      "acceptanceCriteria": "Video selection blocked if exceeds tier limits",
+      "passes": false
+    },
+    {
+      "id": "ENTRY-005",
+      "category": "Entry Creation",
+      "description": "Create text-only entry",
+      "stepsToVerify": [
+        "Tap '+' button",
+        "Select 'Text' option",
+        "Enter journal text",
+        "Select date",
+        "Submit entry",
+        "Verify entry appears as text card in feed"
+      ],
+      "acceptanceCriteria": "User can create text-only journal entries",
+      "passes": false
+    },
+    {
+      "id": "ENTRY-006",
+      "category": "Entry Creation",
+      "description": "Caption is optional",
+      "stepsToVerify": [
+        "Create photo entry",
+        "Leave caption empty",
+        "Submit entry",
+        "Verify entry created successfully without caption"
+      ],
+      "acceptanceCriteria": "Entries can be created without captions",
+      "passes": false
+    },
+    {
+      "id": "ENTRY-007",
+      "category": "Entry Creation",
+      "description": "EXIF date auto-detection",
+      "stepsToVerify": [
+        "Select photo taken days ago (with EXIF)",
+        "Verify date field auto-populated from EXIF",
+        "Verify date is not today's date",
+        "Verify user can still modify date"
+      ],
+      "acceptanceCriteria": "Photo date extracted from EXIF and pre-filled",
+      "passes": false
+    },
+    {
+      "id": "ENTRY-008",
+      "category": "Entry Creation",
+      "description": "Manual date selection (backdate)",
+      "stepsToVerify": [
+        "Create new entry",
+        "Tap date field",
+        "Select date from last week",
+        "Submit entry",
+        "Verify entry appears with correct date in feed"
+      ],
+      "acceptanceCriteria": "Users can manually select any past date",
+      "passes": false
+    },
+    {
+      "id": "ENTRY-009",
+      "category": "Entry Creation",
+      "description": "Pregnancy entries (pre-birth dates)",
+      "stepsToVerify": [
+        "Create entry",
+        "Select date before child's birth date",
+        "Verify date picker allows this",
+        "Submit entry",
+        "Verify entry created with pre-birth date"
+      ],
+      "acceptanceCriteria": "Entries can be dated before child's birth",
+      "passes": false
+    },
+    {
+      "id": "ENTRY-010",
+      "category": "Entry Creation",
+      "description": "Draft auto-save",
+      "stepsToVerify": [
+        "Start creating entry",
+        "Add photo and begin caption",
+        "Kill app without submitting",
+        "Reopen app",
+        "Verify draft indicator shown",
+        "Resume draft - verify content preserved"
+      ],
+      "acceptanceCriteria": "Incomplete entries auto-saved and resumable",
+      "passes": false
+    },
+    {
+      "id": "ENTRY-011",
+      "category": "Entry Creation",
+      "description": "Entry attribution (Posted by)",
+      "stepsToVerify": [
+        "Parent A creates entry",
+        "Verify shows 'Posted by [Parent A]'",
+        "Parent B creates entry",
+        "Verify shows 'Posted by [Parent B]'"
+      ],
+      "acceptanceCriteria": "Each entry displays which parent created it",
+      "passes": false
+    },
+    {
+      "id": "ENTRY-012",
+      "category": "Entry Creation",
+      "description": "Edit own entry",
+      "stepsToVerify": [
+        "Create entry",
+        "Tap edit option",
+        "Modify caption",
+        "Save changes",
+        "Verify caption updated",
+        "Verify 'Edited' indicator shown"
+      ],
+      "acceptanceCriteria": "Users can edit their own entries",
+      "passes": false
+    },
+    {
+      "id": "ENTRY-013",
+      "category": "Entry Creation",
+      "description": "Edit other parent's entry",
+      "stepsToVerify": [
+        "Parent A creates entry",
+        "Log in as Parent B",
+        "Edit Parent A's entry",
+        "Verify 'Edited by [Parent B]' shown"
+      ],
+      "acceptanceCriteria": "Either parent can edit any entry",
+      "passes": false
+    },
+    {
+      "id": "ENTRY-014",
+      "category": "Entry Creation",
+      "description": "Delete entry",
+      "stepsToVerify": [
+        "Create entry",
+        "Tap delete option",
+        "Verify confirmation appears",
+        "Confirm deletion",
+        "Verify entry removed from feed"
+      ],
+      "acceptanceCriteria": "Users can delete entries with confirmation",
+      "passes": false
+    },
+    {
+      "id": "ENTRY-015",
+      "category": "Entry Creation",
+      "description": "Custom tags on entries",
+      "stepsToVerify": [
+        "Create or edit entry",
+        "Add custom tags",
+        "Save entry",
+        "Verify tags display in feed",
+        "Search for tag - verify entry found"
+      ],
+      "acceptanceCriteria": "Users can add freeform custom tags",
+      "passes": false
+    },
+    {
+      "id": "ENTRY-016",
+      "category": "Entry Creation",
+      "description": "Camera capture option",
+      "stepsToVerify": [
+        "Tap '+' button",
+        "Select camera capture option",
+        "Verify expo-camera opens",
+        "Capture photo",
+        "Complete and submit entry"
+      ],
+      "acceptanceCriteria": "Users can capture photos via camera",
+      "passes": false
+    },
+    {
+      "id": "FEED-001",
+      "category": "Timeline & Feed",
+      "description": "Feed reverse chronological order",
+      "stepsToVerify": [
+        "Create entries with different dates",
+        "Navigate to Feed tab",
+        "Verify newest entry at top"
+      ],
+      "acceptanceCriteria": "Feed shows newest entries first",
+      "passes": false
+    },
+    {
+      "id": "FEED-002",
+      "category": "Timeline & Feed",
+      "description": "Infinite scroll pagination",
+      "stepsToVerify": [
+        "Create 50+ entries",
+        "Scroll down feed",
+        "Verify more entries load automatically",
+        "Verify no duplicates"
+      ],
+      "acceptanceCriteria": "Feed loads more entries on scroll",
+      "passes": false
+    },
+    {
+      "id": "FEED-003",
+      "category": "Timeline & Feed",
+      "description": "Pull to refresh",
+      "stepsToVerify": [
+        "Open Feed tab",
+        "Create entry from another device",
+        "Pull down on feed",
+        "Verify feed updates with new entry"
+      ],
+      "acceptanceCriteria": "Users can pull to refresh feed",
+      "passes": false
+    },
+    {
+      "id": "FEED-004",
+      "category": "Timeline & Feed",
+      "description": "Entry card displays metadata",
+      "stepsToVerify": [
+        "Create entry with photo, caption, tags",
+        "View in feed",
+        "Verify photo, caption, date, attribution, tags visible"
+      ],
+      "acceptanceCriteria": "Entry cards show all relevant metadata",
+      "passes": false
+    },
+    {
+      "id": "FEED-005",
+      "category": "Timeline & Feed",
+      "description": "Photo carousel navigation",
+      "stepsToVerify": [
+        "Create entry with 5 photos",
+        "Swipe through carousel in feed",
+        "Verify all photos viewable"
+      ],
+      "acceptanceCriteria": "Multi-photo entries navigable via swipe",
+      "passes": false
+    },
+    {
+      "id": "FEED-006",
+      "category": "Timeline & Feed",
+      "description": "Video playback in feed",
+      "stepsToVerify": [
+        "Create video entry",
+        "Tap video in feed",
+        "Verify video plays with controls"
+      ],
+      "acceptanceCriteria": "Videos play in feed with controls",
+      "passes": false
+    },
+    {
+      "id": "FEED-007",
+      "category": "Timeline & Feed",
+      "description": "Full-screen photo view",
+      "stepsToVerify": [
+        "Tap photo in feed",
+        "Verify opens full-screen",
+        "Verify can pinch to zoom",
+        "Verify can dismiss"
+      ],
+      "acceptanceCriteria": "Photos viewable full-screen with zoom",
+      "passes": false
+    },
+    {
+      "id": "FEED-008",
+      "category": "Timeline & Feed",
+      "description": "'On this day' memories",
+      "stepsToVerify": [
+        "Create entry dated 1 year ago",
+        "On anniversary date, check feed",
+        "Verify memory card appears",
+        "Tap to view original entry"
+      ],
+      "acceptanceCriteria": "Memories from previous years surface",
+      "passes": false
+    },
+    {
+      "id": "MILESTONE-001",
+      "category": "Milestones",
+      "description": "Chinese milestones load correctly",
+      "stepsToVerify": [
+        "Create child with Chinese tradition",
+        "View Milestones tab",
+        "Verify 满月, 百日, 抓周 appear with correct dates"
+      ],
+      "acceptanceCriteria": "Chinese milestones pre-populated from DOB",
+      "passes": false
+    },
+    {
+      "id": "MILESTONE-002",
+      "category": "Milestones",
+      "description": "Malay milestones load correctly",
+      "stepsToVerify": [
+        "Create child with Malay tradition",
+        "View Milestones tab",
+        "Verify Aqiqah, Cukur Jambul, Hari Raya appear"
+      ],
+      "acceptanceCriteria": "Malay milestones pre-populated from DOB",
+      "passes": false
+    },
+    {
+      "id": "MILESTONE-003",
+      "category": "Milestones",
+      "description": "Indian milestones load correctly",
+      "stepsToVerify": [
+        "Create child with Indian tradition",
+        "View Milestones tab",
+        "Verify Naming, Annaprashan, Deepavali appear"
+      ],
+      "acceptanceCriteria": "Indian milestones pre-populated from DOB",
+      "passes": false
+    },
+    {
+      "id": "MILESTONE-004",
+      "category": "Milestones",
+      "description": "Universal milestones available",
+      "stepsToVerify": [
+        "Create child with any tradition",
+        "View Milestones tab",
+        "Verify First smile, First steps, etc. appear"
+      ],
+      "acceptanceCriteria": "Universal milestones available regardless of culture",
+      "passes": false
+    },
+    {
+      "id": "MILESTONE-005",
+      "category": "Milestones",
+      "description": "Dual date system",
+      "stepsToVerify": [
+        "Complete milestone on different date than traditional",
+        "Verify both dates captured and displayed"
+      ],
+      "acceptanceCriteria": "Tracks both traditional and celebration dates",
+      "passes": false
+    },
+    {
+      "id": "MILESTONE-006",
+      "category": "Milestones",
+      "description": "Upcoming milestone indicator",
+      "stepsToVerify": [
+        "Set up child with upcoming milestone",
+        "View Milestones tab",
+        "Verify countdown shown",
+        "Verify reminder in feed"
+      ],
+      "acceptanceCriteria": "Upcoming milestones highlighted with countdown",
+      "passes": false
+    },
+    {
+      "id": "MILESTONE-007",
+      "category": "Milestones",
+      "description": "Create custom milestone",
+      "stepsToVerify": [
+        "Tap 'Add custom milestone'",
+        "Enter name and optional date",
+        "Save",
+        "Verify custom milestone appears in list"
+      ],
+      "acceptanceCriteria": "Parents can create custom milestones",
+      "passes": false
+    },
+    {
+      "id": "MILESTONE-008",
+      "category": "Milestones",
+      "description": "Complete milestone with entry",
+      "stepsToVerify": [
+        "Tap 'Complete' on milestone",
+        "Add photo and caption",
+        "Submit",
+        "Verify milestone marked complete",
+        "Verify entry appears in feed with milestone tag"
+      ],
+      "acceptanceCriteria": "Completing milestone creates linked entry",
+      "passes": false
+    },
+    {
+      "id": "SHARE-001",
+      "category": "Family Sharing",
+      "description": "Invite family member via email",
+      "stepsToVerify": [
+        "Navigate to Settings > Family",
+        "Tap 'Invite family member'",
+        "Enter email, relationship, permission",
+        "Send invitation",
+        "Verify family member appears in pending list"
+      ],
+      "acceptanceCriteria": "Parents can invite family via email",
+      "passes": false
+    },
+    {
+      "id": "SHARE-002",
+      "category": "Family Sharing",
+      "description": "Magic link access (no account)",
+      "stepsToVerify": [
+        "Family member opens magic link",
+        "Verify web viewer loads",
+        "Verify no signup required",
+        "Verify can see feed",
+        "Close and reopen - verify access persists"
+      ],
+      "acceptanceCriteria": "Family access via magic link without account",
+      "passes": false
+    },
+    {
+      "id": "SHARE-003",
+      "category": "Family Sharing",
+      "description": "Multi-device magic link",
+      "stepsToVerify": [
+        "Open magic link on phone",
+        "Open same link on tablet",
+        "Verify both devices have access"
+      ],
+      "acceptanceCriteria": "Same link works on multiple devices",
+      "passes": false
+    },
+    {
+      "id": "SHARE-004",
+      "category": "Family Sharing",
+      "description": "Magic link expiry",
+      "stepsToVerify": [
+        "Do not access for 90 days",
+        "Try to access again",
+        "Verify session expired message"
+      ],
+      "acceptanceCriteria": "Links expire after inactivity period",
+      "passes": false
+    },
+    {
+      "id": "SHARE-005",
+      "category": "Family Sharing",
+      "description": "View-only permission",
+      "stepsToVerify": [
+        "Invite with View only permission",
+        "Access as family member",
+        "Verify cannot comment or react"
+      ],
+      "acceptanceCriteria": "View-only cannot comment or react",
+      "passes": false
+    },
+    {
+      "id": "SHARE-006",
+      "category": "Family Sharing",
+      "description": "Comment + React permission",
+      "stepsToVerify": [
+        "Invite with full permission",
+        "Access as family member",
+        "Add comment - verify it saves",
+        "Add reaction - verify it saves"
+      ],
+      "acceptanceCriteria": "Can comment and react with permission",
+      "passes": false
+    },
+    {
+      "id": "SHARE-007",
+      "category": "Family Sharing",
+      "description": "View family member activity",
+      "stepsToVerify": [
+        "Family member views entries",
+        "Parent checks family settings",
+        "Verify 'Last viewed' timestamp shown"
+      ],
+      "acceptanceCriteria": "Parents see when family last viewed",
+      "passes": false
+    },
+    {
+      "id": "SHARE-008",
+      "category": "Family Sharing",
+      "description": "Revoke family access",
+      "stepsToVerify": [
+        "Remove family member",
+        "Verify they cannot access anymore",
+        "Verify no notification sent to them"
+      ],
+      "acceptanceCriteria": "Parents can revoke access silently",
+      "passes": false
+    },
+    {
+      "id": "SHARE-009",
+      "category": "Family Sharing",
+      "description": "Resend magic link",
+      "stepsToVerify": [
+        "Tap 'Resend link' for family member",
+        "Verify new email sent",
+        "Verify new link works"
+      ],
+      "acceptanceCriteria": "Parents can resend magic links",
+      "passes": false
+    },
+    {
+      "id": "SHARE-010",
+      "category": "Family Sharing",
+      "description": "Delete family member comments",
+      "stepsToVerify": [
+        "Family member adds comment",
+        "Parent deletes the comment",
+        "Verify comment removed"
+      ],
+      "acceptanceCriteria": "Parents can delete any comment",
+      "passes": false
+    },
+    {
+      "id": "NOTIF-001",
+      "category": "Notifications",
+      "description": "Push permission request",
+      "stepsToVerify": [
+        "Fresh install",
+        "Complete auth",
+        "Verify push permission dialog appears",
+        "Grant permission",
+        "Verify registered successfully"
+      ],
+      "acceptanceCriteria": "App requests push permissions appropriately",
+      "passes": false
+    },
+    {
+      "id": "NOTIF-002",
+      "category": "Notifications",
+      "description": "Daily prompt at selected time",
+      "stepsToVerify": [
+        "Set daily prompt time in settings",
+        "Wait for that time",
+        "Verify push notification received",
+        "Tap to open app"
+      ],
+      "acceptanceCriteria": "Daily prompts arrive at configured time",
+      "passes": false
+    },
+    {
+      "id": "NOTIF-003",
+      "category": "Notifications",
+      "description": "Smart frequency reduction",
+      "stepsToVerify": [
+        "Ignore prompts for 3+ days",
+        "Verify frequency reduces",
+        "Create entry",
+        "Verify frequency resets to daily"
+      ],
+      "acceptanceCriteria": "Prompt frequency reduces when ignored",
+      "passes": false
+    },
+    {
+      "id": "NOTIF-004",
+      "category": "Notifications",
+      "description": "Milestone reminder",
+      "stepsToVerify": [
+        "Have upcoming milestone in 3 days",
+        "Verify reminder notification received",
+        "Tap to open milestone"
+      ],
+      "acceptanceCriteria": "Push notifications for upcoming milestones",
+      "passes": false
+    },
+    {
+      "id": "NOTIF-005",
+      "category": "Notifications",
+      "description": "'On this day' notification",
+      "stepsToVerify": [
+        "Have entry from 1 year ago",
+        "On anniversary, verify notification",
+        "Tap to view memory"
+      ],
+      "acceptanceCriteria": "Push for memories from previous years",
+      "passes": false
+    },
+    {
+      "id": "NOTIF-006",
+      "category": "Notifications",
+      "description": "Family activity notification",
+      "stepsToVerify": [
+        "Family member comments on entry",
+        "Verify parent receives push",
+        "Tap to open entry"
+      ],
+      "acceptanceCriteria": "Parents notified of family interactions",
+      "passes": false
+    },
+    {
+      "id": "NOTIF-007",
+      "category": "Notifications",
+      "description": "Storage warning notifications",
+      "stepsToVerify": [
+        "Reach 80% storage",
+        "Verify warning notification",
+        "Verify cannot disable storage warnings"
+      ],
+      "acceptanceCriteria": "Storage warnings sent and cannot be disabled",
+      "passes": false
+    },
+    {
+      "id": "NOTIF-008",
+      "category": "Notifications",
+      "description": "Notification category toggles",
+      "stepsToVerify": [
+        "Disable 'Daily prompts'",
+        "Verify prompts stop",
+        "Enable again",
+        "Verify prompts resume"
+      ],
+      "acceptanceCriteria": "Categories can be individually toggled",
+      "passes": false
+    },
+    {
+      "id": "SEARCH-001",
+      "category": "Search & Discovery",
+      "description": "Text search in captions",
+      "stepsToVerify": [
+        "Create entry with specific caption",
+        "Search for words from caption",
+        "Verify entry found"
+      ],
+      "acceptanceCriteria": "Search finds entries by caption text",
+      "passes": false
+    },
+    {
+      "id": "SEARCH-002",
+      "category": "Search & Discovery",
+      "description": "Semantic search in images",
+      "stepsToVerify": [
+        "Create entry with beach photo (no caption)",
+        "Wait for AI processing",
+        "Search for 'beach'",
+        "Verify entry found by image content"
+      ],
+      "acceptanceCriteria": "Search finds entries by AI-detected content",
+      "passes": false
+    },
+    {
+      "id": "SEARCH-003",
+      "category": "Search & Discovery",
+      "description": "Date range filter",
+      "stepsToVerify": [
+        "Create entries across months",
+        "Filter by specific month",
+        "Verify only matching entries shown"
+      ],
+      "acceptanceCriteria": "Search filterable by date range",
+      "passes": false
+    },
+    {
+      "id": "SEARCH-004",
+      "category": "Search & Discovery",
+      "description": "Media type filter",
+      "stepsToVerify": [
+        "Create photo, video, text entries",
+        "Filter by 'Photos only'",
+        "Verify only photos shown"
+      ],
+      "acceptanceCriteria": "Search filterable by media type",
+      "passes": false
+    },
+    {
+      "id": "SEARCH-005",
+      "category": "Search & Discovery",
+      "description": "Milestone filter",
+      "stepsToVerify": [
+        "Create regular and milestone entries",
+        "Filter by 'Milestones only'",
+        "Verify only milestones shown"
+      ],
+      "acceptanceCriteria": "Search filterable to milestones only",
+      "passes": false
+    },
+    {
+      "id": "SEARCH-006",
+      "category": "Search & Discovery",
+      "description": "Custom tag search",
+      "stepsToVerify": [
+        "Create entry with custom tag",
+        "Search for that tag",
+        "Verify entry found"
+      ],
+      "acceptanceCriteria": "Custom tags are searchable",
+      "passes": false
+    },
+    {
+      "id": "SEARCH-007",
+      "category": "Search & Discovery",
+      "description": "Relevance-ordered results",
+      "stepsToVerify": [
+        "Create entries with varying relevance to search term",
+        "Search",
+        "Verify results ordered by relevance not date"
+      ],
+      "acceptanceCriteria": "Results ranked by relevance",
+      "passes": false
+    },
+    {
+      "id": "VIDEO-001",
+      "category": "Video Handling",
+      "description": "Video upload to Cloudflare Stream",
+      "stepsToVerify": [
+        "Upload video",
+        "Verify upload progress shown",
+        "Verify entry appears in feed",
+        "Verify video streams (not full download)"
+      ],
+      "acceptanceCriteria": "Videos uploaded and streamed via Cloudflare",
+      "passes": false
+    },
+    {
+      "id": "VIDEO-002",
+      "category": "Video Handling",
+      "description": "Video thumbnail generation",
+      "stepsToVerify": [
+        "Upload video",
+        "View in feed",
+        "Verify thumbnail displayed (not blank)"
+      ],
+      "acceptanceCriteria": "Thumbnails auto-generated for videos",
+      "passes": false
+    },
+    {
+      "id": "VIDEO-003",
+      "category": "Video Handling",
+      "description": "Video full-screen playback",
+      "stepsToVerify": [
+        "Play video in feed",
+        "Enter full-screen",
+        "Verify controls available",
+        "Exit full-screen"
+      ],
+      "acceptanceCriteria": "Videos playable full-screen with controls",
+      "passes": false
+    },
+    {
+      "id": "EXPORT-001",
+      "category": "Photo Book Export",
+      "description": "System prompt at first year",
+      "stepsToVerify": [
+        "Child reaches 1 year old",
+        "Verify prompt to generate memory book",
+        "Tap to start generation"
+      ],
+      "acceptanceCriteria": "System prompts at child's first birthday",
+      "passes": false
+    },
+    {
+      "id": "EXPORT-002",
+      "category": "Photo Book Export",
+      "description": "Auto-generated book layout",
+      "stepsToVerify": [
+        "Initiate book generation",
+        "Verify milestone entries auto-selected",
+        "Verify preview displayed"
+      ],
+      "acceptanceCriteria": "System auto-generates layout from milestones",
+      "passes": false
+    },
+    {
+      "id": "EXPORT-003",
+      "category": "Photo Book Export",
+      "description": "Edit book layout",
+      "stepsToVerify": [
+        "Generate book",
+        "Add/remove entries",
+        "Reorder pages",
+        "Verify changes in preview"
+      ],
+      "acceptanceCriteria": "Parents can customize book before export",
+      "passes": false
+    },
+    {
+      "id": "EXPORT-004",
+      "category": "Photo Book Export",
+      "description": "PDF download (premium)",
+      "stepsToVerify": [
+        "As premium user, finalize book",
+        "Download PDF",
+        "Verify PDF content matches preview"
+      ],
+      "acceptanceCriteria": "Premium users can download PDF",
+      "passes": false
+    },
+    {
+      "id": "DATA-001",
+      "category": "Data & Privacy",
+      "description": "Download all memories",
+      "stepsToVerify": [
+        "Navigate to Settings",
+        "Initiate data export",
+        "Download ZIP",
+        "Verify contains folders, media, metadata"
+      ],
+      "acceptanceCriteria": "Users can export all data as ZIP",
+      "passes": false
+    },
+    {
+      "id": "DATA-002",
+      "category": "Data & Privacy",
+      "description": "Export available to all tiers",
+      "stepsToVerify": [
+        "As free tier, find export option",
+        "Verify not gated",
+        "Complete export"
+      ],
+      "acceptanceCriteria": "Data export available to free and premium",
+      "passes": false
+    },
+    {
+      "id": "DATA-003",
+      "category": "Data & Privacy",
+      "description": "Account deletion with confirmation",
+      "stepsToVerify": [
+        "Find 'Delete account'",
+        "Tap delete",
+        "Type 'DELETE' to confirm",
+        "Verify 30-day grace period message"
+      ],
+      "acceptanceCriteria": "Deletion requires confirmation with grace period",
+      "passes": false
+    },
+    {
+      "id": "DATA-004",
+      "category": "Data & Privacy",
+      "description": "Cancel deletion in grace period",
+      "stepsToVerify": [
+        "Delete account",
+        "Within 30 days, log in",
+        "Cancel deletion",
+        "Verify data intact"
+      ],
+      "acceptanceCriteria": "Can cancel deletion within grace period",
+      "passes": false
+    },
+    {
+      "id": "PAY-001",
+      "category": "Monetization",
+      "description": "Storage limit paywall",
+      "stepsToVerify": [
+        "Reach 500MB as free user",
+        "Attempt to upload",
+        "Verify blocked with upgrade prompt"
+      ],
+      "acceptanceCriteria": "Uploads blocked at limit with upgrade prompt",
+      "passes": false
+    },
+    {
+      "id": "PAY-002",
+      "category": "Monetization",
+      "description": "Stripe credit card payment",
+      "stepsToVerify": [
+        "Upgrade to Standard",
+        "Pay with credit card via Stripe",
+        "Verify subscription activated",
+        "Verify storage limit increased"
+      ],
+      "acceptanceCriteria": "Credit card payment via Stripe works",
+      "passes": false
+    },
+    {
+      "id": "PAY-003",
+      "category": "Monetization",
+      "description": "PayNow payment",
+      "stepsToVerify": [
+        "Upgrade",
+        "Select PayNow",
+        "Complete payment",
+        "Verify subscription activated"
+      ],
+      "acceptanceCriteria": "PayNow payment works",
+      "passes": false
+    },
+    {
+      "id": "PAY-004",
+      "category": "Monetization",
+      "description": "GrabPay payment",
+      "stepsToVerify": [
+        "Upgrade",
+        "Select GrabPay",
+        "Complete payment",
+        "Verify subscription activated"
+      ],
+      "acceptanceCriteria": "GrabPay payment works",
+      "passes": false
+    },
+    {
+      "id": "PAY-005",
+      "category": "Monetization",
+      "description": "Annual billing discount",
+      "stepsToVerify": [
+        "View pricing",
+        "Verify annual shows savings message",
+        "Complete annual purchase"
+      ],
+      "acceptanceCriteria": "Annual billing offers 2 months free",
+      "passes": false
+    },
+    {
+      "id": "PAY-006",
+      "category": "Monetization",
+      "description": "Upgrade tier",
+      "stepsToVerify": [
+        "Subscribe to Standard",
+        "Upgrade to Premium",
+        "Verify limits increase immediately"
+      ],
+      "acceptanceCriteria": "Can upgrade tier with proration",
+      "passes": false
+    },
+    {
+      "id": "PAY-007",
+      "category": "Monetization",
+      "description": "Cancel subscription",
+      "stepsToVerify": [
+        "Cancel subscription",
+        "Verify access continues until period ends",
+        "After period, verify reverts to free"
+      ],
+      "acceptanceCriteria": "Cancelled subs retain access until period ends",
+      "passes": false
+    },
+    {
+      "id": "PAY-008",
+      "category": "Monetization",
+      "description": "Failed payment grace period",
+      "stepsToVerify": [
+        "Simulate failed payment",
+        "Verify 7-day grace with reminders",
+        "After grace, verify downgrade to free"
+      ],
+      "acceptanceCriteria": "7-day grace period for failed payments",
+      "passes": false
+    },
+    {
+      "id": "MOBILE-001",
+      "category": "Mobile Experience",
+      "description": "App launch performance",
+      "stepsToVerify": [
+        "Kill app",
+        "Launch fresh",
+        "Verify usable within 3 seconds"
+      ],
+      "acceptanceCriteria": "App launches in under 3 seconds",
+      "passes": false
+    },
+    {
+      "id": "MOBILE-002",
+      "category": "Mobile Experience",
+      "description": "Tab navigation",
+      "stepsToVerify": [
+        "Tap each tab",
+        "Verify correct screen loads",
+        "Verify tab highlighted correctly"
+      ],
+      "acceptanceCriteria": "Tab navigation works smoothly",
+      "passes": false
+    },
+    {
+      "id": "MOBILE-003",
+      "category": "Mobile Experience",
+      "description": "Gesture navigation",
+      "stepsToVerify": [
+        "Navigate to detail screen",
+        "Swipe back",
+        "Verify returns to previous screen"
+      ],
+      "acceptanceCriteria": "Platform gestures work correctly",
+      "passes": false
+    },
+    {
+      "id": "MOBILE-004",
+      "category": "Mobile Experience",
+      "description": "Keyboard handling",
+      "stepsToVerify": [
+        "Tap text input",
+        "Verify keyboard appears",
+        "Verify screen adjusts so input visible",
+        "Dismiss keyboard"
+      ],
+      "acceptanceCriteria": "Keyboard doesn't obscure inputs",
+      "passes": false
+    },
+    {
+      "id": "MOBILE-005",
+      "category": "Mobile Experience",
+      "description": "Background/foreground transition",
+      "stepsToVerify": [
+        "Background app",
+        "Wait 30 seconds",
+        "Reopen app",
+        "Verify resumes to same screen"
+      ],
+      "acceptanceCriteria": "App resumes correctly from background",
+      "passes": false
+    },
+    {
+      "id": "MOBILE-006",
+      "category": "Mobile Experience",
+      "description": "Offline handling",
+      "stepsToVerify": [
+        "Enable airplane mode",
+        "Open app",
+        "Verify cached data viewable",
+        "Verify appropriate offline message"
+      ],
+      "acceptanceCriteria": "App handles offline gracefully",
+      "passes": false
+    },
+    {
+      "id": "WEBVIEW-001",
+      "category": "Web Viewer",
+      "description": "Web viewer loads from magic link",
+      "stepsToVerify": [
+        "Open magic link on desktop",
+        "Verify web viewer loads",
+        "Open on mobile browser",
+        "Verify responsive layout"
+      ],
+      "acceptanceCriteria": "Web viewer loads on desktop and mobile",
+      "passes": false
+    },
+    {
+      "id": "WEBVIEW-002",
+      "category": "Web Viewer",
+      "description": "Web viewer displays entries",
+      "stepsToVerify": [
+        "View feed as family member",
+        "Verify photos display",
+        "Verify videos play",
+        "Verify carousels work"
+      ],
+      "acceptanceCriteria": "All entry types display correctly",
+      "passes": false
+    },
+    {
+      "id": "FEEDBACK-001",
+      "category": "User Feedback",
+      "description": "In-app feedback",
+      "stepsToVerify": [
+        "Find feedback option in Settings",
+        "Tap and enter feedback",
+        "Submit",
+        "Verify confirmation"
+      ],
+      "acceptanceCriteria": "Users can submit feedback from app",
+      "passes": false
+    },
+    {
+      "id": "LEGAL-001",
+      "category": "Legal & Compliance",
+      "description": "Privacy Policy accessible",
+      "stepsToVerify": [
+        "Find Privacy Policy in Settings",
+        "Tap to view",
+        "Verify document loads"
+      ],
+      "acceptanceCriteria": "Privacy Policy accessible from app",
+      "passes": false
+    },
+    {
+      "id": "LEGAL-002",
+      "category": "Legal & Compliance",
+      "description": "Terms of Service accessible",
+      "stepsToVerify": [
+        "Find Terms of Service in Settings",
+        "Tap to view",
+        "Verify document loads"
+      ],
+      "acceptanceCriteria": "Terms of Service accessible from app",
+      "passes": false
+    },
+    {
+      "id": "ANALYTICS-001",
+      "category": "Analytics",
+      "description": "Core events tracked",
+      "stepsToVerify": [
+        "Complete signup",
+        "Verify signup_completed in PostHog",
+        "Create entry",
+        "Verify entry_created event"
+      ],
+      "acceptanceCriteria": "Core user actions tracked in analytics",
+      "passes": false
+    },
+    {
+      "id": "ANALYTICS-002",
+      "category": "Analytics",
+      "description": "Error tracking",
+      "stepsToVerify": [
+        "Trigger an error",
+        "Verify captured in Sentry",
+        "Verify includes context and stack trace"
+      ],
+      "acceptanceCriteria": "Errors tracked in Sentry with context",
+      "passes": false
+    }
+  ]
+}
