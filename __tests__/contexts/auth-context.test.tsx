@@ -3,17 +3,29 @@ import { Text } from "react-native";
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
 
 function TestConsumer() {
-  const { user, isLoading, isAuthenticated, signIn, signOut } = useAuth();
+  const {
+    user,
+    isLoading,
+    isAuthenticated,
+    hasCompletedOnboarding,
+    signIn,
+    signOut,
+    completeOnboarding,
+  } = useAuth();
   return (
     <>
       <Text testID="loading">{isLoading ? "loading" : "ready"}</Text>
       <Text testID="authenticated">{isAuthenticated ? "yes" : "no"}</Text>
+      <Text testID="onboarded">{hasCompletedOnboarding ? "yes" : "no"}</Text>
       <Text testID="user">{user?.email ?? "none"}</Text>
       <Text testID="sign-in" onPress={() => signIn("test@example.com")}>
         Sign In
       </Text>
       <Text testID="sign-out" onPress={() => signOut()}>
         Sign Out
+      </Text>
+      <Text testID="complete-onboarding" onPress={() => completeOnboarding()}>
+        Complete Onboarding
       </Text>
     </>
   );
@@ -95,5 +107,81 @@ describe("AuthContext", () => {
     );
 
     consoleSpy.mockRestore();
+  });
+
+  it("provides hasCompletedOnboarding as false initially", async () => {
+    render(
+      <AuthProvider>
+        <TestConsumer />
+      </AuthProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("loading")).toHaveTextContent("ready");
+    });
+    expect(screen.getByTestId("onboarded")).toHaveTextContent("no");
+  });
+
+  it("sets hasCompletedOnboarding to true after completeOnboarding", async () => {
+    render(
+      <AuthProvider>
+        <TestConsumer />
+      </AuthProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("loading")).toHaveTextContent("ready");
+    });
+
+    // Sign in first
+    await act(async () => {
+      screen.getByTestId("sign-in").props.onPress();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("authenticated")).toHaveTextContent("yes");
+    });
+
+    // Complete onboarding
+    await act(async () => {
+      screen.getByTestId("complete-onboarding").props.onPress();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("onboarded")).toHaveTextContent("yes");
+    });
+  });
+
+  it("resets hasCompletedOnboarding on signOut", async () => {
+    render(
+      <AuthProvider>
+        <TestConsumer />
+      </AuthProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("loading")).toHaveTextContent("ready");
+    });
+
+    // Sign in and complete onboarding
+    await act(async () => {
+      screen.getByTestId("sign-in").props.onPress();
+    });
+    await act(async () => {
+      screen.getByTestId("complete-onboarding").props.onPress();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("onboarded")).toHaveTextContent("yes");
+    });
+
+    // Sign out
+    await act(async () => {
+      screen.getByTestId("sign-out").props.onPress();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("onboarded")).toHaveTextContent("no");
+    });
   });
 });

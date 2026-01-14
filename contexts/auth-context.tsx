@@ -16,8 +16,10 @@ interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  hasCompletedOnboarding: boolean;
   signIn: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
+  completeOnboarding: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -29,10 +31,12 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
 
   useEffect(() => {
     // Check for existing session on mount
     // TODO: Replace with actual session check from expo-secure-store
+    // TODO: Also check if onboarding was completed
     const checkSession = async () => {
       setIsLoading(false);
     };
@@ -50,14 +54,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signOut = useCallback(async () => {
     // TODO: Clear token from expo-secure-store
     setUser(null);
+    setHasCompletedOnboarding(false);
+  }, []);
+
+  const completeOnboarding = useCallback(async () => {
+    // TODO: Persist onboarding completion to backend/storage
+    setHasCompletedOnboarding(true);
   }, []);
 
   const value: AuthContextValue = {
     user,
     isLoading,
     isAuthenticated: user !== null,
+    hasCompletedOnboarding,
     signIn,
     signOut,
+    completeOnboarding,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

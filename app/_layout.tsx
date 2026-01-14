@@ -12,22 +12,32 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
 
 function RootLayoutNav() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, hasCompletedOnboarding } = useAuth();
   const segments = useSegments();
 
   useEffect(() => {
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === "(auth)";
+    const inOnboardingGroup = segments[0] === "(onboarding)";
 
-    if (!isAuthenticated && !inAuthGroup) {
-      // Redirect to sign-in if not authenticated
-      router.replace("/(auth)/sign-in");
-    } else if (isAuthenticated && inAuthGroup) {
-      // Redirect to main app if already authenticated
-      router.replace("/(tabs)");
+    if (!isAuthenticated) {
+      // Not authenticated - go to sign-in
+      if (!inAuthGroup) {
+        router.replace("/(auth)/sign-in");
+      }
+    } else if (!hasCompletedOnboarding) {
+      // Authenticated but not onboarded - go to onboarding
+      if (!inOnboardingGroup) {
+        router.replace("/(onboarding)/add-child");
+      }
+    } else {
+      // Authenticated and onboarded - go to main app
+      if (inAuthGroup || inOnboardingGroup) {
+        router.replace("/(tabs)");
+      }
     }
-  }, [isAuthenticated, isLoading, segments]);
+  }, [isAuthenticated, isLoading, hasCompletedOnboarding, segments]);
 
   return <Slot />;
 }

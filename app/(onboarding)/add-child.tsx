@@ -6,33 +6,41 @@ import { useAuth } from "@/contexts/auth-context";
 
 const PRIMARY_COLOR = "#0a7ea4";
 
-export default function SignInScreen() {
-  const { signIn } = useAuth();
+export default function AddChildScreen() {
+  const { completeOnboarding } = useAuth();
 
-  const handleSignIn = async () => {
-    // TODO: Replace with actual auth flow (magic link input, OAuth buttons)
-    await signIn("demo@littlejourney.sg");
-    // After sign-in, redirect to onboarding (root layout handles this)
+  const handleContinue = async () => {
+    // TODO: Add form fields for child name, DOB, photo
+    // TODO: Save child data to backend
+    // For now, just complete onboarding (root layout handles navigation)
+    await completeOnboarding();
   };
 
   return (
     <ThemedView style={styles.container}>
       <ThemedText type="title" style={styles.title}>
-        Little Journey
+        Add Your Child
       </ThemedText>
       <ThemedText style={styles.subtitle}>
-        Capture your baby&apos;s precious moments
+        Tell us about your little one to get started
+      </ThemedText>
+
+      <ThemedText style={styles.placeholder}>
+        Child form fields coming soon:
+        {"\n"}- Name (required)
+        {"\n"}- Date of birth (required)
+        {"\n"}- Photo (optional)
       </ThemedText>
 
       <Pressable
         style={[styles.button, { backgroundColor: PRIMARY_COLOR }]}
-        onPress={handleSignIn}
+        onPress={handleContinue}
       >
-        <Text style={styles.buttonText}>Continue with Email</Text>
+        <Text style={styles.buttonText}>Continue</Text>
       </Pressable>
 
       <ThemedText style={styles.hint}>
-        Demo: Tap to sign in automatically
+        Demo: Tap to complete onboarding
       </ThemedText>
     </ThemedView>
   );
@@ -49,9 +57,15 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   subtitle: {
-    marginBottom: 48,
+    marginBottom: 32,
     textAlign: "center",
     opacity: 0.7,
+  },
+  placeholder: {
+    marginBottom: 48,
+    textAlign: "left",
+    opacity: 0.5,
+    lineHeight: 24,
   },
   button: {
     paddingHorizontal: 32,

@@ -47,3 +47,28 @@
 **Verification:** tsc, lint, test (9 passed), build all pass. UI verified via Chrome MCP.
 
 **Next:** Guided onboarding flow (PRD Section 1.3) or child profile creation
+
+## 2026-01-15: Onboarding Route Group and Flow
+
+**PRD ref:** Phase 1 Weeks 3-4, Section 1.3 (Guided Onboarding Flow)
+
+**Task:** Set up onboarding architecture - route group, routing logic, placeholder add-child screen
+
+**Decisions:**
+- Added hasCompletedOnboarding + completeOnboarding to auth context (mock, ready for backend)
+- 3-way routing in root layout: auth -> onboarding -> tabs
+- Onboarding screens in (onboarding) route group with Stack navigator
+- headerBackVisible: false, gestureEnabled: false to prevent back navigation during onboarding
+- add-child is first onboarding step (step 2 per PRD, step 1 sign-up already done)
+
+**Files changed:**
+- contexts/auth-context.tsx - Added hasCompletedOnboarding, completeOnboarding
+- app/_layout.tsx - Updated RootLayoutNav with 3-way routing logic
+- app/(onboarding)/_layout.tsx - New: Onboarding route group layout
+- app/(onboarding)/add-child.tsx - New: Add child placeholder screen
+- app/(auth)/sign-in.tsx - Removed manual router.replace (handled by root layout)
+- __tests__/contexts/auth-context.test.tsx - Added 3 tests for onboarding state
+
+**Verification:** tsc, lint, test (12 passed), build all pass. UI verified via Chrome MCP.
+
+**Next:** Child form fields (name, DOB, photo) or remaining onboarding steps (culture, prompt time, invite)
