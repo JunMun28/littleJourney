@@ -204,3 +204,30 @@
 **Verification:** tsc, lint, test (35 passed), build all pass.
 
 **Next:** Core Feed features (entry creation, photo upload) per PRD Phase 1 Weeks 5-7
+
+## 2026-01-15: Entry Context and Feed UI
+
+**PRD ref:** Phase 1 Weeks 5-7, Section 3 (Entry Creation), Section 4 (Timeline & Feed)
+
+**Task:** Implement entry types, context, and feed UI with entry creation modal
+
+**Decisions:**
+- Created EntryContext + useEntries hook for entry state management (TDD approach)
+- Entry type: id, type (photo/video/text), mediaUris (carousel), caption, date, tags, timestamps
+- Entries stored reverse chronological (newest first) per PRD Section 4.1
+- Feed shows FlatList with EntryCard components, EmptyState when no entries
+- Floating action button (+) opens entry creation modal
+- 2-step creation flow: type selection -> caption/media
+- Photo/video picker reuses expo-image-picker from onboarding
+- Multiple photo selection supported for carousel entries
+- Entry card shows image, video placeholder, caption, date, carousel indicator
+
+**Files changed:**
+- contexts/entry-context.tsx - New: EntryProvider, useEntries hook, Entry/EntryType types
+- app/_layout.tsx - Added EntryProvider wrapper
+- app/(tabs)/index.tsx - Full feed UI with entry cards, FAB, creation modal
+- __tests__/contexts/entry-context.test.tsx - New: 8 TDD tests for entry context
+
+**Verification:** tsc, lint, test (43 passed), build all pass.
+
+**Next:** Pull-to-refresh, entry detail view, or photo carousel swipe per PRD Section 4
