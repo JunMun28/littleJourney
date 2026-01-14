@@ -14,6 +14,7 @@ import { ChildProvider } from "@/contexts/child-context";
 import { EntryProvider } from "@/contexts/entry-context";
 import { ExportProvider } from "@/contexts/export-context";
 import { FamilyProvider } from "@/contexts/family-context";
+import { PhotoBookProvider } from "@/contexts/photo-book-context";
 import { MilestoneProvider } from "@/contexts/milestone-context";
 import { NotificationProvider } from "@/contexts/notification-context";
 import { StorageProvider } from "@/contexts/storage-context";
@@ -65,14 +66,16 @@ export default function RootLayout() {
                   <StorageProvider>
                     <SubscriptionProvider>
                       <ExportProvider>
-                        <ThemeProvider
-                          value={
-                            colorScheme === "dark" ? DarkTheme : DefaultTheme
-                          }
-                        >
-                          <RootLayoutNav />
-                          <StatusBar style="auto" />
-                        </ThemeProvider>
+                        <PhotoBookProvider>
+                          <ThemeProvider
+                            value={
+                              colorScheme === "dark" ? DarkTheme : DefaultTheme
+                            }
+                          >
+                            <RootLayoutNav />
+                            <StatusBar style="auto" />
+                          </ThemeProvider>
+                        </PhotoBookProvider>
                       </ExportProvider>
                     </SubscriptionProvider>
                   </StorageProvider>

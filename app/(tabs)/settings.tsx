@@ -17,6 +17,7 @@ import DateTimePicker, {
   type DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
+import { router } from "expo-router";
 import { useAuth } from "@/contexts/auth-context";
 import { useChild, type CulturalTradition } from "@/contexts/child-context";
 import { useExport } from "@/contexts/export-context";
@@ -632,6 +633,25 @@ export default function SettingsScreen() {
               </Text>
             </Pressable>
           )}
+        </View>
+      </View>
+
+      {/* Photo Book Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionHeader}>Photo Book</Text>
+
+        <View style={styles.photoBookContainer}>
+          <Text style={styles.photoBookDescription}>
+            Create a beautiful photo book from your milestone moments
+          </Text>
+
+          <Pressable
+            style={styles.actionButton}
+            onPress={() => router.push("/photo-book")}
+            testID="create-photo-book-button"
+          >
+            <Text style={styles.actionButtonText}>Create Photo Book</Text>
+          </Pressable>
         </View>
       </View>
 
@@ -1421,6 +1441,16 @@ const styles = StyleSheet.create({
   upgradeText: {
     fontSize: 14,
     color: PRIMARY_COLOR,
+    textAlign: "center",
+  },
+  // Photo Book styles
+  photoBookContainer: {
+    paddingVertical: 8,
+  },
+  photoBookDescription: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 12,
     textAlign: "center",
   },
   // Export styles

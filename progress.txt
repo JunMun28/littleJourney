@@ -727,3 +727,33 @@
 **Verification:** tsc, lint, test (150 passed), build all pass.
 
 **Next:** Photo book export (PRD Section 10) or UI polish
+
+## 2026-01-15: Photo Book Export Feature
+
+**PRD ref:** Phase 1 Weeks 12-13 (Polish), Section 10 (Photo Book Export)
+
+**Task:** Implement photo book generation and PDF export (premium feature)
+
+**Decisions:**
+- Created PhotoBookContext + usePhotoBook hook for photo book state management (TDD approach)
+- PhotoBookPage type: title, photo, milestone, blank page types
+- Auto-generates pages from milestone entries + regular photo entries
+- Milestones within 3 days of entry date get associated as milestone pages
+- Title page auto-generated with child name and birth date
+- Pages can be reordered, removed, and captions edited
+- canExportPdf checks subscription tier (premium/standard only per PRD 10.3)
+- Photo Book screen: preview with page cards, edit/remove actions, regenerate option
+- PageCard component shows page number, image, caption, milestone badge
+- Export button shows "Premium" badge if user on free tier
+- Photo Book section added to Settings with "Create Photo Book" button
+
+**Files changed:**
+- contexts/photo-book-context.tsx - New: PhotoBookProvider, usePhotoBook, types
+- app/_layout.tsx - Added PhotoBookProvider wrapper
+- app/photo-book.tsx - New: Full photo book preview with page list, edit modal
+- app/(tabs)/settings.tsx - Added Photo Book section with navigation button
+- __tests__/contexts/photo-book-context.test.tsx - New: 7 TDD tests for photo book context
+
+**Verification:** tsc, lint, test (157 passed), build all pass.
+
+**Next:** UI polish, dark mode improvements, or actual PDF generation implementation
