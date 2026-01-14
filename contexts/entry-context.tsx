@@ -29,6 +29,7 @@ interface EntryContextValue {
   updateEntry: (id: string, updates: Partial<NewEntry>) => void;
   deleteEntry: (id: string) => void;
   getEntry: (id: string) => Entry | undefined;
+  getOnThisDayEntries: () => Entry[];
 }
 
 const EntryContext = createContext<EntryContextValue | null>(null);
@@ -82,12 +83,29 @@ export function EntryProvider({ children }: EntryProviderProps) {
     [entries],
   );
 
+  const getOnThisDayEntries = useCallback((): Entry[] => {
+    const today = new Date();
+    const todayMonth = today.getMonth();
+    const todayDay = today.getDate();
+    const todayYear = today.getFullYear();
+
+    return entries.filter((entry) => {
+      const entryDate = new Date(entry.date);
+      return (
+        entryDate.getMonth() === todayMonth &&
+        entryDate.getDate() === todayDay &&
+        entryDate.getFullYear() < todayYear
+      );
+    });
+  }, [entries]);
+
   const value: EntryContextValue = {
     entries,
     addEntry,
     updateEntry,
     deleteEntry,
     getEntry,
+    getOnThisDayEntries,
   };
 
   return (

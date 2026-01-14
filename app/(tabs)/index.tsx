@@ -44,6 +44,63 @@ function EmptyState() {
   );
 }
 
+interface OnThisDayCardProps {
+  memories: Entry[];
+  onPress: (entry: Entry) => void;
+}
+
+function OnThisDayCard({ memories, onPress }: OnThisDayCardProps) {
+  if (memories.length === 0) return null;
+
+  const yearsAgo = (date: string) => {
+    const entryYear = new Date(date).getFullYear();
+    const currentYear = new Date().getFullYear();
+    const diff = currentYear - entryYear;
+    return diff === 1 ? "1 year ago" : `${diff} years ago`;
+  };
+
+  return (
+    <View style={styles.onThisDayCard}>
+      <View style={styles.onThisDayHeader}>
+        <ThemedText style={styles.onThisDayIcon}>✨</ThemedText>
+        <ThemedText type="subtitle" style={styles.onThisDayTitle}>
+          On This Day
+        </ThemedText>
+      </View>
+      <ThemedText style={styles.onThisDaySubtitle}>
+        {memories.length === 1
+          ? "A memory from the past"
+          : `${memories.length} memories from the past`}
+      </ThemedText>
+      <View style={styles.onThisDayMemories}>
+        {memories.slice(0, 3).map((memory) => (
+          <Pressable
+            key={memory.id}
+            style={styles.onThisDayMemory}
+            onPress={() => onPress(memory)}
+          >
+            {memory.mediaUris && memory.mediaUris.length > 0 ? (
+              <Image
+                source={{ uri: memory.mediaUris[0] }}
+                style={styles.onThisDayImage}
+              />
+            ) : (
+              <View style={styles.onThisDayTextPlaceholder}>
+                <ThemedText style={styles.onThisDayPlaceholderIcon}>
+                  ✏️
+                </ThemedText>
+              </View>
+            )}
+            <ThemedText style={styles.onThisDayYears}>
+              {yearsAgo(memory.date)}
+            </ThemedText>
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  );
+}
+
 interface EntryCardProps {
   entry: Entry;
   onPress: () => void;
@@ -83,9 +140,10 @@ function EntryCard({ entry, onPress }: EntryCardProps) {
 type CreateStep = "type" | "media" | "caption";
 
 export default function FeedScreen() {
-  const { entries, addEntry } = useEntries();
+  const { entries, addEntry, getOnThisDayEntries } = useEntries();
   const { child } = useChild();
   const { canUpload, canUploadVideo, addUsage, tier } = useStorage();
+  const onThisDayMemories = getOnThisDayEntries();
 
   const [refreshing, setRefreshing] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -244,9 +302,17 @@ export default function FeedScreen() {
             onPress={() => router.push(`/entry/${item.id}`)}
           />
         )}
+        ListHeaderComponent={
+          <OnThisDayCard
+            memories={onThisDayMemories}
+            onPress={(entry) => router.push(`/entry/${entry.id}`)}
+          />
+        }
         ListEmptyComponent={EmptyState}
         contentContainerStyle={
-          entries.length === 0 ? styles.listEmpty : styles.list
+          entries.length === 0 && onThisDayMemories.length === 0
+            ? styles.listEmpty
+            : styles.list
         }
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -483,5 +549,58 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+  },
+  onThisDayCard: {
+    backgroundColor: "rgba(255, 215, 0, 0.15)",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255, 215, 0, 0.3)",
+  },
+  onThisDayHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  onThisDayIcon: {
+    fontSize: 20,
+    marginRight: 8,
+  },
+  onThisDayTitle: {
+    fontWeight: "600",
+  },
+  onThisDaySubtitle: {
+    opacity: 0.7,
+    marginBottom: 12,
+  },
+  onThisDayMemories: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  onThisDayMemory: {
+    alignItems: "center",
+  },
+  onThisDayImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    marginBottom: 4,
+  },
+  onThisDayTextPlaceholder: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    backgroundColor: "rgba(128, 128, 128, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  onThisDayPlaceholderIcon: {
+    fontSize: 24,
+  },
+  onThisDayYears: {
+    fontSize: 12,
+    opacity: 0.7,
   },
 });

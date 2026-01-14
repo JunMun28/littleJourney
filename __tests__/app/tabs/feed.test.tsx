@@ -1,6 +1,108 @@
 import { renderHook, act } from "@testing-library/react-native";
 import { useStorage, StorageProvider } from "@/contexts/storage-context";
+import { useEntries, EntryProvider } from "@/contexts/entry-context";
 import type { ReactNode } from "react";
+
+describe("On This Day memories", () => {
+  const entryWrapper = ({ children }: { children: ReactNode }) => (
+    <EntryProvider>{children}</EntryProvider>
+  );
+
+  it("should return empty array when no entries from previous years on this day", () => {
+    const { result } = renderHook(() => useEntries(), {
+      wrapper: entryWrapper,
+    });
+
+    // Add entry from today (current year)
+    const today = new Date().toISOString().split("T")[0];
+    act(() => {
+      result.current.addEntry({
+        type: "photo",
+        caption: "Today's entry",
+        date: today,
+      });
+    });
+
+    expect(result.current.getOnThisDayEntries()).toHaveLength(0);
+  });
+
+  it("should find entries from same day in previous years", () => {
+    const { result } = renderHook(() => useEntries(), {
+      wrapper: entryWrapper,
+    });
+
+    // Create date string for same day last year (use string format to avoid TZ issues)
+    const today = new Date();
+    const year = today.getFullYear() - 1;
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    const lastYearDate = `${year}-${month}-${day}`;
+
+    act(() => {
+      result.current.addEntry({
+        type: "photo",
+        caption: "Memory from last year",
+        date: lastYearDate,
+      });
+    });
+
+    const memories = result.current.getOnThisDayEntries();
+    expect(memories).toHaveLength(1);
+    expect(memories[0].caption).toBe("Memory from last year");
+  });
+
+  it("should find entries from multiple previous years", () => {
+    const { result } = renderHook(() => useEntries(), {
+      wrapper: entryWrapper,
+    });
+
+    // Use string format to avoid TZ issues
+    const today = new Date();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    const lastYearDate = `${today.getFullYear() - 1}-${month}-${day}`;
+    const twoYearsAgoDate = `${today.getFullYear() - 2}-${month}-${day}`;
+
+    act(() => {
+      result.current.addEntry({
+        type: "photo",
+        caption: "One year ago",
+        date: lastYearDate,
+      });
+      result.current.addEntry({
+        type: "text",
+        caption: "Two years ago",
+        date: twoYearsAgoDate,
+      });
+    });
+
+    expect(result.current.getOnThisDayEntries()).toHaveLength(2);
+  });
+
+  it("should not include entries from different days in previous years", () => {
+    const { result } = renderHook(() => useEntries(), {
+      wrapper: entryWrapper,
+    });
+
+    // Use string format to avoid TZ issues - pick a day that's definitely different
+    const today = new Date();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    // Pick day 28 if today is not 28, otherwise pick 27 (safe for all months)
+    const differentDay = today.getDate() === 28 ? 27 : 28;
+    const differentDayStr = String(differentDay).padStart(2, "0");
+    const differentDate = `${today.getFullYear() - 1}-${month}-${differentDayStr}`;
+
+    act(() => {
+      result.current.addEntry({
+        type: "photo",
+        caption: "Different day last year",
+        date: differentDate,
+      });
+    });
+
+    expect(result.current.getOnThisDayEntries()).toHaveLength(0);
+  });
+});
 
 // Test storage enforcement for entry creation
 describe("Feed storage integration", () => {
