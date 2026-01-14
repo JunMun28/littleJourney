@@ -3,11 +3,11 @@ import { StyleSheet } from "react-native";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 
-export default function FeedScreen() {
+export default function SearchScreen() {
   return (
     <ThemedView style={styles.container}>
-      <ThemedText type="title">Feed</ThemedText>
-      <ThemedText>Your baby&apos;s moments will appear here.</ThemedText>
+      <ThemedText type="title">Search</ThemedText>
+      <ThemedText>Search through your memories.</ThemedText>
     </ThemedView>
   );
 }

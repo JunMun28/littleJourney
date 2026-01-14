@@ -1,0 +1,25 @@
+# Little Journey - Development Progress
+
+## 2026-01-14: Core Tab Navigation Setup
+
+**PRD ref:** Phase 1 Weeks 1-2 Foundation, Section 4.1 Primary View
+
+**Task:** Set up 4-tab navigation structure (Feed, Milestones, Search, Settings)
+
+**Decisions:**
+- Used index.tsx as Feed tab (Expo Router convention for default route)
+- Removed template explore.tsx
+- Icons: house.fill (Feed), star.fill (Milestones), magnifyingglass (Search), gearshape.fill (Settings)
+- headerShown: true for proper screen titles
+
+**Files changed:**
+- app/(tabs)/_layout.tsx - Updated with 4 tabs
+- app/(tabs)/index.tsx - Feed screen (renamed from feed.tsx)
+- app/(tabs)/milestones.tsx - New placeholder
+- app/(tabs)/search.tsx - New placeholder
+- app/(tabs)/settings.tsx - New placeholder
+- Deleted: app/(tabs)/explore.tsx
+
+**Verification:** tsc, lint, test, build all pass
+
+**Next:** Authentication flow or onboarding screens per PRD Phase 1 Weeks 3-4
