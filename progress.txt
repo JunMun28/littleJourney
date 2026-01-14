@@ -601,3 +601,30 @@
 **Verification:** tsc, lint, test (121 passed), build all pass.
 
 **Next:** Account deletion (PRD Section 11.2) or Stripe payments (PRD Section 12.2)
+
+## 2026-01-15: Account Deletion Feature
+
+**PRD ref:** Phase 1 Weeks 12-13, Section 11.2 (Account Deletion)
+
+**Task:** Implement account deletion with 30-day grace period per PRD
+
+**Decisions:**
+- Added deletionScheduledAt, requestAccountDeletion, cancelAccountDeletion to AuthContext
+- requestAccountDeletion sets deletion date 30 days in future (grace period per PRD)
+- cancelAccountDeletion clears scheduled deletion
+- signOut clears deletion state
+- Settings shows "Delete Account" button opening modal with confirmation
+- User must type "DELETE" to confirm (PRD requirement)
+- Modal shows warning list of data to be deleted and 30-day grace period info
+- When deletion scheduled: shows yellow banner with date and "Cancel Deletion" button
+- Delete button hidden when deletion already scheduled (replaced by cancel banner)
+
+**Files changed:**
+- contexts/auth-context.tsx - Added deletionScheduledAt state, requestAccountDeletion/cancelAccountDeletion methods
+- app/(tabs)/settings.tsx - Added delete account modal, confirmation flow, scheduled deletion UI
+- __tests__/contexts/auth-context.test.tsx - Added 4 TDD tests for deletion state
+- __tests__/app/tabs/settings.test.tsx - Added 2 tests for delete account UI
+
+**Verification:** tsc, lint, test (127 passed), build all pass.
+
+**Next:** Stripe payments integration (PRD Section 12.2) or UI polish

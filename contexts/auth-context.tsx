@@ -17,9 +17,12 @@ interface AuthContextValue {
   isLoading: boolean;
   isAuthenticated: boolean;
   hasCompletedOnboarding: boolean;
+  deletionScheduledAt: string | null;
   signIn: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
   completeOnboarding: () => Promise<void>;
+  requestAccountDeletion: () => Promise<void>;
+  cancelAccountDeletion: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -32,6 +35,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const [deletionScheduledAt, setDeletionScheduledAt] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     // Check for existing session on mount
@@ -55,6 +61,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // TODO: Clear token from expo-secure-store
     setUser(null);
     setHasCompletedOnboarding(false);
+    setDeletionScheduledAt(null);
   }, []);
 
   const completeOnboarding = useCallback(async () => {
@@ -62,14 +69,30 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setHasCompletedOnboarding(true);
   }, []);
 
+  const requestAccountDeletion = useCallback(async () => {
+    // TODO: Send deletion request to backend
+    // PRD Section 11.2: 30-day grace period before permanent deletion
+    const deletionDate = new Date();
+    deletionDate.setDate(deletionDate.getDate() + 30);
+    setDeletionScheduledAt(deletionDate.toISOString());
+  }, []);
+
+  const cancelAccountDeletion = useCallback(async () => {
+    // TODO: Cancel deletion request on backend
+    setDeletionScheduledAt(null);
+  }, []);
+
   const value: AuthContextValue = {
     user,
     isLoading,
     isAuthenticated: user !== null,
     hasCompletedOnboarding,
+    deletionScheduledAt,
     signIn,
     signOut,
     completeOnboarding,
+    requestAccountDeletion,
+    cancelAccountDeletion,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

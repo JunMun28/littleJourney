@@ -27,7 +27,7 @@ import { useStorage } from "@/contexts/storage-context";
 
 const PRIMARY_COLOR = "#0a7ea4";
 
-type ModalState = "closed" | "inviteFamily" | "timePicker";
+type ModalState = "closed" | "inviteFamily" | "timePicker" | "deleteAccount";
 
 function formatDisplayTime(time: string): string {
   const [hours, minutes] = time.split(":").map(Number);
@@ -72,7 +72,13 @@ function getTierDisplayName(tier: string): string {
 }
 
 export default function SettingsScreen() {
-  const { user, signOut } = useAuth();
+  const {
+    user,
+    signOut,
+    deletionScheduledAt,
+    requestAccountDeletion,
+    cancelAccountDeletion,
+  } = useAuth();
   const {
     settings,
     updateSettings,
@@ -94,6 +100,7 @@ export default function SettingsScreen() {
   const [inviteRelationship, setInviteRelationship] = useState("");
   const [invitePermission, setInvitePermission] =
     useState<PermissionLevel>("view_interact");
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
   const handleToggleNotification = async (
     key: keyof NotificationSettings,
@@ -170,6 +177,18 @@ export default function SettingsScreen() {
 
   const isInviteValid =
     inviteEmail.trim().includes("@") && inviteRelationship.trim().length > 0;
+
+  const handleDeleteAccount = async () => {
+    await requestAccountDeletion();
+    setDeleteConfirmText("");
+    setModalState("closed");
+  };
+
+  const handleCancelDeletion = async () => {
+    await cancelAccountDeletion();
+  };
+
+  const isDeleteConfirmValid = deleteConfirmText === "DELETE";
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -393,6 +412,38 @@ export default function SettingsScreen() {
         <Pressable style={styles.signOutButton} onPress={handleSignOut}>
           <Text style={styles.signOutText}>Sign Out</Text>
         </Pressable>
+
+        {/* Account Deletion */}
+        {deletionScheduledAt ? (
+          <View style={styles.deletionScheduledContainer}>
+            <Text style={styles.deletionScheduledTitle}>
+              Account deletion scheduled
+            </Text>
+            <Text style={styles.deletionScheduledDate}>
+              Your account and all data will be permanently deleted on{" "}
+              {new Date(deletionScheduledAt).toLocaleDateString("en-SG", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
+            </Text>
+            <Pressable
+              style={styles.cancelDeletionButton}
+              onPress={handleCancelDeletion}
+              testID="cancel-deletion-button"
+            >
+              <Text style={styles.cancelDeletionText}>Cancel Deletion</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <Pressable
+            style={styles.deleteAccountButton}
+            onPress={() => setModalState("deleteAccount")}
+            testID="delete-account-button"
+          >
+            <Text style={styles.deleteAccountText}>Delete Account</Text>
+          </Pressable>
+        )}
       </View>
 
       {/* Invite Family Modal */}
@@ -516,6 +567,91 @@ export default function SettingsScreen() {
             />
           </View>
         </View>
+      </Modal>
+
+      {/* Delete Account Modal */}
+      <Modal
+        visible={modalState === "deleteAccount"}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => {
+          setDeleteConfirmText("");
+          setModalState("closed");
+        }}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalContainer}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <View style={styles.modalHeader}>
+            <Pressable
+              onPress={() => {
+                setDeleteConfirmText("");
+                setModalState("closed");
+              }}
+            >
+              <Text style={styles.modalCancel}>Cancel</Text>
+            </Pressable>
+            <Text style={styles.modalTitle}>Delete Account</Text>
+            <View style={{ width: 50 }} />
+          </View>
+
+          <View style={styles.deleteModalContent}>
+            <Text style={styles.deleteWarningTitle}>⚠️ Warning</Text>
+            <Text style={styles.deleteWarningText}>
+              This will permanently delete your account and all your data,
+              including:
+            </Text>
+            <View style={styles.deleteWarningList}>
+              <Text style={styles.deleteWarningItem}>
+                • All journal entries
+              </Text>
+              <Text style={styles.deleteWarningItem}>
+                • All photos and videos
+              </Text>
+              <Text style={styles.deleteWarningItem}>• Child profiles</Text>
+              <Text style={styles.deleteWarningItem}>• Milestones</Text>
+              <Text style={styles.deleteWarningItem}>
+                • Family member access
+              </Text>
+            </View>
+
+            <Text style={styles.deleteGracePeriod}>
+              You will have 30 days to cancel this request. After that, your
+              data will be permanently deleted and cannot be recovered.
+            </Text>
+
+            <Text style={styles.inputLabel}>Type DELETE to confirm</Text>
+            <TextInput
+              style={styles.textInput}
+              value={deleteConfirmText}
+              onChangeText={setDeleteConfirmText}
+              placeholder="DELETE"
+              autoCapitalize="characters"
+              testID="delete-confirm-input"
+            />
+
+            <Pressable
+              style={[
+                styles.deleteConfirmButton,
+                !isDeleteConfirmValid && styles.deleteConfirmButtonDisabled,
+              ]}
+              onPress={handleDeleteAccount}
+              disabled={!isDeleteConfirmValid}
+              testID="confirm-delete-button"
+            >
+              <Text
+                style={[
+                  styles.deleteConfirmButtonText,
+                  !isDeleteConfirmValid &&
+                    styles.deleteConfirmButtonTextDisabled,
+                ]}
+              >
+                Delete My Account
+              </Text>
+            </Pressable>
+          </View>
+        </KeyboardAvoidingView>
       </Modal>
     </ScrollView>
   );
@@ -783,5 +919,95 @@ const styles = StyleSheet.create({
     color: "#999",
     marginTop: 8,
     textAlign: "center",
+  },
+  // Account deletion styles
+  deleteAccountButton: {
+    paddingVertical: 12,
+    alignItems: "center",
+    marginTop: 8,
+  },
+  deleteAccountText: {
+    fontSize: 16,
+    color: "#ff3b30",
+  },
+  deletionScheduledContainer: {
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: "#fff3cd",
+    borderRadius: 8,
+  },
+  deletionScheduledTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#856404",
+    marginBottom: 8,
+  },
+  deletionScheduledDate: {
+    fontSize: 14,
+    color: "#856404",
+    marginBottom: 12,
+  },
+  cancelDeletionButton: {
+    backgroundColor: "#fff",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#856404",
+  },
+  cancelDeletionText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#856404",
+  },
+  deleteModalContent: {
+    padding: 16,
+  },
+  deleteWarningTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#ff3b30",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  deleteWarningText: {
+    fontSize: 16,
+    color: "#333",
+    marginBottom: 12,
+  },
+  deleteWarningList: {
+    marginBottom: 16,
+  },
+  deleteWarningItem: {
+    fontSize: 15,
+    color: "#666",
+    marginBottom: 4,
+  },
+  deleteGracePeriod: {
+    fontSize: 14,
+    color: "#666",
+    backgroundColor: "#f5f5f5",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  deleteConfirmButton: {
+    backgroundColor: "#ff3b30",
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 16,
+  },
+  deleteConfirmButtonDisabled: {
+    backgroundColor: "#ccc",
+  },
+  deleteConfirmButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#fff",
+  },
+  deleteConfirmButtonTextDisabled: {
+    color: "#999",
   },
 });

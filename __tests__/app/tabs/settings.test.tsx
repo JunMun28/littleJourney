@@ -163,4 +163,24 @@ describe("SettingsScreen", () => {
       ),
     ).toBeTruthy();
   });
+
+  it("renders delete account button", () => {
+    renderWithProviders(<SettingsScreen />);
+
+    expect(screen.getByTestId("delete-account-button")).toBeTruthy();
+    expect(screen.getByText("Delete Account")).toBeTruthy();
+  });
+
+  it("opens delete account modal when delete button is pressed", () => {
+    renderWithProviders(<SettingsScreen />);
+
+    fireEvent.press(screen.getByTestId("delete-account-button"));
+
+    // Modal should show warning and confirmation input
+    expect(screen.getByText("⚠️ Warning")).toBeTruthy();
+    expect(screen.getByText(/permanently delete your account/)).toBeTruthy();
+    expect(screen.getByText(/30 days to cancel/)).toBeTruthy();
+    expect(screen.getByTestId("delete-confirm-input")).toBeTruthy();
+    expect(screen.getByTestId("confirm-delete-button")).toBeTruthy();
+  });
 });

@@ -11,6 +11,9 @@ function TestConsumer() {
     signIn,
     signOut,
     completeOnboarding,
+    deletionScheduledAt,
+    requestAccountDeletion,
+    cancelAccountDeletion,
   } = useAuth();
   return (
     <>
@@ -18,6 +21,9 @@ function TestConsumer() {
       <Text testID="authenticated">{isAuthenticated ? "yes" : "no"}</Text>
       <Text testID="onboarded">{hasCompletedOnboarding ? "yes" : "no"}</Text>
       <Text testID="user">{user?.email ?? "none"}</Text>
+      <Text testID="deletion-scheduled">
+        {deletionScheduledAt ?? "not-scheduled"}
+      </Text>
       <Text testID="sign-in" onPress={() => signIn("test@example.com")}>
         Sign In
       </Text>
@@ -26,6 +32,12 @@ function TestConsumer() {
       </Text>
       <Text testID="complete-onboarding" onPress={() => completeOnboarding()}>
         Complete Onboarding
+      </Text>
+      <Text testID="request-deletion" onPress={() => requestAccountDeletion()}>
+        Request Deletion
+      </Text>
+      <Text testID="cancel-deletion" onPress={() => cancelAccountDeletion()}>
+        Cancel Deletion
       </Text>
     </>
   );
@@ -182,6 +194,131 @@ describe("AuthContext", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("onboarded")).toHaveTextContent("no");
+    });
+  });
+
+  it("provides deletionScheduledAt as null initially", async () => {
+    render(
+      <AuthProvider>
+        <TestConsumer />
+      </AuthProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("loading")).toHaveTextContent("ready");
+    });
+    expect(screen.getByTestId("deletion-scheduled")).toHaveTextContent(
+      "not-scheduled",
+    );
+  });
+
+  it("sets deletionScheduledAt when requestAccountDeletion is called", async () => {
+    render(
+      <AuthProvider>
+        <TestConsumer />
+      </AuthProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("loading")).toHaveTextContent("ready");
+    });
+
+    // Sign in first
+    await act(async () => {
+      screen.getByTestId("sign-in").props.onPress();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("authenticated")).toHaveTextContent("yes");
+    });
+
+    // Request deletion
+    await act(async () => {
+      screen.getByTestId("request-deletion").props.onPress();
+    });
+
+    await waitFor(() => {
+      const deletionText =
+        screen.getByTestId("deletion-scheduled").props.children;
+      expect(deletionText).not.toBe("not-scheduled");
+      // Should be an ISO date string
+      expect(new Date(deletionText).toISOString()).toBe(deletionText);
+    });
+  });
+
+  it("clears deletionScheduledAt when cancelAccountDeletion is called", async () => {
+    render(
+      <AuthProvider>
+        <TestConsumer />
+      </AuthProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("loading")).toHaveTextContent("ready");
+    });
+
+    // Sign in
+    await act(async () => {
+      screen.getByTestId("sign-in").props.onPress();
+    });
+
+    // Request deletion
+    await act(async () => {
+      screen.getByTestId("request-deletion").props.onPress();
+    });
+
+    await waitFor(() => {
+      const deletionText =
+        screen.getByTestId("deletion-scheduled").props.children;
+      expect(deletionText).not.toBe("not-scheduled");
+    });
+
+    // Cancel deletion
+    await act(async () => {
+      screen.getByTestId("cancel-deletion").props.onPress();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("deletion-scheduled")).toHaveTextContent(
+        "not-scheduled",
+      );
+    });
+  });
+
+  it("clears deletionScheduledAt on signOut", async () => {
+    render(
+      <AuthProvider>
+        <TestConsumer />
+      </AuthProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("loading")).toHaveTextContent("ready");
+    });
+
+    // Sign in and request deletion
+    await act(async () => {
+      screen.getByTestId("sign-in").props.onPress();
+    });
+    await act(async () => {
+      screen.getByTestId("request-deletion").props.onPress();
+    });
+
+    await waitFor(() => {
+      const deletionText =
+        screen.getByTestId("deletion-scheduled").props.children;
+      expect(deletionText).not.toBe("not-scheduled");
+    });
+
+    // Sign out
+    await act(async () => {
+      screen.getByTestId("sign-out").props.onPress();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("deletion-scheduled")).toHaveTextContent(
+        "not-scheduled",
+      );
     });
   });
 });
