@@ -23,3 +23,27 @@
 **Verification:** tsc, lint, test, build all pass
 
 **Next:** Authentication flow or onboarding screens per PRD Phase 1 Weeks 3-4
+
+## 2026-01-15: Auth Context and Route Protection
+
+**PRD ref:** Phase 1 Weeks 3-4, Section 1 (Auth & Onboarding)
+
+**Task:** Set up auth architecture - context, hooks, route protection, sign-in screen
+
+**Decisions:**
+- Created AuthProvider + useAuth hook with mock signIn/signOut (ready for backend integration)
+- Used Slot-based routing with useSegments for auth gating (Expo Router pattern)
+- Auth screens in (auth) route group, tabs in (tabs) group
+- Sign-in screen is placeholder with demo flow - will add magic link/OAuth later
+- Primary button color hardcoded (#0a7ea4) to work in light/dark mode
+
+**Files changed:**
+- contexts/auth-context.tsx - New: AuthProvider, useAuth hook, User type
+- app/_layout.tsx - Wrap with AuthProvider, add RootLayoutNav for auth routing
+- app/(auth)/_layout.tsx - New: Auth route group layout
+- app/(auth)/sign-in.tsx - New: Sign-in placeholder screen
+- __tests__/contexts/auth-context.test.tsx - New: TDD tests for auth context
+
+**Verification:** tsc, lint, test (9 passed), build all pass. UI verified via Chrome MCP.
+
+**Next:** Guided onboarding flow (PRD Section 1.3) or child profile creation

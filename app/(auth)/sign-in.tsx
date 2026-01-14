@@ -1,15 +1,14 @@
-import { StyleSheet, Pressable } from "react-native";
+import { StyleSheet, Pressable, Text } from "react-native";
 import { router } from "expo-router";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useAuth } from "@/contexts/auth-context";
-import { Colors } from "@/constants/theme";
-import { useColorScheme } from "@/hooks/use-color-scheme";
+
+const PRIMARY_COLOR = "#0a7ea4";
 
 export default function SignInScreen() {
   const { signIn } = useAuth();
-  const colorScheme = useColorScheme();
 
   const handleSignIn = async () => {
     // TODO: Replace with actual auth flow (magic link input, OAuth buttons)
@@ -27,19 +26,10 @@ export default function SignInScreen() {
       </ThemedText>
 
       <Pressable
-        style={[
-          styles.button,
-          { backgroundColor: Colors[colorScheme ?? "light"].tint },
-        ]}
+        style={[styles.button, { backgroundColor: PRIMARY_COLOR }]}
         onPress={handleSignIn}
       >
-        <ThemedText
-          style={styles.buttonText}
-          lightColor="#fff"
-          darkColor="#fff"
-        >
-          Continue with Email
-        </ThemedText>
+        <Text style={styles.buttonText}>Continue with Email</Text>
       </Pressable>
 
       <ThemedText style={styles.hint}>
@@ -75,6 +65,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontWeight: "600",
     fontSize: 16,
+    color: "#fff",
   },
   hint: {
     opacity: 0.5,
