@@ -520,3 +520,28 @@
 **Verification:** tsc, lint, test (98 passed), build all pass.
 
 **Next:** Remaining Phase 1 Week 12-13 items (Stripe payments, storage limits, polish) or Photo for child profile
+
+## 2026-01-15: Storage Context and Tier Limits
+
+**PRD ref:** Phase 1 Weeks 12-13, Section 9.1 (Video Tier Limits), Section 12.1 (Tier Structure)
+
+**Task:** Implement StorageContext for tracking storage usage and enforcing tier limits
+
+**Decisions:**
+- Created StorageContext + useStorage hook for storage management (TDD approach)
+- SubscriptionTier type: "free" | "standard" | "premium"
+- TIER_LIMITS constant: free=500MB, standard=10GB, premium=50GB per PRD
+- VIDEO_DURATION_LIMITS: free=0, standard=2min, premium=10min per PRD Section 9.1
+- usagePercent calculated as Math.round((usedBytes/limitBytes)*100)
+- canUpload(bytes) checks if addition would exceed limit
+- canUploadVideo(seconds) checks tier video permissions
+- addUsage/removeUsage for tracking media uploads/deletes
+
+**Files changed:**
+- contexts/storage-context.tsx - New: StorageProvider, useStorage, TIER_LIMITS, VIDEO_DURATION_LIMITS
+- app/_layout.tsx - Added StorageProvider wrapper
+- __tests__/contexts/storage-context.test.tsx - New: 7 TDD tests for storage context
+
+**Verification:** tsc, lint, test (105 passed), build all pass.
+
+**Next:** Integrate storage tracking with entry creation or Settings screen storage display
