@@ -682,3 +682,25 @@
 **Verification:** tsc, lint, test (140 passed), build all pass.
 
 **Next:** Photo book export (PRD Section 10) or UI polish
+
+## 2026-01-15: Child Profile Photo Picker
+
+**PRD ref:** Phase 1 Weeks 3-4, Section 2.1 (Child Profile - Photo optional field)
+
+**Task:** Add photo picker to add-child onboarding screen for child profile photo
+
+**Decisions:**
+- Reused expo-image-picker pattern from first-entry.tsx
+- Circular photo button (100x100) with dashed border, centered above form fields
+- allowsEditing: true with 1:1 aspect ratio for profile-appropriate cropping
+- Placeholder shows camera emoji + "Add Photo" text
+- photoUri stored in child context and passed to setChild on Continue
+- TDD approach: wrote 5 tests before implementation
+
+**Files changed:**
+- app/(onboarding)/add-child.tsx - Added photo picker UI, handlePickPhoto, photoUri state
+- __tests__/app/onboarding/add-child.test.tsx - New: 5 TDD tests for photo picker
+
+**Verification:** tsc, lint, test (145 passed), build all pass.
+
+**Next:** Photo book export (PRD Section 10) or Settings child profile edit

@@ -8,10 +8,13 @@ import {
   Platform,
   KeyboardAvoidingView,
   ScrollView,
+  Image,
+  Alert,
 } from "react-native";
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
+import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 
 import { ThemedText } from "@/components/themed-text";
@@ -41,6 +44,7 @@ export default function AddChildScreen() {
   const [nickname, setNickname] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ name?: string; dob?: string }>({});
 
   const validateForm = (): boolean => {
@@ -75,6 +79,28 @@ export default function AddChildScreen() {
     }
   };
 
+  const handlePickPhoto = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Permission Required",
+        "Please allow access to your photo library to add a photo.",
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setPhotoUri(result.assets[0].uri);
+    }
+  };
+
   const handleContinue = () => {
     if (!validateForm()) return;
 
@@ -82,6 +108,7 @@ export default function AddChildScreen() {
       name: name.trim(),
       dateOfBirth: toISODateString(dateOfBirth!),
       nickname: nickname.trim() || undefined,
+      photoUri: photoUri || undefined,
     });
 
     router.push("/(onboarding)/select-culture");
@@ -107,6 +134,34 @@ export default function AddChildScreen() {
           </ThemedText>
 
           <View style={styles.form}>
+            {/* Photo picker */}
+            <View style={styles.photoSection}>
+              <Pressable
+                style={styles.photoButton}
+                onPress={handlePickPhoto}
+                testID="photo-button"
+              >
+                {photoUri ? (
+                  <Image
+                    source={{ uri: photoUri }}
+                    style={styles.photoPreview}
+                    testID="photo-preview"
+                  />
+                ) : (
+                  <View
+                    style={styles.photoPlaceholder}
+                    testID="photo-placeholder"
+                  >
+                    <Text style={styles.photoPlaceholderIcon}>📷</Text>
+                    <Text style={styles.photoPlaceholderText}>Add Photo</Text>
+                  </View>
+                )}
+              </Pressable>
+              <ThemedText style={styles.photoHint}>
+                Optional profile photo
+              </ThemedText>
+            </View>
+
             {/* Name field */}
             <View style={styles.field}>
               <ThemedText style={styles.label}>
@@ -240,6 +295,42 @@ const styles = StyleSheet.create({
   },
   form: {
     flex: 1,
+  },
+  photoSection: {
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  photoButton: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    overflow: "hidden",
+    borderWidth: 2,
+    borderColor: "#ccc",
+    borderStyle: "dashed",
+  },
+  photoPreview: {
+    width: "100%",
+    height: "100%",
+  },
+  photoPlaceholder: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+  },
+  photoPlaceholderIcon: {
+    fontSize: 24,
+    marginBottom: 4,
+  },
+  photoPlaceholderText: {
+    fontSize: 12,
+    color: "#666",
+  },
+  photoHint: {
+    fontSize: 12,
+    opacity: 0.6,
+    marginTop: 8,
   },
   field: {
     marginBottom: 24,
