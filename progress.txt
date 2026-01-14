@@ -420,3 +420,30 @@
 **Verification:** tsc, lint, test (79 passed), build all pass.
 
 **Next:** Video playback (PRD Section 9.3) or push notifications (PRD Section 7)
+
+## 2026-01-15: Video Playback with expo-av
+
+**PRD ref:** Phase 1 Weeks 5-7, Section 9.3 (Video Playback)
+
+**Task:** Implement video playback for video entries using expo-av
+
+**Decisions:**
+- Installed expo-av for Video component (note: deprecated in SDK 54, will migrate to expo-video later)
+- Created VideoPlayer component with play/pause overlay controls
+- VideoPlayer replaces placeholder 🎬 emoji in Feed EntryCard
+- Entry Detail shows full-screen video player for video entries
+- Auto-loops videos, tap to toggle play/pause
+- ResizeMode.CONTAIN for proper aspect ratio
+- TDD approach: wrote tests first with expo-av mocks
+
+**Files changed:**
+- components/video-player.tsx - New: VideoPlayer with expo-av Video, play/pause controls
+- app/(tabs)/index.tsx - Integrated VideoPlayer in EntryCard, removed videoPlaceholder styles
+- app/entry/[id].tsx - Added VideoPlayer for video entries, conditional rendering photo vs video
+- __tests__/components/video-player.test.tsx - New: 5 TDD tests for VideoPlayer
+- __tests__/app/entry/entry-detail.test.tsx - Added expo-av mock
+- package.json - Added expo-av dependency
+
+**Verification:** tsc, lint, test (84 passed), build all pass.
+
+**Next:** Push notifications (PRD Section 7) or Settings screen UI

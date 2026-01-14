@@ -18,6 +18,7 @@ import { router } from "expo-router";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { PhotoCarousel } from "@/components/photo-carousel";
+import { VideoPlayer } from "@/components/video-player";
 import {
   useEntries,
   type Entry,
@@ -63,9 +64,11 @@ function EntryCard({ entry, onPress }: EntryCardProps) {
       {entry.type === "video" &&
         entry.mediaUris &&
         entry.mediaUris.length > 0 && (
-          <View style={styles.videoPlaceholder}>
-            <ThemedText style={styles.videoIcon}>🎬</ThemedText>
-          </View>
+          <VideoPlayer
+            uri={entry.mediaUris[0]}
+            onPress={onPress}
+            showControls={true}
+          />
         )}
       {entry.caption && (
         <ThemedText style={styles.cardCaption}>{entry.caption}</ThemedText>
@@ -300,16 +303,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: "hidden",
     backgroundColor: "rgba(128, 128, 128, 0.1)",
-  },
-  videoPlaceholder: {
-    width: "100%",
-    aspectRatio: 16 / 9,
-    backgroundColor: "rgba(0, 0, 0, 0.1)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  videoIcon: {
-    fontSize: 48,
   },
   cardCaption: {
     padding: 12,

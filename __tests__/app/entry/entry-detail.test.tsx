@@ -1,5 +1,25 @@
+import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react-native";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+
+// Mock expo-av
+jest.mock("expo-av", () => {
+  const React = require("react");
+  const { View } = require("react-native");
+  return {
+    Video: React.forwardRef((props: any, ref: React.Ref<any>) => {
+      React.useImperativeHandle(ref, () => ({
+        playAsync: jest.fn(),
+        pauseAsync: jest.fn(),
+      }));
+      return <View testID="mock-video" />;
+    }),
+    ResizeMode: {
+      CONTAIN: "contain",
+      COVER: "cover",
+    },
+  };
+});
 
 // Mock expo-router
 const mockBack = jest.fn();

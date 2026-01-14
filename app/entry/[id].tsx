@@ -17,6 +17,7 @@ import {
 import { useLocalSearchParams, router } from "expo-router";
 
 import { ThemedText } from "@/components/themed-text";
+import { VideoPlayer } from "@/components/video-player";
 import { useEntries } from "@/contexts/entry-context";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -98,7 +99,8 @@ export default function EntryDetailScreen() {
   }
 
   const hasMedia = entry.mediaUris && entry.mediaUris.length > 0;
-  const isMultiPhoto = hasMedia && entry.mediaUris!.length > 1;
+  const isVideo = entry.type === "video";
+  const isMultiPhoto = hasMedia && !isVideo && entry.mediaUris!.length > 1;
 
   const formattedDate = new Date(entry.date).toLocaleDateString("en-SG", {
     day: "numeric",
@@ -137,8 +139,19 @@ export default function EntryDetailScreen() {
         </View>
       </View>
 
+      {/* Full-screen video player */}
+      {hasMedia && isVideo && (
+        <View style={styles.videoContainer}>
+          <VideoPlayer
+            uri={entry.mediaUris![0]}
+            aspectRatio={(SCREEN_HEIGHT * 0.7) / SCREEN_WIDTH}
+            showControls={true}
+          />
+        </View>
+      )}
+
       {/* Full-screen image carousel */}
-      {hasMedia && (
+      {hasMedia && !isVideo && (
         <ScrollView
           horizontal
           pagingEnabled
@@ -332,6 +345,11 @@ const styles = StyleSheet.create({
   imageCounterText: {
     color: "#fff",
     fontSize: 14,
+  },
+  videoContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   imageScrollView: {
     flex: 1,
