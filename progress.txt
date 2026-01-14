@@ -397,3 +397,26 @@
 **Verification:** tsc, lint, test (73 passed), build all pass.
 
 **Next:** Search feature (PRD Section 8) or video playback (PRD Section 9.3)
+
+## 2026-01-15: Search Feature - UI and Local Filtering
+
+**PRD ref:** Phase 1 Weeks 8-9, Section 8 (Search & Discovery)
+
+**Task:** Implement Search tab UI with text search and type filtering
+
+**Decisions:**
+- Search filters entries by caption text and tags (local filtering, AI/Vectorize deferred)
+- Filter chips: All, Photos, Videos, Text (type-based filtering)
+- Empty state with search icon when no query entered
+- "No Results" state when search has no matches
+- SearchResultCard shows thumbnail, caption, date, tags (max 3)
+- Tapping result navigates to entry detail view (/entry/[id])
+- useMemo for filtered entries to optimize re-renders
+
+**Files changed:**
+- app/(tabs)/search.tsx - Full search UI with input, filter chips, results list
+- __tests__/app/tabs/search.test.tsx - New: 6 TDD tests for search functionality
+
+**Verification:** tsc, lint, test (79 passed), build all pass.
+
+**Next:** Video playback (PRD Section 9.3) or push notifications (PRD Section 7)
