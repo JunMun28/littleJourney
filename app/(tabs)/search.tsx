@@ -7,6 +7,8 @@ import {
   Pressable,
   Image,
   useColorScheme,
+  Modal,
+  ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
 
@@ -17,6 +19,58 @@ import { type Entry, type EntryType } from "@/contexts/entry-context";
 import { PRIMARY_COLOR, Colors, Spacing, Shadows } from "@/constants/theme";
 
 type FilterType = "all" | EntryType;
+
+interface DateRange {
+  year: number;
+  month: number; // 0-11
+}
+
+// Helper to get month name
+function getMonthName(month: number): string {
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  return months[month];
+}
+
+// Helper to format date range for display
+function formatDateRange(dateRange: DateRange | null): string {
+  if (!dateRange) return "Date Range";
+  return `${getMonthName(dateRange.month)} ${dateRange.year}`;
+}
+
+// Generate months for selection (last 24 months)
+function generateMonthOptions(): DateRange[] {
+  const months: DateRange[] = [];
+  const now = new Date();
+  for (let i = 0; i < 24; i++) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({
+      year: date.getFullYear(),
+      month: date.getMonth(),
+    });
+  }
+  return months;
+}
+
+// Check if entry date falls within selected month
+function isInDateRange(entryDate: string, dateRange: DateRange): boolean {
+  const date = new Date(entryDate);
+  return (
+    date.getFullYear() === dateRange.year && date.getMonth() === dateRange.month
+  );
+}
 
 interface FilterChipProps {
   label: string;
@@ -124,8 +178,13 @@ export default function SearchScreen() {
   const { entries } = useEntriesFlat();
   const [query, setQuery] = useState("");
   const [filterType, setFilterType] = useState<FilterType>("all");
+  const [dateRange, setDateRange] = useState<DateRange | null>(null);
+  const [showDateModal, setShowDateModal] = useState(false);
+  const [tempDateRange, setTempDateRange] = useState<DateRange | null>(null);
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
+
+  const monthOptions = useMemo(() => generateMonthOptions(), []);
 
   const filteredEntries = useMemo(() => {
     if (!query.trim()) return [];
@@ -135,6 +194,11 @@ export default function SearchScreen() {
     return entries.filter((entry) => {
       // Filter by type
       if (filterType !== "all" && entry.type !== filterType) {
+        return false;
+      }
+
+      // Filter by date range
+      if (dateRange && !isInDateRange(entry.date, dateRange)) {
         return false;
       }
 
@@ -150,7 +214,7 @@ export default function SearchScreen() {
 
       return false;
     });
-  }, [entries, query, filterType]);
+  }, [entries, query, filterType, dateRange]);
 
   const handleEntryPress = useCallback(
     (entryId: string) => {
@@ -158,6 +222,22 @@ export default function SearchScreen() {
     },
     [router],
   );
+
+  const handleOpenDateModal = useCallback(() => {
+    setTempDateRange(dateRange);
+    setShowDateModal(true);
+  }, [dateRange]);
+
+  const handleApplyDateRange = useCallback(() => {
+    setDateRange(tempDateRange);
+    setShowDateModal(false);
+  }, [tempDateRange]);
+
+  const handleClearDateRange = useCallback(() => {
+    setDateRange(null);
+    setTempDateRange(null);
+    setShowDateModal(false);
+  }, []);
 
   const renderEmptyState = () => {
     if (!query.trim()) {
@@ -236,6 +316,12 @@ export default function SearchScreen() {
           onPress={() => setFilterType("text")}
           colors={colors}
         />
+        <FilterChip
+          label={formatDateRange(dateRange)}
+          isActive={dateRange !== null}
+          onPress={handleOpenDateModal}
+          colors={colors}
+        />
       </View>
 
       {/* Results */}
@@ -256,6 +342,72 @@ export default function SearchScreen() {
       ) : (
         renderEmptyState()
       )}
+
+      {/* Date Range Modal */}
+      <Modal
+        visible={showDateModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowDateModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View
+            style={[
+              styles.modalContent,
+              { backgroundColor: colors.background },
+            ]}
+          >
+            <ThemedText type="subtitle" style={styles.modalTitle}>
+              Filter by Date
+            </ThemedText>
+
+            <ScrollView style={styles.monthList}>
+              {monthOptions.map((option) => {
+                const isSelected =
+                  tempDateRange?.year === option.year &&
+                  tempDateRange?.month === option.month;
+                const testId = `month-${option.year}-${String(option.month + 1).padStart(2, "0")}`;
+                return (
+                  <Pressable
+                    key={testId}
+                    testID={testId}
+                    style={[
+                      styles.monthOption,
+                      { borderColor: colors.border },
+                      isSelected && styles.monthOptionSelected,
+                    ]}
+                    onPress={() => setTempDateRange(option)}
+                  >
+                    <ThemedText
+                      style={[
+                        styles.monthOptionText,
+                        isSelected && styles.monthOptionTextSelected,
+                      ]}
+                    >
+                      {getMonthName(option.month)} {option.year}
+                    </ThemedText>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+
+            <View style={styles.modalButtons}>
+              <Pressable
+                style={[styles.modalButton, styles.clearButton]}
+                onPress={handleClearDateRange}
+              >
+                <ThemedText style={styles.clearButtonText}>Clear</ThemedText>
+              </Pressable>
+              <Pressable
+                style={[styles.modalButton, styles.applyButton]}
+                onPress={handleApplyDateRange}
+              >
+                <ThemedText style={styles.applyButtonText}>Apply</ThemedText>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ThemedView>
   );
 }
@@ -369,5 +521,69 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     textAlign: "center",
+  },
+  // Date range modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: Spacing.lg,
+    maxHeight: "70%",
+  },
+  modalTitle: {
+    textAlign: "center",
+    marginBottom: Spacing.lg,
+  },
+  monthList: {
+    maxHeight: 300,
+  },
+  monthOption: {
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: 10,
+    borderWidth: 1,
+    marginBottom: Spacing.sm,
+  },
+  monthOptionSelected: {
+    backgroundColor: PRIMARY_COLOR,
+    borderColor: PRIMARY_COLOR,
+  },
+  monthOptionText: {
+    fontSize: 16,
+  },
+  monthOptionTextSelected: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  modalButtons: {
+    flexDirection: "row",
+    gap: Spacing.md,
+    marginTop: Spacing.lg,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  clearButton: {
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    borderColor: PRIMARY_COLOR,
+  },
+  clearButtonText: {
+    color: PRIMARY_COLOR,
+    fontWeight: "600",
+  },
+  applyButton: {
+    backgroundColor: PRIMARY_COLOR,
+  },
+  applyButtonText: {
+    color: "#fff",
+    fontWeight: "600",
   },
 });

@@ -938,7 +938,7 @@
         "Verify only matching entries shown"
       ],
       "acceptanceCriteria": "Search filterable by date range",
-      "passes": false
+      "passes": true
     },
     {
       "id": "SEARCH-004",

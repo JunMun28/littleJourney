@@ -201,4 +201,159 @@ describe("SearchScreen", () => {
       expect(queryByText("First steps today!")).toBeNull();
     });
   });
+
+  // Date range filter tests (SEARCH-003)
+  describe("date range filter", () => {
+    it("shows date range filter button", () => {
+      const TestWrapper = createTestWrapper();
+      const { getByText } = render(
+        <TestWrapper>
+          <SearchScreen />
+        </TestWrapper>,
+      );
+
+      expect(getByText("Date Range")).toBeTruthy();
+    });
+
+    it("opens date range modal when button pressed", async () => {
+      const TestWrapper = createTestWrapper();
+      const { getByText } = render(
+        <TestWrapper>
+          <SearchScreen />
+        </TestWrapper>,
+      );
+
+      fireEvent.press(getByText("Date Range"));
+
+      await waitFor(() => {
+        expect(getByText("Filter by Date")).toBeTruthy();
+      });
+    });
+
+    it("filters entries by date range", async () => {
+      const TestWrapper = createTestWrapper();
+      // Add entries with different dates
+      await entryApi.createEntry({
+        entry: {
+          type: "photo",
+          caption: "January photo",
+          date: "2025-01-15",
+          mediaUris: ["jan.jpg"],
+        },
+      });
+      await entryApi.createEntry({
+        entry: {
+          type: "photo",
+          caption: "February photo",
+          date: "2025-02-15",
+          mediaUris: ["feb.jpg"],
+        },
+      });
+      await entryApi.createEntry({
+        entry: {
+          type: "photo",
+          caption: "March photo",
+          date: "2025-03-15",
+          mediaUris: ["mar.jpg"],
+        },
+      });
+
+      const { getByPlaceholderText, getByText, getByTestId, queryByText } =
+        render(
+          <TestWrapper>
+            <SearchScreen />
+          </TestWrapper>,
+        );
+
+      // Search for "photo" to get all entries
+      const searchInput = getByPlaceholderText("Search memories...");
+      fireEvent.changeText(searchInput, "photo");
+
+      await waitFor(() => {
+        expect(getByText("January photo")).toBeTruthy();
+        expect(getByText("February photo")).toBeTruthy();
+        expect(getByText("March photo")).toBeTruthy();
+      });
+
+      // Open date range modal
+      fireEvent.press(getByText("Date Range"));
+
+      await waitFor(() => {
+        expect(getByText("Filter by Date")).toBeTruthy();
+      });
+
+      // Select January 2025
+      fireEvent.press(getByTestId("month-2025-01"));
+
+      // Apply filter
+      fireEvent.press(getByText("Apply"));
+
+      // Should only show January entry
+      await waitFor(() => {
+        expect(getByText("January photo")).toBeTruthy();
+        expect(queryByText("February photo")).toBeNull();
+        expect(queryByText("March photo")).toBeNull();
+      });
+    });
+
+    it("clears date range filter", async () => {
+      const TestWrapper = createTestWrapper();
+      await entryApi.createEntry({
+        entry: {
+          type: "photo",
+          caption: "January photo",
+          date: "2025-01-15",
+          mediaUris: ["jan.jpg"],
+        },
+      });
+      await entryApi.createEntry({
+        entry: {
+          type: "photo",
+          caption: "February photo",
+          date: "2025-02-15",
+          mediaUris: ["feb.jpg"],
+        },
+      });
+
+      const { getByPlaceholderText, getByText, getByTestId, queryByText } =
+        render(
+          <TestWrapper>
+            <SearchScreen />
+          </TestWrapper>,
+        );
+
+      const searchInput = getByPlaceholderText("Search memories...");
+      fireEvent.changeText(searchInput, "photo");
+
+      await waitFor(() => {
+        expect(getByText("January photo")).toBeTruthy();
+        expect(getByText("February photo")).toBeTruthy();
+      });
+
+      // Apply January filter
+      fireEvent.press(getByText("Date Range"));
+      await waitFor(() => {
+        expect(getByText("Filter by Date")).toBeTruthy();
+      });
+      fireEvent.press(getByTestId("month-2025-01"));
+      fireEvent.press(getByText("Apply"));
+
+      await waitFor(() => {
+        expect(queryByText("February photo")).toBeNull();
+      });
+
+      // Clear filter
+      fireEvent.press(getByText("Jan 2025")); // Date range chip shows selected month
+      await waitFor(() => {
+        expect(getByText("Filter by Date")).toBeTruthy();
+      });
+      fireEvent.press(getByText("Clear"));
+
+      // Should show all entries again
+      await waitFor(() => {
+        expect(getByText("January photo")).toBeTruthy();
+        expect(getByText("February photo")).toBeTruthy();
+      });
+    });
+  });
 });

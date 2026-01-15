@@ -1884,3 +1884,28 @@
 **Verification:** tsc, lint, test (359 passed), build all pass.
 
 **Next:** Continue remaining PRD items: backend integration, Stripe SDK, or Web Viewer (Phase 2)
+
+## 2026-01-16: Date Range Filter for Search (SEARCH-003)
+
+**PRD ref:** Phase 1, Section 8 (Search & Discovery), SEARCH-003
+
+**Task:** Implement date range filter for Search screen per PRD requirement
+
+**Decisions:**
+- Added DateRange interface (year + month) for month-based filtering
+- Added month selector modal with scrollable list of last 24 months
+- Filter chip shows "Date Range" when no filter, "Jan 2025" format when active
+- Filtering logic checks entry.date against selected year/month
+- Modal has Apply (sets filter) and Clear (removes filter) buttons
+- Month options generated dynamically via generateMonthOptions()
+- isInDateRange() helper compares entry date to selected month
+- TDD approach: 4 new tests for date range filter
+
+**Files changed:**
+- app/(tabs)/search.tsx - Added DateRange state, modal UI, filter integration, styles
+- __tests__/app/tabs/search.test.tsx - Added 4 TDD tests for date range filter
+- prd-items.json - Updated SEARCH-003 to passes: true
+
+**Verification:** tsc, lint, test (363 passed), build all pass.
+
+**Next:** Continue remaining PRD items: SEARCH-005 (milestone filter), FEEDBACK-001, or backend integration
