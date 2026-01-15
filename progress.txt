@@ -1458,3 +1458,27 @@
 **Verification:** tsc, lint, test (284 passed), build all pass.
 
 **Next:** Cloudflare Workers backend setup or additional screens migration (onboarding screens)
+
+## 2026-01-15: Onboarding Screens TanStack Query Migration
+
+**PRD ref:** Phase 1 Technical Architecture (TanStack Query for server state)
+
+**Task:** Migrate onboarding screens from context-based state to TanStack Query hooks
+
+**Decisions:**
+- add-child.tsx: replaced useChild().setChild with useCreateChild mutation
+- select-culture.tsx: replaced useChild().updateChild with useChildFlat + useUpdateChild mutation
+- invite-family.tsx: replaced useFamily().inviteFamilyMember with useInviteFamilyMember mutation
+- All mutations use onSuccess callback for navigation after successful API call
+- Tests updated to use QueryClientProvider wrapper and callback-style router mocks
+- Type exports still come from contexts (backward compatibility)
+
+**Files changed:**
+- app/(onboarding)/add-child.tsx - useCreateChild mutation replaces context setChild
+- app/(onboarding)/select-culture.tsx - useChildFlat + useUpdateChild replaces context updateChild
+- app/(onboarding)/invite-family.tsx - useInviteFamilyMember replaces context inviteFamilyMember
+- __tests__/app/onboarding/add-child.test.tsx - Updated with QueryClientProvider, 3 new TanStack Query tests
+
+**Verification:** tsc, lint, test (287 passed), build all pass.
+
+**Next:** Cloudflare Workers backend setup or Stripe SDK integration

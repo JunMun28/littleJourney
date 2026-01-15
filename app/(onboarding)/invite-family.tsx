@@ -14,7 +14,8 @@ import { useRouter } from "expo-router";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { useFamily, type PermissionLevel } from "@/contexts/family-context";
+import { useInviteFamilyMember } from "@/hooks/use-family";
+import type { PermissionLevel } from "@/contexts/family-context";
 import { PRIMARY_COLOR, Colors, Spacing } from "@/constants/theme";
 
 const PERMISSION_OPTIONS: {
@@ -40,7 +41,7 @@ function isValidEmail(email: string): boolean {
 
 export default function InviteFamilyScreen() {
   const router = useRouter();
-  const { inviteFamilyMember } = useFamily();
+  const inviteMutation = useInviteFamilyMember();
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
 
@@ -54,13 +55,18 @@ export default function InviteFamilyScreen() {
   const handleSendInvite = () => {
     if (!isFormValid) return;
 
-    inviteFamilyMember({
-      email: email.trim(),
-      relationship: relationship.trim(),
-      permissionLevel,
-    });
-
-    router.push("/first-entry");
+    inviteMutation.mutate(
+      {
+        email: email.trim(),
+        relationship: relationship.trim(),
+        permissionLevel,
+      },
+      {
+        onSuccess: () => {
+          router.push("/first-entry");
+        },
+      },
+    );
   };
 
   const handleSkip = () => {

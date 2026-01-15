@@ -20,7 +20,7 @@ import { router } from "expo-router";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { useChild } from "@/contexts/child-context";
+import { useCreateChild } from "@/hooks/use-children";
 import {
   PRIMARY_COLOR,
   Colors,
@@ -41,7 +41,7 @@ function toISODateString(date: Date): string {
 }
 
 export default function AddChildScreen() {
-  const { setChild } = useChild();
+  const createChildMutation = useCreateChild();
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
 
@@ -109,14 +109,19 @@ export default function AddChildScreen() {
   const handleContinue = () => {
     if (!validateForm()) return;
 
-    setChild({
-      name: name.trim(),
-      dateOfBirth: toISODateString(dateOfBirth!),
-      nickname: nickname.trim() || undefined,
-      photoUri: photoUri || undefined,
-    });
-
-    router.push("/(onboarding)/select-culture");
+    createChildMutation.mutate(
+      {
+        name: name.trim(),
+        dateOfBirth: toISODateString(dateOfBirth!),
+        nickname: nickname.trim() || undefined,
+        photoUri: photoUri || undefined,
+      },
+      {
+        onSuccess: () => {
+          router.push("/(onboarding)/select-culture");
+        },
+      },
+    );
   };
 
   const isFormValid = name.trim() && dateOfBirth;

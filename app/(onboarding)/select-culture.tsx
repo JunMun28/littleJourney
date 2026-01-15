@@ -10,7 +10,8 @@ import { router } from "expo-router";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { useChild, type CulturalTradition } from "@/contexts/child-context";
+import { useChildFlat, useUpdateChild } from "@/hooks/use-children";
+import type { CulturalTradition } from "@/contexts/child-context";
 import { PRIMARY_COLOR, Colors, Spacing } from "@/constants/theme";
 
 interface CultureOption {
@@ -43,7 +44,8 @@ const CULTURE_OPTIONS: CultureOption[] = [
 ];
 
 export default function SelectCultureScreen() {
-  const { updateChild } = useChild();
+  const { child } = useChildFlat();
+  const updateChildMutation = useUpdateChild();
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
 
@@ -51,10 +53,19 @@ export default function SelectCultureScreen() {
     useState<CulturalTradition | null>(null);
 
   const handleContinue = () => {
-    if (!selectedCulture) return;
+    if (!selectedCulture || !child?.id) return;
 
-    updateChild({ culturalTradition: selectedCulture });
-    router.push("/(onboarding)/set-prompt-time");
+    updateChildMutation.mutate(
+      {
+        id: child.id,
+        updates: { culturalTradition: selectedCulture },
+      },
+      {
+        onSuccess: () => {
+          router.push("/(onboarding)/set-prompt-time");
+        },
+      },
+    );
   };
 
   const isFormValid = selectedCulture !== null;
