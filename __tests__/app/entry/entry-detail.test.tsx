@@ -8,8 +8,9 @@ import {
 import { View } from "react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import { entryApi, clearAllMockData } from "@/services/api-client";
+import { entryApi, commentApi, clearAllMockData } from "@/services/api-client";
 import { AuthProvider } from "@/contexts/auth-context";
+import { ViewerProvider, useViewer } from "@/contexts/viewer-context";
 
 // Mock expo-secure-store for AuthProvider
 jest.mock("expo-secure-store", () => ({
@@ -53,7 +54,7 @@ jest.mock("expo-router", () => ({
 // Import after mocks
 import EntryDetailScreen from "@/app/entry/[id]";
 
-// Create test wrapper with QueryClient and AuthProvider
+// Create test wrapper with QueryClient, AuthProvider, and ViewerProvider
 function createWrapper() {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -70,7 +71,70 @@ function createWrapper() {
   return function Wrapper({ children }: { children: React.ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <ViewerProvider>{children}</ViewerProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    );
+  };
+}
+
+// Wrapper that sets viewer as view_only family member
+function createViewOnlyWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, gcTime: 0 },
+      mutations: { retry: false },
+    },
+  });
+
+  // Component that sets viewer context
+  function ViewOnlySetup({ children }: { children: React.ReactNode }) {
+    const { setFamilyViewer } = useViewer();
+    React.useEffect(() => {
+      setFamilyViewer("view_only", "family-test-123");
+    }, [setFamilyViewer]);
+    return <>{children}</>;
+  }
+
+  return function Wrapper({ children }: { children: React.ReactNode }) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <ViewerProvider>
+            <ViewOnlySetup>{children}</ViewOnlySetup>
+          </ViewerProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    );
+  };
+}
+
+// Wrapper that sets viewer as view_interact family member
+function createViewInteractWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, gcTime: 0 },
+      mutations: { retry: false },
+    },
+  });
+
+  function ViewInteractSetup({ children }: { children: React.ReactNode }) {
+    const { setFamilyViewer } = useViewer();
+    React.useEffect(() => {
+      setFamilyViewer("view_interact", "family-test-456");
+    }, [setFamilyViewer]);
+    return <>{children}</>;
+  }
+
+  return function Wrapper({ children }: { children: React.ReactNode }) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <ViewerProvider>
+            <ViewInteractSetup>{children}</ViewInteractSetup>
+          </ViewerProvider>
+        </AuthProvider>
       </QueryClientProvider>
     );
   };
@@ -463,6 +527,116 @@ describe("EntryDetailScreen", () => {
       await waitFor(() => {
         expect(screen.getByText("Edited by another parent")).toBeTruthy();
       });
+    });
+  });
+
+  describe("SHARE-005: View-only permission", () => {
+    it("hides options button for view_only family member", async () => {
+      const entry = await createTestEntry();
+      mockParams = { id: entry.id };
+
+      render(<EntryDetailScreen />, { wrapper: createViewOnlyWrapper() });
+
+      await waitFor(() => {
+        expect(screen.getByText("First steps!")).toBeTruthy();
+      });
+
+      // Options button should be hidden for view_only viewers
+      expect(screen.queryByTestId("options-button")).toBeNull();
+    });
+
+    it("shows view-only badge for view_only family member", async () => {
+      const entry = await createTestEntry();
+      mockParams = { id: entry.id };
+
+      render(<EntryDetailScreen />, { wrapper: createViewOnlyWrapper() });
+
+      await waitFor(() => {
+        expect(screen.getByText("First steps!")).toBeTruthy();
+      });
+
+      // Should show view-only indicator
+      expect(screen.getByTestId("view-only-badge")).toBeTruthy();
+    });
+
+    it("disables comments button for view_only family member", async () => {
+      const entry = await createTestEntry();
+      // Add a comment so the button is visible
+      await commentApi.createComment({
+        entryId: entry.id,
+        text: "Test comment",
+        authorId: "family-test-123",
+        authorName: "Test Family Member",
+      });
+      mockParams = { id: entry.id };
+
+      render(<EntryDetailScreen />, { wrapper: createViewOnlyWrapper() });
+
+      await waitFor(() => {
+        expect(screen.getByText("First steps!")).toBeTruthy();
+      });
+
+      // Comments button should be disabled (not pressable)
+      const commentsButton = screen.getByTestId("comments-button");
+      expect(commentsButton.props.accessibilityState?.disabled).toBe(true);
+    });
+
+    it("shows options button for view_interact family member", async () => {
+      const entry = await createTestEntry();
+      mockParams = { id: entry.id };
+
+      render(<EntryDetailScreen />, { wrapper: createViewInteractWrapper() });
+
+      await waitFor(() => {
+        expect(screen.getByText("First steps!")).toBeTruthy();
+      });
+
+      // Options button should be hidden (no edit/delete for family)
+      // but comments should work
+      expect(screen.queryByTestId("options-button")).toBeNull();
+    });
+
+    it("enables comments button for view_interact family member", async () => {
+      const entry = await createTestEntry();
+      mockParams = { id: entry.id };
+
+      render(<EntryDetailScreen />, { wrapper: createViewInteractWrapper() });
+
+      await waitFor(() => {
+        expect(screen.getByText("First steps!")).toBeTruthy();
+      });
+
+      // Comments button should be enabled
+      const commentsButton = screen.getByTestId("comments-button");
+      expect(commentsButton.props.accessibilityState?.disabled).toBeFalsy();
+    });
+
+    it("shows options button for parent viewer", async () => {
+      const entry = await createTestEntry();
+      mockParams = { id: entry.id };
+
+      render(<EntryDetailScreen />, { wrapper: createWrapper() });
+
+      await waitFor(() => {
+        expect(screen.getByText("First steps!")).toBeTruthy();
+      });
+
+      // Options button should be visible for parents
+      expect(screen.getByTestId("options-button")).toBeTruthy();
+    });
+
+    it("does not show view-only badge for parent viewer", async () => {
+      const entry = await createTestEntry();
+      mockParams = { id: entry.id };
+
+      render(<EntryDetailScreen />, { wrapper: createWrapper() });
+
+      await waitFor(() => {
+        expect(screen.getByText("First steps!")).toBeTruthy();
+      });
+
+      // View-only badge should not be visible for parents
+      expect(screen.queryByTestId("view-only-badge")).toBeNull();
     });
   });
 });

@@ -739,7 +739,7 @@
         "Verify cannot comment or react"
       ],
       "acceptanceCriteria": "View-only cannot comment or react",
-      "passes": false
+      "passes": true
     },
     {
       "id": "SHARE-006",

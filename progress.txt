@@ -2316,3 +2316,35 @@
 **Verification:** tsc, lint, test (530 passed), build all pass.
 
 **Next:** Continue remaining PRD items: PAY-003 (Apple Pay), PAY-004 (Google Pay), PAY-006 (receipts), PAY-008 (Cloudflare Worker)
+
+## 2026-01-16: View-only Permission Enforcement (SHARE-005)
+
+**PRD ref:** Phase 1, Section 6 (Family Sharing), SHARE-005
+
+**Task:** Implement view-only permission enforcement for family members
+
+**Decisions:**
+- Created ViewerContext to track current viewer type (parent vs family) and permission level
+- ViewerType: 'parent' (full access) or 'family' (permission-based access)
+- PermissionLevel: 'view_only' (can only view) or 'view_interact' (can comment/react)
+- Parents always have canEdit, canDelete, canComment, canReact = true
+- Family view_interact: canComment/canReact = true, canEdit/canDelete = false
+- Family view_only: all permissions = false (PRD SHARE-005 requirement)
+- Entry detail screen conditionally renders:
+  - Options button (edit/delete) only for parents
+  - View-only badge for family members with view_only permission
+  - Comments button disabled (with opacity) for view_only family members
+- TDD approach: 23 context tests + 7 entry detail permission tests
+
+**Files changed:**
+- contexts/viewer-context.tsx - New: ViewerContext with permission tracking
+- app/_layout.tsx - Added ViewerProvider to provider tree
+- app/entry/[id].tsx - Added permission-based UI rendering
+- __tests__/contexts/viewer-context.test.tsx - New: 23 TDD tests
+- __tests__/app/entry/entry-detail.test.tsx - Added 7 SHARE-005 tests
+- prd-items.json - Updated SHARE-005 to passes: true
+
+**Verification:** tsc, lint, test (560 passed), build all pass.
+
+**Next:** Continue remaining PRD items: SHARE-002-004 (magic link Web Viewer), SHARE-007 (family activity), SEARCH-002 (AI semantic search), VIDEO-001-002 (Cloudflare Stream), PAY items
+

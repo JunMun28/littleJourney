@@ -26,6 +26,7 @@ import {
   useDeleteComment,
 } from "@/hooks/use-comments";
 import { useAuth } from "@/contexts/auth-context";
+import { useViewer } from "@/contexts/viewer-context";
 import {
   PRIMARY_COLOR,
   SemanticColors,
@@ -47,6 +48,14 @@ type MenuState =
 export default function EntryDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
+  const {
+    canEdit,
+    canDelete,
+    canComment,
+    canReact,
+    isParent,
+    permissionLevel,
+  } = useViewer();
 
   // TanStack Query hooks
   const { data: entry, isLoading, isError } = useEntry(id);
@@ -218,6 +227,14 @@ export default function EntryDetailScreen() {
           <ThemedText style={styles.backButtonIcon}>←</ThemedText>
         </Pressable>
         <View style={styles.headerRight}>
+          {/* View-only badge for family members with view_only permission (PRD SHARE-005) */}
+          {!isParent && permissionLevel === "view_only" && (
+            <View testID="view-only-badge" style={styles.viewOnlyBadge}>
+              <ThemedText style={styles.viewOnlyBadgeText}>
+                View Only
+              </ThemedText>
+            </View>
+          )}
           {isMultiPhoto && (
             <View testID="image-counter" style={styles.imageCounter}>
               <ThemedText style={styles.imageCounterText}>
@@ -225,13 +242,16 @@ export default function EntryDetailScreen() {
               </ThemedText>
             </View>
           )}
-          <Pressable
-            testID="options-button"
-            onPress={handleOpenOptions}
-            style={styles.optionsButton}
-          >
-            <ThemedText style={styles.optionsButtonIcon}>⋮</ThemedText>
-          </Pressable>
+          {/* Only show options button for parents who can edit/delete */}
+          {isParent && (canEdit || canDelete) && (
+            <Pressable
+              testID="options-button"
+              onPress={handleOpenOptions}
+              style={styles.optionsButton}
+            >
+              <ThemedText style={styles.optionsButtonIcon}>⋮</ThemedText>
+            </Pressable>
+          )}
         </View>
       </View>
 
@@ -285,11 +305,16 @@ export default function EntryDetailScreen() {
                 </ThemedText>
               )}
           </View>
-          {/* Reactions and comments row (PRD SHARE-006) */}
+          {/* Reactions and comments row (PRD SHARE-006, SHARE-005) */}
           <Pressable
             testID="comments-button"
-            style={styles.engagementRow}
-            onPress={handleOpenComments}
+            style={[
+              styles.engagementRow,
+              !canComment && !canReact && styles.engagementRowDisabled,
+            ]}
+            onPress={canComment || canReact ? handleOpenComments : undefined}
+            disabled={!canComment && !canReact}
+            accessibilityState={{ disabled: !canComment && !canReact }}
           >
             {reactions.length > 0 && (
               <View style={styles.engagementItem}>
@@ -601,6 +626,17 @@ const styles = StyleSheet.create({
     color: ViewerColors.text,
     fontSize: 14,
   },
+  viewOnlyBadge: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm - 2,
+    backgroundColor: ViewerColors.overlay,
+    borderRadius: Spacing.lg,
+  },
+  viewOnlyBadgeText: {
+    color: ViewerColors.textMuted,
+    fontSize: 12,
+    fontWeight: "500",
+  },
   videoContainer: {
     flex: 1,
     justifyContent: "center",
@@ -766,6 +802,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: Spacing.lg,
     marginTop: Spacing.md,
+  },
+  engagementRowDisabled: {
+    opacity: 0.5,
   },
   engagementItem: {
     flexDirection: "row",
