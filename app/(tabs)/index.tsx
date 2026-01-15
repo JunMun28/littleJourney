@@ -14,7 +14,10 @@ import {
   Alert,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { router } from "expo-router";
+
+import { extractDateFromExif, type ExifData } from "@/utils/exif-date";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -173,6 +176,8 @@ export default function FeedScreen() {
   const [selectedMedia, setSelectedMedia] = useState<string[]>([]);
   const [selectedMediaSizes, setSelectedMediaSizes] = useState<number[]>([]);
   const [caption, setCaption] = useState("");
+  const [entryDate, setEntryDate] = useState<Date>(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const resetCreation = () => {
     setIsCreating(false);
@@ -181,6 +186,8 @@ export default function FeedScreen() {
     setSelectedMedia([]);
     setSelectedMediaSizes([]);
     setCaption("");
+    setEntryDate(new Date());
+    setShowDatePicker(false);
   };
 
   const onRefresh = useCallback(() => {
@@ -266,6 +273,7 @@ export default function FeedScreen() {
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsMultipleSelection: true,
         quality: 0.8,
+        exif: true, // Request EXIF data for date extraction (PRD Section 3.4)
       });
 
       if (!result.canceled && result.assets.length > 0) {
@@ -286,6 +294,16 @@ export default function FeedScreen() {
 
         setSelectedMedia(result.assets.map((a) => a.uri));
         setSelectedMediaSizes(result.assets.map((a) => a.fileSize ?? 0));
+
+        // Extract date from first photo's EXIF (PRD Section 3.4)
+        const firstAsset = result.assets[0];
+        const exifDate = extractDateFromExif(firstAsset.exif as ExifData);
+        if (exifDate) {
+          setEntryDate(new Date(exifDate));
+        } else {
+          setEntryDate(new Date());
+        }
+
         setCreateStep("caption");
       }
     }
@@ -294,13 +312,14 @@ export default function FeedScreen() {
   const handleSubmit = () => {
     if (!selectedType) return;
 
-    const today = new Date().toISOString().split("T")[0];
+    // Use entryDate (may be from EXIF or user-selected)
+    const dateString = entryDate.toISOString().split("T")[0];
 
     addEntry({
       type: selectedType,
       mediaUris: selectedMedia.length > 0 ? selectedMedia : undefined,
       caption: caption.trim() || undefined,
-      date: today,
+      date: dateString,
     });
 
     // Track storage usage for uploaded media
@@ -442,6 +461,41 @@ export default function FeedScreen() {
                 multiline
                 autoFocus={selectedType === "text"}
               />
+
+              {/* Date picker row (PRD Section 3.4: editable date pre-filled from EXIF) */}
+              <Pressable
+                style={[styles.dateRow, { borderColor: colors.inputBorder }]}
+                onPress={() => setShowDatePicker(true)}
+              >
+                <ThemedText style={{ color: colors.textSecondary }}>
+                  Date
+                </ThemedText>
+                <ThemedText>
+                  {entryDate.toLocaleDateString("en-SG", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </ThemedText>
+              </Pressable>
+
+              {showDatePicker && (
+                <DateTimePicker
+                  value={entryDate}
+                  mode="date"
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  maximumDate={new Date()}
+                  onChange={(event, selectedDate) => {
+                    if (Platform.OS === "android") {
+                      setShowDatePicker(false);
+                    }
+                    if (selectedDate) {
+                      setEntryDate(selectedDate);
+                    }
+                  }}
+                />
+              )}
+
               <TouchableOpacity
                 style={styles.submitButton}
                 onPress={handleSubmit}
@@ -566,6 +620,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     minHeight: 100,
     textAlignVertical: "top",
+    padding: 12,
+    borderWidth: 1,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  dateRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 12,
     borderWidth: 1,
     borderRadius: 8,

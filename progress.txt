@@ -951,3 +951,30 @@
 **Verification:** tsc, lint, test (157 passed), build all pass.
 
 **Next:** All UI screens themed. Remaining items: actual Stripe SDK integration, PDF generation, or backend API integration.
+
+## 2026-01-15: EXIF Date Extraction for Photo Entries
+
+**PRD ref:** Phase 1 Weeks 5-7, Section 3.4 (EXIF Date Detection)
+
+**Task:** Implement EXIF date extraction to auto-fill entry date from photo metadata
+
+**Decisions:**
+- Created utils/exif-date.ts with extractDateFromExif() function
+- ExifData type supports DateTimeOriginal, DateTimeDigitized, DateTime fields
+- Priority order: DateTimeOriginal > DateTimeDigitized > DateTime (per EXIF spec)
+- Handles both EXIF format "YYYY:MM:DD HH:mm:ss" and ISO format
+- Returns null for invalid/missing dates (graceful fallback to today)
+- Added exif: true option to ImagePicker.launchImageLibraryAsync for photos
+- Entry creation now extracts date from first selected photo's EXIF
+- Added date picker row to caption step so user can override date
+- Date picker limits maximumDate to today (no future dates)
+- TDD approach: 10 unit tests for EXIF parsing
+
+**Files changed:**
+- utils/exif-date.ts - New: extractDateFromExif function, ExifData type
+- app/(tabs)/index.tsx - Added EXIF extraction, entryDate state, date picker UI
+- __tests__/utils/exif-date.test.ts - New: 10 TDD tests for EXIF date parsing
+
+**Verification:** tsc, lint, test (167 passed), build all pass.
+
+**Next:** Backend API integration, Stripe SDK, or PDF generation
