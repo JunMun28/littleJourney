@@ -814,3 +814,28 @@
 **Verification:** tsc, lint, test (157 passed), build all pass.
 
 **Next:** Continue UI polish for search.tsx, settings.tsx, entry detail screens
+
+## 2026-01-15: UI Polish - Search Screen Theme Integration
+
+**PRD ref:** Phase 1 Weeks 12-13 (Polish)
+
+**Task:** Apply theme system to search.tsx screen
+
+**Decisions:**
+- Added useColorScheme hook + Colors/Spacing/Shadows imports from theme
+- Removed local PRIMARY_COLOR definition, use imported constant
+- Dynamic colors via colors = Colors[colorScheme] pattern
+- FilterChip: dynamic backgroundColor (backgroundTertiary), textSecondary color
+- SearchResultCard: dynamic backgroundSecondary, Shadows.small for elevation
+- Video/text placeholders: dynamic backgroundTertiary
+- Search input: colors.background, colors.text, colors.inputBorder, colors.placeholder
+- Result date: colors.textSecondary instead of opacity hack
+- Empty state text: colors.textMuted
+- Replaced hardcoded padding/margin with Spacing constants
+
+**Files changed:**
+- app/(tabs)/search.tsx - Full theme integration with dynamic colors and Spacing
+
+**Verification:** tsc, lint, test (157 passed), build all pass.
+
+**Next:** Continue UI polish for settings.tsx, entry detail screens

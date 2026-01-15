@@ -6,6 +6,7 @@ import {
   FlatList,
   Pressable,
   Image,
+  useColorScheme,
 } from "react-native";
 import { useRouter } from "expo-router";
 
@@ -16,9 +17,7 @@ import {
   type Entry,
   type EntryType,
 } from "@/contexts/entry-context";
-import { useThemeColor } from "@/hooks/use-theme-color";
-
-const PRIMARY_COLOR = "#0a7ea4";
+import { PRIMARY_COLOR, Colors, Spacing, Shadows } from "@/constants/theme";
 
 type FilterType = "all" | EntryType;
 
@@ -26,16 +25,25 @@ interface FilterChipProps {
   label: string;
   isActive: boolean;
   onPress: () => void;
+  colors: (typeof Colors)["light"];
 }
 
-function FilterChip({ label, isActive, onPress }: FilterChipProps) {
+function FilterChip({ label, isActive, onPress, colors }: FilterChipProps) {
   return (
     <Pressable
-      style={[styles.filterChip, isActive && styles.filterChipActive]}
+      style={[
+        styles.filterChip,
+        { backgroundColor: colors.backgroundTertiary },
+        isActive && styles.filterChipActive,
+      ]}
       onPress={onPress}
     >
       <ThemedText
-        style={[styles.filterChipText, isActive && styles.filterChipTextActive]}
+        style={[
+          styles.filterChipText,
+          { color: colors.textSecondary },
+          isActive && styles.filterChipTextActive,
+        ]}
       >
         {label}
       </ThemedText>
@@ -46,13 +54,19 @@ function FilterChip({ label, isActive, onPress }: FilterChipProps) {
 interface SearchResultCardProps {
   entry: Entry;
   onPress: () => void;
+  colors: (typeof Colors)["light"];
 }
 
-function SearchResultCard({ entry, onPress }: SearchResultCardProps) {
-  const textColor = useThemeColor({}, "text");
-
+function SearchResultCard({ entry, onPress, colors }: SearchResultCardProps) {
   return (
-    <Pressable style={styles.resultCard} onPress={onPress}>
+    <Pressable
+      style={[
+        styles.resultCard,
+        { backgroundColor: colors.backgroundSecondary },
+        Shadows.small,
+      ]}
+      onPress={onPress}
+    >
       {entry.type === "photo" && entry.mediaUris?.[0] && (
         <Image
           source={{ uri: entry.mediaUris[0] }}
@@ -60,12 +74,24 @@ function SearchResultCard({ entry, onPress }: SearchResultCardProps) {
         />
       )}
       {entry.type === "video" && (
-        <View style={[styles.resultThumbnail, styles.videoPlaceholder]}>
+        <View
+          style={[
+            styles.resultThumbnail,
+            styles.videoPlaceholder,
+            { backgroundColor: colors.backgroundTertiary },
+          ]}
+        >
           <ThemedText style={styles.videoIcon}>🎬</ThemedText>
         </View>
       )}
       {entry.type === "text" && (
-        <View style={[styles.resultThumbnail, styles.textPlaceholder]}>
+        <View
+          style={[
+            styles.resultThumbnail,
+            styles.textPlaceholder,
+            { backgroundColor: colors.backgroundTertiary },
+          ]}
+        >
           <ThemedText style={styles.textIcon}>📝</ThemedText>
         </View>
       )}
@@ -73,7 +99,9 @@ function SearchResultCard({ entry, onPress }: SearchResultCardProps) {
         <ThemedText style={styles.resultCaption} numberOfLines={2}>
           {entry.caption || "No caption"}
         </ThemedText>
-        <ThemedText style={[styles.resultDate, { color: textColor }]}>
+        <ThemedText
+          style={[styles.resultDate, { color: colors.textSecondary }]}
+        >
           {new Date(entry.date).toLocaleDateString("en-SG", {
             day: "numeric",
             month: "short",
@@ -99,8 +127,8 @@ export default function SearchScreen() {
   const { entries } = useEntries();
   const [query, setQuery] = useState("");
   const [filterType, setFilterType] = useState<FilterType>("all");
-  const backgroundColor = useThemeColor({}, "background");
-  const textColor = useThemeColor({}, "text");
+  const colorScheme = useColorScheme() ?? "light";
+  const colors = Colors[colorScheme];
 
   const filteredEntries = useMemo(() => {
     if (!query.trim()) return [];
@@ -142,7 +170,7 @@ export default function SearchScreen() {
           <ThemedText type="subtitle" style={styles.emptyTitle}>
             Search Your Memories
           </ThemedText>
-          <ThemedText style={styles.emptyText}>
+          <ThemedText style={[styles.emptyText, { color: colors.textMuted }]}>
             Search through captions and tags to find your precious moments
           </ThemedText>
         </View>
@@ -155,7 +183,7 @@ export default function SearchScreen() {
         <ThemedText type="subtitle" style={styles.emptyTitle}>
           No Results
         </ThemedText>
-        <ThemedText style={styles.emptyText}>
+        <ThemedText style={[styles.emptyText, { color: colors.textMuted }]}>
           Try different keywords or filters
         </ThemedText>
       </View>
@@ -170,13 +198,13 @@ export default function SearchScreen() {
           style={[
             styles.searchInput,
             {
-              backgroundColor,
-              color: textColor,
-              borderColor: textColor + "30",
+              backgroundColor: colors.background,
+              color: colors.text,
+              borderColor: colors.inputBorder,
             },
           ]}
           placeholder="Search memories..."
-          placeholderTextColor={textColor + "60"}
+          placeholderTextColor={colors.placeholder}
           value={query}
           onChangeText={setQuery}
           autoCapitalize="none"
@@ -191,21 +219,25 @@ export default function SearchScreen() {
           label="All"
           isActive={filterType === "all"}
           onPress={() => setFilterType("all")}
+          colors={colors}
         />
         <FilterChip
           label="Photos"
           isActive={filterType === "photo"}
           onPress={() => setFilterType("photo")}
+          colors={colors}
         />
         <FilterChip
           label="Videos"
           isActive={filterType === "video"}
           onPress={() => setFilterType("video")}
+          colors={colors}
         />
         <FilterChip
           label="Text"
           isActive={filterType === "text"}
           onPress={() => setFilterType("text")}
+          colors={colors}
         />
       </View>
 
@@ -218,6 +250,7 @@ export default function SearchScreen() {
             <SearchResultCard
               entry={item}
               onPress={() => handleEntryPress(item.id)}
+              colors={colors}
             />
           )}
           contentContainerStyle={styles.resultsList}
@@ -235,57 +268,53 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   searchContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.sm,
   },
   searchInput: {
     height: 44,
     borderRadius: 10,
-    paddingHorizontal: 16,
+    paddingHorizontal: Spacing.lg,
     fontSize: 16,
     borderWidth: 1,
   },
   filterRow: {
     flexDirection: "row",
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    gap: 8,
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.md,
+    gap: Spacing.sm,
   },
   filterChip: {
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: "#e0e0e0",
   },
   filterChipActive: {
     backgroundColor: PRIMARY_COLOR,
   },
   filterChipText: {
     fontSize: 14,
-    color: "#666",
   },
   filterChipTextActive: {
     color: "#fff",
     fontWeight: "600",
   },
   resultsList: {
-    padding: 16,
-    gap: 12,
+    padding: Spacing.lg,
+    gap: Spacing.md,
   },
   resultCard: {
     flexDirection: "row",
-    backgroundColor: "#f5f5f5",
     borderRadius: 12,
     overflow: "hidden",
-    marginBottom: 12,
+    marginBottom: Spacing.md,
   },
   resultThumbnail: {
     width: 80,
     height: 80,
   },
   videoPlaceholder: {
-    backgroundColor: "#333",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -293,7 +322,6 @@ const styles = StyleSheet.create({
     fontSize: 28,
   },
   textPlaceholder: {
-    backgroundColor: "#e8e8e8",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -308,21 +336,20 @@ const styles = StyleSheet.create({
   resultCaption: {
     fontSize: 14,
     fontWeight: "500",
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
   },
   resultDate: {
     fontSize: 12,
-    opacity: 0.7,
   },
   tagRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     marginTop: 6,
-    gap: 4,
+    gap: Spacing.xs,
   },
   tag: {
     backgroundColor: PRIMARY_COLOR + "20",
-    paddingHorizontal: 8,
+    paddingHorizontal: Spacing.sm,
     paddingVertical: 2,
     borderRadius: 10,
   },
@@ -334,17 +361,16 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 32,
+    padding: Spacing.xxl,
   },
   emptyIcon: {
     fontSize: 48,
-    marginBottom: 16,
+    marginBottom: Spacing.lg,
   },
   emptyTitle: {
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   emptyText: {
     textAlign: "center",
-    opacity: 0.7,
   },
 });
