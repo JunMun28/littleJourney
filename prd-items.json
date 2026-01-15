@@ -88,7 +88,7 @@
         "Verify user is still authenticated"
       ],
       "acceptanceCriteria": "Auth tokens are securely stored and persist across app restarts",
-      "passes": false
+      "passes": true
     },
     {
       "id": "AUTH-005",
@@ -104,7 +104,7 @@
         "Verify cannot access protected screens"
       ],
       "acceptanceCriteria": "User can log out and all local auth data is cleared",
-      "passes": false
+      "passes": true
     },
     {
       "id": "ONBOARD-001",
@@ -117,7 +117,7 @@
         "Verify cannot skip to main app without required steps"
       ],
       "acceptanceCriteria": "New users are automatically directed to onboarding flow",
-      "passes": false
+      "passes": true
     },
     {
       "id": "ONBOARD-002",
@@ -134,7 +134,7 @@
         "Verify proceeds to next step"
       ],
       "acceptanceCriteria": "User must provide child's name and DOB; display name and photo are optional",
-      "passes": false
+      "passes": true
     },
     {
       "id": "ONBOARD-003",
@@ -149,7 +149,7 @@
         "Verify selection saved to child profile"
       ],
       "acceptanceCriteria": "User must select exactly one cultural tradition",
-      "passes": false
+      "passes": true
     },
     {
       "id": "ONBOARD-004",
@@ -164,7 +164,7 @@
         "Verify selected time saved to preferences"
       ],
       "acceptanceCriteria": "User can set preferred daily prompt notification time",
-      "passes": false
+      "passes": true
     },
     {
       "id": "ONBOARD-005",
@@ -178,7 +178,7 @@
         "Verify proceeds to next step"
       ],
       "acceptanceCriteria": "User is prompted to invite family but can skip",
-      "passes": false
+      "passes": true
     },
     {
       "id": "ONBOARD-006",
@@ -192,7 +192,7 @@
         "Tap skip - verify lands on main feed"
       ],
       "acceptanceCriteria": "User is encouraged to create first entry but can skip",
-      "passes": false
+      "passes": true
     },
     {
       "id": "CHILD-001",
@@ -207,7 +207,7 @@
         "Verify age calculated correctly from DOB"
       ],
       "acceptanceCriteria": "Child profile created with name and DOB; age auto-calculated",
-      "passes": false
+      "passes": true
     },
     {
       "id": "CHILD-002",
@@ -221,7 +221,7 @@
         "View as family member - verify display name shown"
       ],
       "acceptanceCriteria": "Display name shown to family instead of real name when set",
-      "passes": false
+      "passes": true
     },
     {
       "id": "CHILD-003",
@@ -236,7 +236,7 @@
         "Verify milestone templates updated if tradition changed"
       ],
       "acceptanceCriteria": "All child profile fields can be edited",
-      "passes": false
+      "passes": true
     },
     {
       "id": "CHILD-004",
@@ -266,7 +266,7 @@
         "Verify entry appears in feed"
       ],
       "acceptanceCriteria": "User can create entry with single photo; EXIF date auto-detected",
-      "passes": false
+      "passes": true
     },
     {
       "id": "ENTRY-002",
@@ -281,7 +281,7 @@
         "Verify entry shows as swipeable carousel in feed"
       ],
       "acceptanceCriteria": "Multiple photos displayed as swipeable carousel",
-      "passes": false
+      "passes": true
     },
     {
       "id": "ENTRY-003",
@@ -297,7 +297,7 @@
         "Verify entry appears with playable video"
       ],
       "acceptanceCriteria": "Standard tier users can upload videos up to 2 minutes",
-      "passes": false
+      "passes": true
     },
     {
       "id": "ENTRY-004",
@@ -309,7 +309,7 @@
         "As Premium tier, verify >10min video blocked"
       ],
       "acceptanceCriteria": "Video selection blocked if exceeds tier limits",
-      "passes": false
+      "passes": true
     },
     {
       "id": "ENTRY-005",
@@ -324,7 +324,7 @@
         "Verify entry appears as text card in feed"
       ],
       "acceptanceCriteria": "User can create text-only journal entries",
-      "passes": false
+      "passes": true
     },
     {
       "id": "ENTRY-006",
@@ -337,7 +337,7 @@
         "Verify entry created successfully without caption"
       ],
       "acceptanceCriteria": "Entries can be created without captions",
-      "passes": false
+      "passes": true
     },
     {
       "id": "ENTRY-007",
@@ -350,7 +350,7 @@
         "Verify user can still modify date"
       ],
       "acceptanceCriteria": "Photo date extracted from EXIF and pre-filled",
-      "passes": false
+      "passes": true
     },
     {
       "id": "ENTRY-008",
@@ -364,7 +364,7 @@
         "Verify entry appears with correct date in feed"
       ],
       "acceptanceCriteria": "Users can manually select any past date",
-      "passes": false
+      "passes": true
     },
     {
       "id": "ENTRY-009",
@@ -378,7 +378,7 @@
         "Verify entry created with pre-birth date"
       ],
       "acceptanceCriteria": "Entries can be dated before child's birth",
-      "passes": false
+      "passes": true
     },
     {
       "id": "ENTRY-010",
@@ -393,7 +393,7 @@
         "Resume draft - verify content preserved"
       ],
       "acceptanceCriteria": "Incomplete entries auto-saved and resumable",
-      "passes": false
+      "passes": true
     },
     {
       "id": "ENTRY-011",
@@ -406,7 +406,7 @@
         "Verify shows 'Posted by [Parent B]'"
       ],
       "acceptanceCriteria": "Each entry displays which parent created it",
-      "passes": false
+      "passes": true
     },
     {
       "id": "ENTRY-012",
@@ -421,7 +421,7 @@
         "Verify 'Edited' indicator shown"
       ],
       "acceptanceCriteria": "Users can edit their own entries",
-      "passes": false
+      "passes": true
     },
     {
       "id": "ENTRY-013",
@@ -448,7 +448,7 @@
         "Verify entry removed from feed"
       ],
       "acceptanceCriteria": "Users can delete entries with confirmation",
-      "passes": false
+      "passes": true
     },
     {
       "id": "ENTRY-015",
@@ -462,7 +462,7 @@
         "Search for tag - verify entry found"
       ],
       "acceptanceCriteria": "Users can add freeform custom tags",
-      "passes": false
+      "passes": true
     },
     {
       "id": "ENTRY-016",
@@ -476,7 +476,7 @@
         "Complete and submit entry"
       ],
       "acceptanceCriteria": "Users can capture photos via camera",
-      "passes": false
+      "passes": true
     },
     {
       "id": "FEED-001",
@@ -488,7 +488,7 @@
         "Verify newest entry at top"
       ],
       "acceptanceCriteria": "Feed shows newest entries first",
-      "passes": false
+      "passes": true
     },
     {
       "id": "FEED-002",
@@ -501,7 +501,7 @@
         "Verify no duplicates"
       ],
       "acceptanceCriteria": "Feed loads more entries on scroll",
-      "passes": false
+      "passes": true
     },
     {
       "id": "FEED-003",
@@ -514,7 +514,7 @@
         "Verify feed updates with new entry"
       ],
       "acceptanceCriteria": "Users can pull to refresh feed",
-      "passes": false
+      "passes": true
     },
     {
       "id": "FEED-004",
@@ -526,7 +526,7 @@
         "Verify photo, caption, date, attribution, tags visible"
       ],
       "acceptanceCriteria": "Entry cards show all relevant metadata",
-      "passes": false
+      "passes": true
     },
     {
       "id": "FEED-005",
@@ -538,7 +538,7 @@
         "Verify all photos viewable"
       ],
       "acceptanceCriteria": "Multi-photo entries navigable via swipe",
-      "passes": false
+      "passes": true
     },
     {
       "id": "FEED-006",
@@ -550,7 +550,7 @@
         "Verify video plays with controls"
       ],
       "acceptanceCriteria": "Videos play in feed with controls",
-      "passes": false
+      "passes": true
     },
     {
       "id": "FEED-007",
@@ -563,7 +563,7 @@
         "Verify can dismiss"
       ],
       "acceptanceCriteria": "Photos viewable full-screen with zoom",
-      "passes": false
+      "passes": true
     },
     {
       "id": "FEED-008",
@@ -576,7 +576,7 @@
         "Tap to view original entry"
       ],
       "acceptanceCriteria": "Memories from previous years surface",
-      "passes": false
+      "passes": true
     },
     {
       "id": "MILESTONE-001",
@@ -588,7 +588,7 @@
         "Verify 满月, 百日, 抓周 appear with correct dates"
       ],
       "acceptanceCriteria": "Chinese milestones pre-populated from DOB",
-      "passes": false
+      "passes": true
     },
     {
       "id": "MILESTONE-002",
@@ -600,7 +600,7 @@
         "Verify Aqiqah, Cukur Jambul, Hari Raya appear"
       ],
       "acceptanceCriteria": "Malay milestones pre-populated from DOB",
-      "passes": false
+      "passes": true
     },
     {
       "id": "MILESTONE-003",
@@ -612,7 +612,7 @@
         "Verify Naming, Annaprashan, Deepavali appear"
       ],
       "acceptanceCriteria": "Indian milestones pre-populated from DOB",
-      "passes": false
+      "passes": true
     },
     {
       "id": "MILESTONE-004",
@@ -624,7 +624,7 @@
         "Verify First smile, First steps, etc. appear"
       ],
       "acceptanceCriteria": "Universal milestones available regardless of culture",
-      "passes": false
+      "passes": true
     },
     {
       "id": "MILESTONE-005",
@@ -635,7 +635,7 @@
         "Verify both dates captured and displayed"
       ],
       "acceptanceCriteria": "Tracks both traditional and celebration dates",
-      "passes": false
+      "passes": true
     },
     {
       "id": "MILESTONE-006",
@@ -648,7 +648,7 @@
         "Verify reminder in feed"
       ],
       "acceptanceCriteria": "Upcoming milestones highlighted with countdown",
-      "passes": false
+      "passes": true
     },
     {
       "id": "MILESTONE-007",
@@ -661,7 +661,7 @@
         "Verify custom milestone appears in list"
       ],
       "acceptanceCriteria": "Parents can create custom milestones",
-      "passes": false
+      "passes": true
     },
     {
       "id": "MILESTONE-008",
@@ -675,7 +675,7 @@
         "Verify entry appears in feed with milestone tag"
       ],
       "acceptanceCriteria": "Completing milestone creates linked entry",
-      "passes": false
+      "passes": true
     },
     {
       "id": "SHARE-001",
@@ -689,7 +689,7 @@
         "Verify family member appears in pending list"
       ],
       "acceptanceCriteria": "Parents can invite family via email",
-      "passes": false
+      "passes": true
     },
     {
       "id": "SHARE-002",
@@ -776,7 +776,7 @@
         "Verify no notification sent to them"
       ],
       "acceptanceCriteria": "Parents can revoke access silently",
-      "passes": false
+      "passes": true
     },
     {
       "id": "SHARE-009",
@@ -788,7 +788,7 @@
         "Verify new link works"
       ],
       "acceptanceCriteria": "Parents can resend magic links",
-      "passes": false
+      "passes": true
     },
     {
       "id": "SHARE-010",
@@ -814,7 +814,7 @@
         "Verify registered successfully"
       ],
       "acceptanceCriteria": "App requests push permissions appropriately",
-      "passes": false
+      "passes": true
     },
     {
       "id": "NOTIF-002",
@@ -827,7 +827,7 @@
         "Tap to open app"
       ],
       "acceptanceCriteria": "Daily prompts arrive at configured time",
-      "passes": false
+      "passes": true
     },
     {
       "id": "NOTIF-003",
@@ -840,7 +840,7 @@
         "Verify frequency resets to daily"
       ],
       "acceptanceCriteria": "Prompt frequency reduces when ignored",
-      "passes": false
+      "passes": true
     },
     {
       "id": "NOTIF-004",
@@ -852,7 +852,7 @@
         "Tap to open milestone"
       ],
       "acceptanceCriteria": "Push notifications for upcoming milestones",
-      "passes": false
+      "passes": true
     },
     {
       "id": "NOTIF-005",
@@ -864,7 +864,7 @@
         "Tap to view memory"
       ],
       "acceptanceCriteria": "Push for memories from previous years",
-      "passes": false
+      "passes": true
     },
     {
       "id": "NOTIF-006",
@@ -876,7 +876,7 @@
         "Tap to open entry"
       ],
       "acceptanceCriteria": "Parents notified of family interactions",
-      "passes": false
+      "passes": true
     },
     {
       "id": "NOTIF-007",
@@ -888,7 +888,7 @@
         "Verify cannot disable storage warnings"
       ],
       "acceptanceCriteria": "Storage warnings sent and cannot be disabled",
-      "passes": false
+      "passes": true
     },
     {
       "id": "NOTIF-008",
@@ -901,7 +901,7 @@
         "Verify prompts resume"
       ],
       "acceptanceCriteria": "Categories can be individually toggled",
-      "passes": false
+      "passes": true
     },
     {
       "id": "SEARCH-001",
@@ -913,7 +913,7 @@
         "Verify entry found"
       ],
       "acceptanceCriteria": "Search finds entries by caption text",
-      "passes": false
+      "passes": true
     },
     {
       "id": "SEARCH-002",
@@ -950,7 +950,7 @@
         "Verify only photos shown"
       ],
       "acceptanceCriteria": "Search filterable by media type",
-      "passes": false
+      "passes": true
     },
     {
       "id": "SEARCH-005",
@@ -974,7 +974,7 @@
         "Verify entry found"
       ],
       "acceptanceCriteria": "Custom tags are searchable",
-      "passes": false
+      "passes": true
     },
     {
       "id": "SEARCH-007",
@@ -1024,7 +1024,7 @@
         "Exit full-screen"
       ],
       "acceptanceCriteria": "Videos playable full-screen with controls",
-      "passes": false
+      "passes": true
     },
     {
       "id": "EXPORT-001",
@@ -1036,7 +1036,7 @@
         "Tap to start generation"
       ],
       "acceptanceCriteria": "System prompts at child's first birthday",
-      "passes": false
+      "passes": true
     },
     {
       "id": "EXPORT-002",
@@ -1048,7 +1048,7 @@
         "Verify preview displayed"
       ],
       "acceptanceCriteria": "System auto-generates layout from milestones",
-      "passes": false
+      "passes": true
     },
     {
       "id": "EXPORT-003",
@@ -1061,7 +1061,7 @@
         "Verify changes in preview"
       ],
       "acceptanceCriteria": "Parents can customize book before export",
-      "passes": false
+      "passes": true
     },
     {
       "id": "EXPORT-004",
@@ -1073,7 +1073,7 @@
         "Verify PDF content matches preview"
       ],
       "acceptanceCriteria": "Premium users can download PDF",
-      "passes": false
+      "passes": true
     },
     {
       "id": "DATA-001",
@@ -1086,7 +1086,7 @@
         "Verify contains folders, media, metadata"
       ],
       "acceptanceCriteria": "Users can export all data as ZIP",
-      "passes": false
+      "passes": true
     },
     {
       "id": "DATA-002",
@@ -1098,7 +1098,7 @@
         "Complete export"
       ],
       "acceptanceCriteria": "Data export available to free and premium",
-      "passes": false
+      "passes": true
     },
     {
       "id": "DATA-003",
@@ -1111,7 +1111,7 @@
         "Verify 30-day grace period message"
       ],
       "acceptanceCriteria": "Deletion requires confirmation with grace period",
-      "passes": false
+      "passes": true
     },
     {
       "id": "DATA-004",
@@ -1124,7 +1124,7 @@
         "Verify data intact"
       ],
       "acceptanceCriteria": "Can cancel deletion within grace period",
-      "passes": false
+      "passes": true
     },
     {
       "id": "PAY-001",
@@ -1136,7 +1136,7 @@
         "Verify blocked with upgrade prompt"
       ],
       "acceptanceCriteria": "Uploads blocked at limit with upgrade prompt",
-      "passes": false
+      "passes": true
     },
     {
       "id": "PAY-002",
@@ -1187,7 +1187,7 @@
         "Complete annual purchase"
       ],
       "acceptanceCriteria": "Annual billing offers 2 months free",
-      "passes": false
+      "passes": true
     },
     {
       "id": "PAY-006",
@@ -1211,7 +1211,7 @@
         "After period, verify reverts to free"
       ],
       "acceptanceCriteria": "Cancelled subs retain access until period ends",
-      "passes": false
+      "passes": true
     },
     {
       "id": "PAY-008",
@@ -1247,7 +1247,7 @@
         "Verify tab highlighted correctly"
       ],
       "acceptanceCriteria": "Tab navigation works smoothly",
-      "passes": false
+      "passes": true
     },
     {
       "id": "MOBILE-003",
@@ -1259,7 +1259,7 @@
         "Verify returns to previous screen"
       ],
       "acceptanceCriteria": "Platform gestures work correctly",
-      "passes": false
+      "passes": true
     },
     {
       "id": "MOBILE-004",
@@ -1272,7 +1272,7 @@
         "Dismiss keyboard"
       ],
       "acceptanceCriteria": "Keyboard doesn't obscure inputs",
-      "passes": false
+      "passes": true
     },
     {
       "id": "MOBILE-005",

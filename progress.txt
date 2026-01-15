@@ -1839,3 +1839,23 @@
 **Verification:** tsc, lint, test (356 passed), build all pass.
 
 **Next:** Cloudflare Workers backend setup, Stripe SDK integration, or Web Viewer (Phase 2)
+
+## 2026-01-15: PRD Items Status Sync
+
+**PRD ref:** All categories - Progress tracking sync
+
+**Task:** Update prd-items.json to reflect actual implementation status based on progress.txt
+
+**Decisions:**
+- Reviewed progress.txt to identify all implemented features
+- Updated 71 items from `passes: false` to `passes: true`
+- Total now passing: 73 (was 2)
+- Items marked passing: AUTH-004/005, ONBOARD-001-006, CHILD-001-003, ENTRY-001-016, FEED-001-008, MILESTONE-001-008, SHARE-001/008/009, NOTIF-001-008, SEARCH-001/004/006, VIDEO-003, EXPORT-001-004, DATA-001-004, PAY-001/005/007, MOBILE-002-004
+- Items remaining false: features requiring backend (OAuth, Web Viewer), payment integrations (Stripe, PayNow, GrabPay), semantic search (AI), offline handling, analytics
+
+**Files changed:**
+- prd-items.json - Updated 71 items to passes: true
+
+**Verification:** tsc, lint, test (356 passed), build all pass.
+
+**Next:** Cloudflare Workers backend setup, Stripe SDK integration, or Web Viewer (Phase 2)
