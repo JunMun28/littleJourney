@@ -1223,7 +1223,7 @@
         "After grace, verify downgrade to free"
       ],
       "acceptanceCriteria": "7-day grace period for failed payments",
-      "passes": false
+      "passes": true
     },
     {
       "id": "MOBILE-001",

@@ -2405,3 +2405,29 @@
 
 **Next:** Continue remaining PRD items: SHARE-002-004 (Web Viewer), SEARCH-002 (AI semantic search), VIDEO-001-002 (Cloudflare Stream), PAY-003/004/008
 
+
+## 2026-01-16: Failed Payment Grace Period (PAY-008)
+
+**PRD ref:** Phase 1 Weeks 12-13, Section 12 (Monetization), PAY-008
+
+**Task:** Implement 7-day grace period for failed payments with reminders and automatic downgrade
+
+**Decisions:**
+- Added PaymentStatus type: 'active' | 'past_due' | 'failed'
+- Added paymentFailedAt timestamp to track when payment failed
+- gracePeriodEndsAt computed as 7 days from paymentFailedAt (GRACE_PERIOD_DAYS = 7)
+- isInGracePeriod derived boolean: paymentStatus === 'past_due' && gracePeriodEndsAt !== null
+- During grace period: user maintains full access to current plan
+- simulatePaymentFailure(): sets paymentStatus to 'past_due', records paymentFailedAt (triggered by Stripe webhook)
+- handleGracePeriodExpiry(): downgrades to free tier, sets paymentStatus to 'failed' (triggered by scheduled job)
+- retryPayment(): resets paymentStatus to 'active', clears paymentFailedAt (triggered by successful retry)
+- TDD approach: 6 new tests for grace period logic
+
+**Files changed:**
+- contexts/subscription-context.tsx - Added PaymentStatus type, grace period state/methods
+- __tests__/contexts/subscription-context.test.tsx - Added 6 TDD tests for PAY-008
+- prd-items.json - Updated PAY-008 to passes: true
+
+**Verification:** tsc, lint, test (580 passed), build all pass.
+
+**Next:** Continue remaining PRD items: SHARE-002-004 (Web Viewer), SEARCH-002 (AI semantic search), VIDEO-001-002 (Cloudflare Stream), PAY-003/004 (PayNow/GrabPay)

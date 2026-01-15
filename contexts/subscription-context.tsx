@@ -9,6 +9,12 @@ import type { SubscriptionTier } from "@/contexts/storage-context";
 
 export type BillingCycle = "monthly" | "yearly";
 
+// PAY-008: Payment status for grace period handling
+export type PaymentStatus = "active" | "past_due" | "failed";
+
+// Grace period duration in days per PRD
+const GRACE_PERIOD_DAYS = 7;
+
 // Tier hierarchy for upgrade/downgrade validation
 const TIER_HIERARCHY: Record<SubscriptionTier, number> = {
   free: 0,
@@ -57,6 +63,11 @@ interface SubscriptionState {
   currentPeriodStart: string | null;
   currentPeriodEnd: string | null;
   cancelledAt: string | null;
+  // PAY-008: Grace period fields
+  paymentStatus: PaymentStatus;
+  paymentFailedAt: string | null;
+  gracePeriodEndsAt: string | null;
+  isInGracePeriod: boolean;
 }
 
 interface SubscriptionContextValue extends SubscriptionState {
@@ -65,6 +76,10 @@ interface SubscriptionContextValue extends SubscriptionState {
   calculateProratedAmount: (newPlan: SubscriptionTier) => number;
   cancelSubscription: () => Promise<void>;
   restoreSubscription: () => Promise<void>;
+  // PAY-008: Grace period methods
+  simulatePaymentFailure: () => Promise<void>;
+  handleGracePeriodExpiry: () => Promise<void>;
+  retryPayment: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -86,7 +101,24 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
   const [cancelledAt, setCancelledAt] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // PAY-008: Grace period state
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("active");
+  const [paymentFailedAt, setPaymentFailedAt] = useState<string | null>(null);
+
   const isSubscribed = currentPlan !== "free";
+
+  // PAY-008: Calculate grace period end (7 days from payment failure)
+  const gracePeriodEndsAt =
+    paymentFailedAt !== null
+      ? new Date(
+          new Date(paymentFailedAt).getTime() +
+            GRACE_PERIOD_DAYS * 24 * 60 * 60 * 1000,
+        ).toISOString()
+      : null;
+
+  // PAY-008: Check if currently in grace period
+  const isInGracePeriod =
+    paymentStatus === "past_due" && gracePeriodEndsAt !== null;
 
   const subscribe = useCallback(
     async (plan: SubscriptionTier, cycle: BillingCycle): Promise<void> => {
@@ -228,6 +260,53 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     }
   }, []);
 
+  // PAY-008: Simulate a failed payment (for testing/webhook handling)
+  const simulatePaymentFailure = useCallback(async (): Promise<void> => {
+    setIsLoading(true);
+    try {
+      // In production, this is triggered by Stripe webhook invoice.payment_failed
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      setPaymentStatus("past_due");
+      setPaymentFailedAt(new Date().toISOString());
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // PAY-008: Handle grace period expiry - downgrade to free tier
+  const handleGracePeriodExpiry = useCallback(async (): Promise<void> => {
+    setIsLoading(true);
+    try {
+      // In production, this is triggered by scheduled job after 7 days
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      setCurrentPlan("free");
+      setBillingCycle(null);
+      setCurrentPeriodStart(null);
+      setCurrentPeriodEnd(null);
+      setCancelledAt(null);
+      setPaymentStatus("failed");
+      // Keep paymentFailedAt for record
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // PAY-008: Retry payment - reset payment status on success
+  const retryPayment = useCallback(async (): Promise<void> => {
+    setIsLoading(true);
+    try {
+      // In production, this triggers Stripe payment retry
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      setPaymentStatus("active");
+      setPaymentFailedAt(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   const value: SubscriptionContextValue = {
     currentPlan,
     billingCycle,
@@ -235,11 +314,21 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     currentPeriodStart,
     currentPeriodEnd,
     cancelledAt,
+    // PAY-008: Grace period state
+    paymentStatus,
+    paymentFailedAt,
+    gracePeriodEndsAt,
+    isInGracePeriod,
+    // Methods
     subscribe,
     upgradePlan,
     calculateProratedAmount,
     cancelSubscription,
     restoreSubscription,
+    // PAY-008: Grace period methods
+    simulatePaymentFailure,
+    handleGracePeriodExpiry,
+    retryPayment,
     isLoading,
   };
 

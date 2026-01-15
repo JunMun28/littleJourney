@@ -209,4 +209,111 @@ describe("SubscriptionContext", () => {
       ).rejects.toThrow("Cannot downgrade using upgradePlan");
     });
   });
+
+  // PAY-008: Failed payment grace period tests
+  describe("failed payment grace period", () => {
+    it("provides paymentStatus field defaulting to active", () => {
+      const { result } = renderHook(() => useSubscription(), { wrapper });
+      expect(result.current.paymentStatus).toBe("active");
+    });
+
+    it("simulates payment failure and enters grace period", async () => {
+      const { result } = renderHook(() => useSubscription(), { wrapper });
+
+      // Subscribe first
+      await act(async () => {
+        await result.current.subscribe("standard", "monthly");
+      });
+
+      // Simulate payment failure
+      await act(async () => {
+        await result.current.simulatePaymentFailure();
+      });
+
+      expect(result.current.paymentStatus).toBe("past_due");
+      expect(result.current.paymentFailedAt).toBeTruthy();
+      expect(result.current.isInGracePeriod).toBe(true);
+    });
+
+    it("calculates 7-day grace period end date from payment failure", async () => {
+      const { result } = renderHook(() => useSubscription(), { wrapper });
+
+      await act(async () => {
+        await result.current.subscribe("standard", "monthly");
+      });
+
+      await act(async () => {
+        await result.current.simulatePaymentFailure();
+      });
+
+      // Grace period should be 7 days from failure
+      expect(result.current.gracePeriodEndsAt).toBeTruthy();
+      const failedDate = new Date(result.current.paymentFailedAt!);
+      const graceEndDate = new Date(result.current.gracePeriodEndsAt!);
+      const daysDiff = Math.round(
+        (graceEndDate.getTime() - failedDate.getTime()) / (1000 * 60 * 60 * 24),
+      );
+      expect(daysDiff).toBe(7);
+    });
+
+    it("maintains access during grace period", async () => {
+      const { result } = renderHook(() => useSubscription(), { wrapper });
+
+      await act(async () => {
+        await result.current.subscribe("standard", "monthly");
+      });
+
+      await act(async () => {
+        await result.current.simulatePaymentFailure();
+      });
+
+      // User should still have access during grace period
+      expect(result.current.currentPlan).toBe("standard");
+      expect(result.current.isSubscribed).toBe(true);
+    });
+
+    it("downgrades to free tier after grace period expires", async () => {
+      const { result } = renderHook(() => useSubscription(), { wrapper });
+
+      await act(async () => {
+        await result.current.subscribe("standard", "monthly");
+      });
+
+      await act(async () => {
+        await result.current.simulatePaymentFailure();
+      });
+
+      // Manually trigger grace period expiry
+      await act(async () => {
+        await result.current.handleGracePeriodExpiry();
+      });
+
+      expect(result.current.currentPlan).toBe("free");
+      expect(result.current.isSubscribed).toBe(false);
+      expect(result.current.paymentStatus).toBe("failed");
+    });
+
+    it("resets payment status when successful payment made", async () => {
+      const { result } = renderHook(() => useSubscription(), { wrapper });
+
+      await act(async () => {
+        await result.current.subscribe("standard", "monthly");
+      });
+
+      await act(async () => {
+        await result.current.simulatePaymentFailure();
+      });
+
+      expect(result.current.paymentStatus).toBe("past_due");
+
+      // Simulate successful payment retry
+      await act(async () => {
+        await result.current.retryPayment();
+      });
+
+      expect(result.current.paymentStatus).toBe("active");
+      expect(result.current.paymentFailedAt).toBeNull();
+      expect(result.current.isInGracePeriod).toBe(false);
+    });
+  });
 });
