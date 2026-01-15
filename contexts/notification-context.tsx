@@ -53,6 +53,8 @@ interface NotificationContextValue {
     daysBefore: number,
   ) => Promise<void>;
   cancelMilestoneReminder: (milestoneId: string) => Promise<void>;
+  // Storage warning (PRD Section 7.1 - locked on)
+  sendStorageWarningNotification: (usagePercent: number) => Promise<void>;
   // Smart frequency (PRD Section 7.3)
   promptFrequency: PromptFrequency;
   consecutiveIgnoredDays: number;
@@ -306,6 +308,42 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     );
   }, []);
 
+  // Storage warning notification (PRD Section 7.1 - locked on at 80%, 90%, 100%)
+  const sendStorageWarningNotification = useCallback(
+    async (usagePercent: number) => {
+      // Only send at threshold levels: 80%, 90%, 100%
+      // Note: storageWarning setting is ignored - this is "locked on" per PRD
+      if (usagePercent < 80) {
+        return;
+      }
+
+      let title: string;
+      let body: string;
+
+      if (usagePercent >= 100) {
+        title = "⚠️ Storage is full!";
+        body =
+          "You've reached your storage limit. Upgrade your plan to continue adding memories.";
+      } else {
+        title = `⚠️ Storage ${usagePercent}% full`;
+        body =
+          usagePercent >= 90
+            ? "You're almost out of space! Consider upgrading or removing some media."
+            : "Your storage is filling up. Consider upgrading your plan for more space.";
+      }
+
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title,
+          body,
+          data: { type: "storage_warning", threshold: usagePercent },
+        },
+        trigger: null, // Send immediately
+      });
+    },
+    [],
+  );
+
   // Smart frequency methods (PRD Section 7.3)
   const recordIgnoredPrompt = useCallback(() => {
     setConsecutiveIgnoredDays((prev) => {
@@ -338,6 +376,8 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     // Milestone reminders
     scheduleMilestoneReminder,
     cancelMilestoneReminder,
+    // Storage warning
+    sendStorageWarningNotification,
     // Smart frequency
     promptFrequency,
     consecutiveIgnoredDays,

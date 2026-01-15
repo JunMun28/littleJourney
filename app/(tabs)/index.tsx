@@ -29,7 +29,7 @@ import {
   type EntryType,
 } from "@/contexts/entry-context";
 import { useChild } from "@/contexts/child-context";
-import { useStorage } from "@/contexts/storage-context";
+import { useStorage, TIER_LIMITS } from "@/contexts/storage-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useDraft } from "@/hooks/use-draft";
 import { useNotifications } from "@/contexts/notification-context";
@@ -166,9 +166,13 @@ type CreateStep = "type" | "media" | "caption";
 export default function FeedScreen() {
   const { entries, addEntry, getOnThisDayEntries } = useEntries();
   const { child } = useChild();
-  const { canUpload, canUploadVideo, addUsage, tier } = useStorage();
-  const { recordEntryPosted, sendMemoriesNotification, settings } =
-    useNotifications();
+  const { canUpload, canUploadVideo, addUsage, tier, usedBytes } = useStorage();
+  const {
+    recordEntryPosted,
+    sendMemoriesNotification,
+    sendStorageWarningNotification,
+    settings,
+  } = useNotifications();
   const {
     draft,
     hasDraft,
@@ -410,10 +414,25 @@ export default function FeedScreen() {
       tags: tags.length > 0 ? tags : undefined,
     });
 
-    // Track storage usage for uploaded media
+    // Track storage usage for uploaded media and check for threshold warnings (PRD Section 7.1)
     if (selectedMediaSizes.length > 0) {
       const totalSize = selectedMediaSizes.reduce((sum, size) => sum + size, 0);
+      const limitBytes = TIER_LIMITS[tier];
+      const previousPercent = Math.round((usedBytes / limitBytes) * 100);
+      const newPercent = Math.round(
+        ((usedBytes + totalSize) / limitBytes) * 100,
+      );
+
       addUsage(totalSize);
+
+      // Check if we crossed a storage threshold (80%, 90%, 100%)
+      const thresholds = [80, 90, 100];
+      for (const threshold of thresholds) {
+        if (previousPercent < threshold && newPercent >= threshold) {
+          sendStorageWarningNotification(threshold);
+          break; // Only send one notification (the first threshold crossed)
+        }
+      }
     }
 
     // Reset notification frequency to daily (PRD Section 7.3)

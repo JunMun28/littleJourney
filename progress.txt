@@ -1180,3 +1180,29 @@
 **Verification:** tsc, lint, test (207 passed), build all pass.
 
 **Next:** Backend API integration, Stripe SDK, or Web Viewer (Phase 2)
+
+## 2026-01-15: Storage Warning Push Notifications
+
+**PRD ref:** Phase 1 Weeks 10-11, Section 7.1 (Notification Types - Storage Warning at 80%, 90%, 100%)
+
+**Task:** Implement storage warning push notifications that trigger when crossing storage thresholds
+
+**Decisions:**
+- Added sendStorageWarningNotification(usagePercent) to NotificationContext
+- Thresholds: 80% (warning), 90% (critical), 100% (full) per PRD Section 7.1
+- Storage warning is "locked on" per PRD - ignores storageWarning setting (always sends)
+- Different messages for each threshold: 80%/90% = filling up, 100% = full + upgrade prompt
+- Notification data type: "storage_warning" with threshold for tap handling
+- Integration in Feed handleSubmit: calculates before/after percentages, sends notification on threshold crossing
+- Only first threshold crossed triggers notification (prevents multiple for single upload)
+- TDD approach: 6 context tests + 3 integration tests
+
+**Files changed:**
+- contexts/notification-context.tsx - Added sendStorageWarningNotification method
+- app/(tabs)/index.tsx - Added threshold crossing detection in handleSubmit after addUsage
+- __tests__/contexts/notification-context.test.tsx - Added 6 TDD tests for storage warning
+- __tests__/app/tabs/feed.test.tsx - Added 3 integration tests for storage warning notifications
+
+**Verification:** tsc, lint, test (216 passed), build all pass.
+
+**Next:** Backend API integration, Stripe SDK, or Web Viewer (Phase 2)

@@ -418,4 +418,108 @@ describe("NotificationContext", () => {
       expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
     });
   });
+
+  // Storage Warning Notification tests (PRD Section 7.1)
+  describe("Storage Warning Notification", () => {
+    it("provides sendStorageWarningNotification method", () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+
+      expect(typeof result.current.sendStorageWarningNotification).toBe(
+        "function",
+      );
+    });
+
+    it("sends notification at 80% threshold", async () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+      const Notifications = require("expo-notifications");
+
+      Notifications.scheduleNotificationAsync.mockClear();
+
+      await act(async () => {
+        await result.current.sendStorageWarningNotification(80);
+      });
+
+      expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: expect.objectContaining({
+            title: expect.stringContaining("80%"),
+            data: { type: "storage_warning", threshold: 80 },
+          }),
+          trigger: null, // Immediate notification
+        }),
+      );
+    });
+
+    it("sends notification at 90% threshold", async () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+      const Notifications = require("expo-notifications");
+
+      Notifications.scheduleNotificationAsync.mockClear();
+
+      await act(async () => {
+        await result.current.sendStorageWarningNotification(90);
+      });
+
+      expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: expect.objectContaining({
+            title: expect.stringContaining("90%"),
+          }),
+        }),
+      );
+    });
+
+    it("sends notification at 100% threshold with different message", async () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+      const Notifications = require("expo-notifications");
+
+      Notifications.scheduleNotificationAsync.mockClear();
+
+      await act(async () => {
+        await result.current.sendStorageWarningNotification(100);
+      });
+
+      expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: expect.objectContaining({
+            title: expect.stringContaining("full"),
+            body: expect.stringContaining("Upgrade"),
+          }),
+        }),
+      );
+    });
+
+    it("always sends notification regardless of storageWarning setting (locked on)", async () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+      const Notifications = require("expo-notifications");
+
+      // Even if user tries to disable storage warnings (they shouldn't be able to)
+      // the notification should still be sent
+      await act(async () => {
+        result.current.updateSettings({ storageWarning: false });
+      });
+
+      Notifications.scheduleNotificationAsync.mockClear();
+
+      await act(async () => {
+        await result.current.sendStorageWarningNotification(80);
+      });
+
+      // Storage warnings are locked on per PRD, so notification still sends
+      expect(Notifications.scheduleNotificationAsync).toHaveBeenCalled();
+    });
+
+    it("does not send notification for thresholds below 80%", async () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+      const Notifications = require("expo-notifications");
+
+      Notifications.scheduleNotificationAsync.mockClear();
+
+      await act(async () => {
+        await result.current.sendStorageWarningNotification(75);
+      });
+
+      expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
+    });
+  });
 });

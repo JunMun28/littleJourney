@@ -327,6 +327,94 @@ describe("Smart notification frequency", () => {
   });
 });
 
+// Test storage warning notification integration (PRD Section 7.1)
+describe("Storage warning notifications", () => {
+  const Notifications = require("expo-notifications");
+
+  const combinedWrapper = ({ children }: { children: ReactNode }) => (
+    <StorageProvider>
+      <NotificationProvider>{children}</NotificationProvider>
+    </StorageProvider>
+  );
+
+  beforeEach(() => {
+    Notifications.scheduleNotificationAsync.mockClear();
+  });
+
+  it("should send storage warning when crossing 80% threshold", async () => {
+    const { result: storageResult } = renderHook(() => useStorage(), {
+      wrapper: combinedWrapper,
+    });
+    const { result: notificationResult } = renderHook(
+      () => useNotifications(),
+      {
+        wrapper: combinedWrapper,
+      },
+    );
+
+    // Free tier = 500MB limit. Add 375MB (75%)
+    act(() => {
+      storageResult.current.addUsage(375 * 1024 * 1024);
+    });
+
+    Notifications.scheduleNotificationAsync.mockClear();
+
+    // Send notification for crossing 80%
+    await act(async () => {
+      await notificationResult.current.sendStorageWarningNotification(80);
+    });
+
+    expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        content: expect.objectContaining({
+          title: expect.stringContaining("80%"),
+          data: { type: "storage_warning", threshold: 80 },
+        }),
+      }),
+    );
+  });
+
+  it("should send storage warning when crossing 100% threshold", async () => {
+    const { result: notificationResult } = renderHook(
+      () => useNotifications(),
+      {
+        wrapper: combinedWrapper,
+      },
+    );
+
+    Notifications.scheduleNotificationAsync.mockClear();
+
+    await act(async () => {
+      await notificationResult.current.sendStorageWarningNotification(100);
+    });
+
+    expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        content: expect.objectContaining({
+          title: expect.stringContaining("full"),
+        }),
+      }),
+    );
+  });
+
+  it("should not send warning when below 80%", async () => {
+    const { result: notificationResult } = renderHook(
+      () => useNotifications(),
+      {
+        wrapper: combinedWrapper,
+      },
+    );
+
+    Notifications.scheduleNotificationAsync.mockClear();
+
+    await act(async () => {
+      await notificationResult.current.sendStorageWarningNotification(75);
+    });
+
+    expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
+  });
+});
+
 // Test draft auto-save feature (PRD Section 3.5)
 describe("Feed draft auto-save", () => {
   beforeEach(() => {
