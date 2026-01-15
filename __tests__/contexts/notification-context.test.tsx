@@ -19,6 +19,7 @@ jest.mock("expo-notifications", () => ({
   ),
   scheduleNotificationAsync: jest.fn(() => Promise.resolve("notification-id")),
   cancelAllScheduledNotificationsAsync: jest.fn(() => Promise.resolve()),
+  cancelScheduledNotificationAsync: jest.fn(() => Promise.resolve()),
   addNotificationReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
   addNotificationResponseReceivedListener: jest.fn(() => ({
     remove: jest.fn(),
@@ -311,6 +312,110 @@ describe("NotificationContext", () => {
           }),
         }),
       );
+    });
+  });
+
+  // Milestone Reminder Notification tests (PRD Section 7.1)
+  describe("Milestone Reminder Notification", () => {
+    it("provides scheduleMilestoneReminder method", () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+
+      expect(typeof result.current.scheduleMilestoneReminder).toBe("function");
+    });
+
+    it("schedules notification X days before milestone date", async () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+      const Notifications = require("expo-notifications");
+
+      Notifications.scheduleNotificationAsync.mockClear();
+
+      // Schedule reminder 3 days before milestone (milestone in 7 days, remind 3 days before = 4 days from now)
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 7);
+      const milestoneDateStr = futureDate.toISOString().split("T")[0];
+
+      await act(async () => {
+        await result.current.scheduleMilestoneReminder(
+          "milestone-1",
+          "Full Month",
+          milestoneDateStr,
+          3, // Days before = notification fires 4 days from now
+        );
+      });
+
+      expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: expect.objectContaining({
+            title: expect.stringContaining("Full Month"),
+            data: expect.objectContaining({
+              type: "milestone_reminder",
+              milestoneId: "milestone-1",
+            }),
+          }),
+        }),
+      );
+    });
+
+    it("does not schedule notification when setting is disabled", async () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+      const Notifications = require("expo-notifications");
+
+      // Disable milestone reminders
+      await act(async () => {
+        result.current.updateSettings({ milestoneReminder: false });
+      });
+
+      Notifications.scheduleNotificationAsync.mockClear();
+
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 3);
+
+      await act(async () => {
+        await result.current.scheduleMilestoneReminder(
+          "milestone-1",
+          "Full Month",
+          futureDate.toISOString().split("T")[0],
+          3,
+        );
+      });
+
+      expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
+    });
+
+    it("cancels existing milestone reminder", async () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+      const Notifications = require("expo-notifications");
+
+      Notifications.cancelScheduledNotificationAsync.mockClear();
+
+      await act(async () => {
+        await result.current.cancelMilestoneReminder("milestone-1");
+      });
+
+      expect(
+        Notifications.cancelScheduledNotificationAsync,
+      ).toHaveBeenCalledWith("milestone-reminder-milestone-1");
+    });
+
+    it("does not schedule if milestone date is in the past", async () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+      const Notifications = require("expo-notifications");
+
+      Notifications.scheduleNotificationAsync.mockClear();
+
+      const pastDate = new Date();
+      pastDate.setDate(pastDate.getDate() - 5);
+
+      await act(async () => {
+        await result.current.scheduleMilestoneReminder(
+          "milestone-1",
+          "Full Month",
+          pastDate.toISOString().split("T")[0],
+          3,
+        );
+      });
+
+      expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
     });
   });
 });

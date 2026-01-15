@@ -45,6 +45,14 @@ interface NotificationContextValue {
   cancelDailyPrompt: () => Promise<void>;
   // On This Day memories (PRD Section 4.5)
   sendMemoriesNotification: (memoriesCount: number) => Promise<void>;
+  // Milestone reminders (PRD Section 7.1)
+  scheduleMilestoneReminder: (
+    milestoneId: string,
+    title: string,
+    milestoneDate: string,
+    daysBefore: number,
+  ) => Promise<void>;
+  cancelMilestoneReminder: (milestoneId: string) => Promise<void>;
   // Smart frequency (PRD Section 7.3)
   promptFrequency: PromptFrequency;
   consecutiveIgnoredDays: number;
@@ -248,6 +256,56 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     [settings.memories],
   );
 
+  // Milestone reminder methods (PRD Section 7.1)
+  const scheduleMilestoneReminder = useCallback(
+    async (
+      milestoneId: string,
+      title: string,
+      milestoneDate: string,
+      daysBefore: number,
+    ) => {
+      // Skip if milestone reminders are disabled
+      if (!settings.milestoneReminder) {
+        return;
+      }
+
+      // Parse milestone date and calculate trigger date
+      const milestone = new Date(milestoneDate);
+      const triggerDate = new Date(milestone);
+      triggerDate.setDate(triggerDate.getDate() - daysBefore);
+
+      // Don't schedule if trigger date is in the past
+      if (triggerDate <= new Date()) {
+        return;
+      }
+
+      // Calculate seconds until trigger
+      const secondsUntilTrigger = Math.floor(
+        (triggerDate.getTime() - Date.now()) / 1000,
+      );
+
+      await Notifications.scheduleNotificationAsync({
+        identifier: `milestone-reminder-${milestoneId}`,
+        content: {
+          title: `🎉 ${title} is coming up!`,
+          body: `${daysBefore} day${daysBefore === 1 ? "" : "s"} until this special milestone.`,
+          data: { type: "milestone_reminder", milestoneId },
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+          seconds: secondsUntilTrigger,
+        },
+      });
+    },
+    [settings.milestoneReminder],
+  );
+
+  const cancelMilestoneReminder = useCallback(async (milestoneId: string) => {
+    await Notifications.cancelScheduledNotificationAsync(
+      `milestone-reminder-${milestoneId}`,
+    );
+  }, []);
+
   // Smart frequency methods (PRD Section 7.3)
   const recordIgnoredPrompt = useCallback(() => {
     setConsecutiveIgnoredDays((prev) => {
@@ -277,6 +335,9 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     cancelDailyPrompt,
     // On This Day memories
     sendMemoriesNotification,
+    // Milestone reminders
+    scheduleMilestoneReminder,
+    cancelMilestoneReminder,
     // Smart frequency
     promptFrequency,
     consecutiveIgnoredDays,

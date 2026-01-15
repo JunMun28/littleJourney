@@ -1,13 +1,12 @@
 {
-  "session_id": "6ff6a648-3c61-43a9-9a90-05e516b3649f",
-  "transcript_path": "/Users/wongjunmun/.claude/projects/-Users-wongjunmun-Developer-expo-projects-littleJourney/6ff6a648-3c61-43a9-9a90-05e516b3649f.jsonl",
+  "session_id": "78cb1e9f-45ce-466a-b752-b7d8160c6f2a",
+  "transcript_path": "/Users/wongjunmun/.claude/projects/-Users-wongjunmun-Developer-expo-projects-littleJourney/78cb1e9f-45ce-466a-b752-b7d8160c6f2a.jsonl",
   "cwd": "/Users/wongjunmun/Developer/expo_projects/littleJourney",
   "permission_mode": "bypassPermissions",
   "hook_event_name": "PreToolUse",
   "tool_name": "Bash",
   "tool_input": {
-    "command": "git add -A && git status",
-    "description": "Stage all changes"
+    "command": "git add -A && git status 2>&1"
   },
-  "tool_use_id": "toolu_019X9KuSk9h4ynJJD6V6YsKN"
+  "tool_use_id": "toolu_01GQFAozJAUNCr1z7ckKTb5t"
 }

@@ -1130,3 +1130,28 @@
 **Verification:** tsc, lint, test (198 passed), build all pass.
 
 **Next:** Backend API integration, Stripe SDK, or Web Viewer (Phase 2)
+
+## 2026-01-15: Milestone Reminder Push Notifications
+
+**PRD ref:** Phase 1 Weeks 10-11, Section 7.1 (Notification Types - Milestone Reminder)
+
+**Task:** Implement milestone reminder push notifications that fire X days before milestone date
+
+**Decisions:**
+- Added scheduleMilestoneReminder(milestoneId, title, milestoneDate, daysBefore) to NotificationContext
+- Uses TIME_INTERVAL trigger with calculated seconds until reminder date
+- Notification identifier: "milestone-reminder-{milestoneId}" for targeted cancellation
+- cancelMilestoneReminder(milestoneId) cancels specific milestone notification
+- Respects settings.milestoneReminder toggle - skips if disabled
+- Does not schedule if trigger date (milestoneDate - daysBefore) is in past
+- Message: "🎉 {title} is coming up!" + "{N} day(s) until this special milestone"
+- Notification data includes type: "milestone_reminder" and milestoneId for tap handling
+- TDD approach: 5 new tests for milestone reminder logic
+
+**Files changed:**
+- contexts/notification-context.tsx - Added scheduleMilestoneReminder, cancelMilestoneReminder methods
+- __tests__/contexts/notification-context.test.tsx - Added 5 TDD tests, added cancelScheduledNotificationAsync mock
+
+**Verification:** tsc, lint, test (203 passed), build all pass.
+
+**Next:** Integrate milestone reminder with MilestoneContext addMilestone, Backend API, or Web Viewer (Phase 2)
