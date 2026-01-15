@@ -21,12 +21,21 @@ import {
   type MilestoneTemplate,
 } from "@/contexts/milestone-context";
 import { useChild } from "@/contexts/child-context";
-
-const PRIMARY_COLOR = "#0a7ea4";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import {
+  PRIMARY_COLOR,
+  Colors,
+  SemanticColors,
+  Shadows,
+  Spacing,
+} from "@/constants/theme";
 
 type ModalState = "closed" | "selectTemplate" | "addCustom" | "complete";
 
 export default function MilestonesScreen() {
+  const colorScheme = useColorScheme() ?? "light";
+  const colors = Colors[colorScheme];
+
   const {
     milestones,
     upcomingMilestones,
@@ -133,31 +142,56 @@ export default function MilestonesScreen() {
 
     return (
       <Pressable
-        style={styles.milestoneCard}
+        style={[
+          styles.milestoneCard,
+          { backgroundColor: colors.card, borderColor: colors.cardBorder },
+          Shadows.small,
+        ]}
         onPress={() => handleOpenCompletion(item)}
       >
         <View style={styles.milestoneHeader}>
-          <Text style={styles.milestoneTitle}>
+          <Text style={[styles.milestoneTitle, { color: colors.text }]}>
             {title}
             {localTitle && (
-              <Text style={styles.localTitle}> ({localTitle})</Text>
+              <Text
+                style={[styles.localTitle, { color: colors.textSecondary }]}
+              >
+                {" "}
+                ({localTitle})
+              </Text>
             )}
           </Text>
           {item.isCompleted && (
-            <View style={styles.completedBadge}>
+            <View
+              style={[
+                styles.completedBadge,
+                { backgroundColor: SemanticColors.success },
+              ]}
+            >
               <Text style={styles.completedBadgeText}>Completed</Text>
             </View>
           )}
         </View>
         {description && (
-          <Text style={styles.milestoneDescription}>{description}</Text>
+          <Text
+            style={[
+              styles.milestoneDescription,
+              { color: colors.textSecondary },
+            ]}
+          >
+            {description}
+          </Text>
         )}
         <Text style={styles.milestoneDate}>
           {item.isCompleted && item.celebrationDate
             ? `Celebrated: ${new Date(item.celebrationDate).toLocaleDateString("en-SG")}`
             : `Due: ${new Date(item.milestoneDate).toLocaleDateString("en-SG")}`}
         </Text>
-        {item.notes && <Text style={styles.milestoneNotes}>{item.notes}</Text>}
+        {item.notes && (
+          <Text style={[styles.milestoneNotes, { color: colors.textMuted }]}>
+            {item.notes}
+          </Text>
+        )}
       </Pressable>
     );
   };
@@ -168,7 +202,9 @@ export default function MilestonesScreen() {
       <ThemedText type="subtitle" style={styles.emptyStateTitle}>
         No Milestones Yet
       </ThemedText>
-      <ThemedText style={styles.emptyStateText}>
+      <ThemedText
+        style={[styles.emptyStateText, { color: colors.textSecondary }]}
+      >
         Track your baby&apos;s special moments and cultural celebrations.
       </ThemedText>
       <Pressable
@@ -189,7 +225,9 @@ export default function MilestonesScreen() {
           {/* Upcoming Section */}
           {upcomingMilestones.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>
+              <Text
+                style={[styles.sectionTitle, { color: colors.textSecondary }]}
+              >
                 Upcoming ({upcomingMilestones.length})
               </Text>
               {upcomingMilestones.map((milestone) => (
@@ -203,7 +241,9 @@ export default function MilestonesScreen() {
           {/* Completed Section */}
           {completedMilestones.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>
+              <Text
+                style={[styles.sectionTitle, { color: colors.textSecondary }]}
+              >
                 Completed ({completedMilestones.length})
               </Text>
               {completedMilestones.map((milestone) => (
@@ -219,7 +259,7 @@ export default function MilestonesScreen() {
       {/* FAB to add milestone */}
       {milestones.length > 0 && (
         <Pressable
-          style={styles.fab}
+          style={[styles.fab, Shadows.large]}
           onPress={() => setModalState("selectTemplate")}
         >
           <Text style={styles.fabText}>+</Text>
@@ -232,23 +272,46 @@ export default function MilestonesScreen() {
         animationType="slide"
         transparent
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
+        <View
+          style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}
+        >
+          <View
+            style={[
+              styles.modalContent,
+              { backgroundColor: colors.background },
+            ]}
+          >
+            <View
+              style={[styles.modalHeader, { borderBottomColor: colors.border }]}
+            >
               <ThemedText type="subtitle">Add Milestone</ThemedText>
               <Pressable onPress={() => setModalState("closed")}>
-                <Text style={styles.closeButton}>×</Text>
+                <Text
+                  style={[styles.closeButton, { color: colors.textSecondary }]}
+                >
+                  ×
+                </Text>
               </Pressable>
             </View>
 
             <ScrollView style={styles.templateList}>
               {/* Custom milestone option */}
               <Pressable
-                style={styles.templateItem}
+                style={[
+                  styles.templateItem,
+                  { backgroundColor: colors.backgroundSecondary },
+                ]}
                 onPress={() => setModalState("addCustom")}
               >
-                <Text style={styles.templateTitle}>+ Custom Milestone</Text>
-                <Text style={styles.templateDescription}>
+                <Text style={[styles.templateTitle, { color: colors.text }]}>
+                  + Custom Milestone
+                </Text>
+                <Text
+                  style={[
+                    styles.templateDescription,
+                    { color: colors.textSecondary },
+                  ]}
+                >
                   Create your own milestone
                 </Text>
               </Pressable>
@@ -257,19 +320,32 @@ export default function MilestonesScreen() {
               {relevantTemplates.map((template) => (
                 <Pressable
                   key={template.id}
-                  style={styles.templateItem}
+                  style={[
+                    styles.templateItem,
+                    { backgroundColor: colors.backgroundSecondary },
+                  ]}
                   onPress={() => handleAddFromTemplate(template)}
                 >
-                  <Text style={styles.templateTitle}>
+                  <Text style={[styles.templateTitle, { color: colors.text }]}>
                     {template.title}
                     {template.titleLocal && (
-                      <Text style={styles.localTitle}>
+                      <Text
+                        style={[
+                          styles.localTitle,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
                         {" "}
                         ({template.titleLocal})
                       </Text>
                     )}
                   </Text>
-                  <Text style={styles.templateDescription}>
+                  <Text
+                    style={[
+                      styles.templateDescription,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
                     {template.description}
                   </Text>
                   {template.daysFromBirth && (
@@ -287,10 +363,15 @@ export default function MilestonesScreen() {
       {/* Custom Milestone Modal */}
       <Modal visible={modalState === "addCustom"} animationType="slide">
         <KeyboardAvoidingView
-          style={styles.fullModal}
+          style={[styles.fullModal, { backgroundColor: colors.background }]}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          <View style={styles.fullModalHeader}>
+          <View
+            style={[
+              styles.fullModalHeader,
+              { borderBottomColor: colors.border },
+            ]}
+          >
             <Pressable onPress={() => setModalState("selectTemplate")}>
               <Text style={styles.backButton}>← Back</Text>
             </Pressable>
@@ -299,32 +380,49 @@ export default function MilestonesScreen() {
           </View>
 
           <ScrollView style={styles.formContainer}>
-            <Text style={styles.label}>Title *</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Title *</Text>
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                {
+                  borderColor: colors.inputBorder,
+                  backgroundColor: colors.background,
+                  color: colors.text,
+                },
+              ]}
               value={customTitle}
               onChangeText={setCustomTitle}
               placeholder="e.g., First Laugh"
-              placeholderTextColor="#999"
+              placeholderTextColor={colors.placeholder}
             />
 
-            <Text style={styles.label}>Description</Text>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Description
+            </Text>
             <TextInput
-              style={[styles.input, styles.textArea]}
+              style={[
+                styles.input,
+                styles.textArea,
+                {
+                  borderColor: colors.inputBorder,
+                  backgroundColor: colors.background,
+                  color: colors.text,
+                },
+              ]}
               value={customDescription}
               onChangeText={setCustomDescription}
               placeholder="Optional description"
-              placeholderTextColor="#999"
+              placeholderTextColor={colors.placeholder}
               multiline
               numberOfLines={3}
             />
 
-            <Text style={styles.label}>Date</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Date</Text>
             <Pressable
-              style={styles.dateButton}
+              style={[styles.dateButton, { borderColor: colors.inputBorder }]}
               onPress={() => setShowDatePicker(true)}
             >
-              <Text style={styles.dateButtonText}>
+              <Text style={[styles.dateButtonText, { color: colors.text }]}>
                 {milestoneDate.toLocaleDateString("en-SG")}
               </Text>
             </Pressable>
@@ -357,10 +455,15 @@ export default function MilestonesScreen() {
       {/* Completion Modal */}
       <Modal visible={modalState === "complete"} animationType="slide">
         <KeyboardAvoidingView
-          style={styles.fullModal}
+          style={[styles.fullModal, { backgroundColor: colors.background }]}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          <View style={styles.fullModalHeader}>
+          <View
+            style={[
+              styles.fullModalHeader,
+              { borderBottomColor: colors.border },
+            ]}
+          >
             <Pressable onPress={() => setModalState("closed")}>
               <Text style={styles.backButton}>Cancel</Text>
             </Pressable>
@@ -371,7 +474,7 @@ export default function MilestonesScreen() {
           <ScrollView style={styles.formContainer}>
             {selectedMilestone && (
               <>
-                <Text style={styles.completionTitle}>
+                <Text style={[styles.completionTitle, { color: colors.text }]}>
                   {selectedMilestone.customTitle ??
                     MILESTONE_TEMPLATES.find(
                       (t) => t.id === selectedMilestone.templateId,
@@ -379,12 +482,17 @@ export default function MilestonesScreen() {
                     "Milestone"}
                 </Text>
 
-                <Text style={styles.label}>Celebration Date</Text>
+                <Text style={[styles.label, { color: colors.text }]}>
+                  Celebration Date
+                </Text>
                 <Pressable
-                  style={styles.dateButton}
+                  style={[
+                    styles.dateButton,
+                    { borderColor: colors.inputBorder },
+                  ]}
                   onPress={() => setShowCelebrationDatePicker(true)}
                 >
-                  <Text style={styles.dateButtonText}>
+                  <Text style={[styles.dateButtonText, { color: colors.text }]}>
                     {celebrationDate.toLocaleDateString("en-SG")}
                   </Text>
                 </Pressable>
@@ -400,13 +508,23 @@ export default function MilestonesScreen() {
                   />
                 )}
 
-                <Text style={styles.label}>Notes</Text>
+                <Text style={[styles.label, { color: colors.text }]}>
+                  Notes
+                </Text>
                 <TextInput
-                  style={[styles.input, styles.textArea]}
+                  style={[
+                    styles.input,
+                    styles.textArea,
+                    {
+                      borderColor: colors.inputBorder,
+                      backgroundColor: colors.background,
+                      color: colors.text,
+                    },
+                  ]}
                   value={completionNotes}
                   onChangeText={setCompletionNotes}
                   placeholder="Add notes about this milestone..."
-                  placeholderTextColor="#999"
+                  placeholderTextColor={colors.placeholder}
                   multiline
                   numberOfLines={4}
                 />
@@ -421,10 +539,20 @@ export default function MilestonesScreen() {
                 </Pressable>
 
                 <Pressable
-                  style={styles.deleteButton}
+                  style={[
+                    styles.deleteButton,
+                    { borderColor: SemanticColors.error },
+                  ]}
                   onPress={handleDeleteMilestone}
                 >
-                  <Text style={styles.deleteButtonText}>Delete Milestone</Text>
+                  <Text
+                    style={[
+                      styles.deleteButtonText,
+                      { color: SemanticColors.error },
+                    ]}
+                  >
+                    Delete Milestone
+                  </Text>
                 </Pressable>
               </>
             )}
@@ -441,33 +569,27 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    padding: 16,
+    padding: Spacing.lg,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: Spacing.xl,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "600",
-    marginBottom: 12,
-    color: "#666",
+    marginBottom: Spacing.md,
   },
   milestoneCard: {
-    backgroundColor: "#fff",
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    padding: Spacing.lg,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
   },
   milestoneHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
   },
   milestoneTitle: {
     fontSize: 18,
@@ -476,12 +598,10 @@ const styles = StyleSheet.create({
   },
   localTitle: {
     fontWeight: "400",
-    color: "#666",
   },
   completedBadge: {
-    backgroundColor: "#4CAF50",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
     borderRadius: 12,
   },
   completedBadgeText: {
@@ -491,8 +611,7 @@ const styles = StyleSheet.create({
   },
   milestoneDescription: {
     fontSize: 14,
-    color: "#666",
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   milestoneDate: {
     fontSize: 13,
@@ -501,33 +620,31 @@ const styles = StyleSheet.create({
   },
   milestoneNotes: {
     fontSize: 13,
-    color: "#888",
-    marginTop: 8,
+    marginTop: Spacing.sm,
     fontStyle: "italic",
   },
   emptyState: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    padding: 32,
+    padding: Spacing.xxl,
   },
   emptyStateIcon: {
     fontSize: 64,
-    marginBottom: 16,
+    marginBottom: Spacing.lg,
   },
   emptyStateTitle: {
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
     textAlign: "center",
   },
   emptyStateText: {
     textAlign: "center",
-    color: "#666",
-    marginBottom: 24,
+    marginBottom: Spacing.xl,
   },
   emptyStateButton: {
     backgroundColor: PRIMARY_COLOR,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
     borderRadius: 24,
   },
   emptyStateButtonText: {
@@ -545,11 +662,6 @@ const styles = StyleSheet.create({
     backgroundColor: PRIMARY_COLOR,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
   },
   fabText: {
     color: "#fff",
@@ -558,11 +670,9 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "flex-end",
   },
   modalContent: {
-    backgroundColor: "#fff",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: "80%",
@@ -572,72 +682,63 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 16,
+    padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
   },
   closeButton: {
     fontSize: 28,
-    color: "#666",
-    paddingHorizontal: 8,
+    paddingHorizontal: Spacing.sm,
   },
   templateList: {
-    padding: 16,
+    padding: Spacing.lg,
   },
   templateItem: {
-    padding: 16,
+    padding: Spacing.lg,
     borderRadius: 12,
-    backgroundColor: "#f5f5f5",
-    marginBottom: 12,
+    marginBottom: Spacing.md,
   },
   templateTitle: {
     fontSize: 16,
     fontWeight: "600",
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
   },
   templateDescription: {
     fontSize: 14,
-    color: "#666",
   },
   templateDays: {
     fontSize: 12,
     color: PRIMARY_COLOR,
-    marginTop: 4,
+    marginTop: Spacing.xs,
     fontWeight: "500",
   },
   fullModal: {
     flex: 1,
-    backgroundColor: "#fff",
   },
   fullModalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 16,
+    padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
   },
   backButton: {
     fontSize: 16,
     color: PRIMARY_COLOR,
   },
   formContainer: {
-    padding: 16,
+    padding: Spacing.lg,
   },
   label: {
     fontSize: 14,
     fontWeight: "600",
-    marginBottom: 8,
-    color: "#333",
+    marginBottom: Spacing.sm,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ddd",
     borderRadius: 8,
-    padding: 12,
+    padding: Spacing.md,
     fontSize: 16,
-    marginBottom: 16,
-    backgroundColor: "#fff",
+    marginBottom: Spacing.lg,
   },
   textArea: {
     minHeight: 80,
@@ -645,23 +746,21 @@ const styles = StyleSheet.create({
   },
   dateButton: {
     borderWidth: 1,
-    borderColor: "#ddd",
     borderRadius: 8,
-    padding: 12,
-    marginBottom: 24,
+    padding: Spacing.md,
+    marginBottom: Spacing.xl,
   },
   dateButtonText: {
     fontSize: 16,
-    color: "#333",
   },
   submitButton: {
     backgroundColor: PRIMARY_COLOR,
-    padding: 16,
+    padding: Spacing.lg,
     borderRadius: 8,
     alignItems: "center",
   },
   submitButtonDisabled: {
-    backgroundColor: "#ccc",
+    opacity: 0.5,
   },
   submitButtonText: {
     color: "#fff",
@@ -671,21 +770,18 @@ const styles = StyleSheet.create({
   completionTitle: {
     fontSize: 24,
     fontWeight: "700",
-    marginBottom: 24,
+    marginBottom: Spacing.xl,
     textAlign: "center",
-    color: "#333",
   },
   deleteButton: {
-    marginTop: 16,
-    padding: 16,
+    marginTop: Spacing.lg,
+    padding: Spacing.lg,
     borderRadius: 8,
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: "transparent",
     borderWidth: 1,
-    borderColor: "#dc3545",
   },
   deleteButtonText: {
-    color: "#dc3545",
     fontSize: 16,
     fontWeight: "600",
   },
