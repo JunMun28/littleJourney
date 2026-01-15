@@ -58,7 +58,7 @@
         "Kill app and reopen - verify session persists"
       ],
       "acceptanceCriteria": "User can authenticate using their Google account",
-      "passes": false
+      "passes": true
     },
     {
       "id": "AUTH-003",

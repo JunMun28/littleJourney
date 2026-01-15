@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   StyleSheet,
   Pressable,
@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
@@ -16,10 +17,28 @@ import { ThemedView } from "@/components/themed-view";
 import { useAuth } from "@/contexts/auth-context";
 import { Colors, PRIMARY_COLOR, Spacing } from "@/constants/theme";
 import { trackEvent, AnalyticsEvent } from "@/services/analytics";
+import { useGoogleAuth, type GoogleAuthResult } from "@/hooks/use-google-auth";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type SignInStep = "input" | "sent";
+
+// Fetch user info from Google using access token
+async function fetchGoogleUserInfo(
+  accessToken: string,
+): Promise<{ email: string; name?: string }> {
+  const response = await fetch(
+    "https://www.googleapis.com/oauth2/v3/userinfo",
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
+  if (!response.ok) {
+    throw new Error("Failed to fetch user info");
+  }
+  const data = await response.json();
+  return { email: data.email, name: data.name };
+}
 
 export default function SignInScreen() {
   const { signIn } = useAuth();
@@ -31,8 +50,34 @@ export default function SignInScreen() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Google OAuth hook
+  const handleGoogleSuccess = useCallback(
+    async (result: GoogleAuthResult) => {
+      try {
+        setIsLoading(true);
+        const userInfo = await fetchGoogleUserInfo(result.accessToken);
+        await signIn(userInfo.email);
+        trackEvent(AnalyticsEvent.SIGNUP_COMPLETED, { method: "google" });
+      } catch {
+        setError("Failed to complete Google sign-in. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [signIn],
+  );
+
+  const {
+    signIn: googleSignIn,
+    isLoading: googleLoading,
+    error: googleError,
+  } = useGoogleAuth({
+    onSuccess: handleGoogleSuccess,
+    onError: (err) => setError(err),
+  });
+
   const isValidEmail = EMAIL_REGEX.test(email);
-  const canSubmit = email.trim().length > 0 && !isLoading;
+  const canSubmit = email.trim().length > 0 && !isLoading && !googleLoading;
 
   const handleSendMagicLink = async () => {
     setError(null);
@@ -61,19 +106,24 @@ export default function SignInScreen() {
     }
   };
 
-  const handleOAuthSignIn = async (provider: "google" | "apple") => {
+  const handleAppleSignIn = async () => {
     setError(null);
     setIsLoading(true);
     try {
-      // TODO: In production, initiate OAuth flow
-      await signIn(`${provider}@demo.littlejourney.sg`);
-      trackEvent(AnalyticsEvent.SIGNUP_COMPLETED, { method: provider });
+      // TODO: Implement Apple Sign-In with expo-apple-authentication
+      await signIn("apple@demo.littlejourney.sg");
+      trackEvent(AnalyticsEvent.SIGNUP_COMPLETED, { method: "apple" });
     } catch {
-      setError(`Failed to sign in with ${provider}. Please try again.`);
+      setError("Failed to sign in with Apple. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Combined loading state
+  const anyLoading = isLoading || googleLoading;
+  // Show Google error if present, otherwise show local error
+  const displayError = googleError || error;
 
   if (step === "sent") {
     return (
@@ -131,7 +181,7 @@ export default function SignInScreen() {
                 styles.input,
                 {
                   backgroundColor: colors.background,
-                  borderColor: error ? "#dc2626" : colors.inputBorder,
+                  borderColor: displayError ? "#dc2626" : colors.inputBorder,
                   color: colors.text,
                 },
               ]}
@@ -146,19 +196,21 @@ export default function SignInScreen() {
               autoCapitalize="none"
               autoCorrect={false}
               autoComplete="email"
-              editable={!isLoading}
+              editable={!anyLoading}
             />
-            {error && <Text style={styles.errorText}>{error}</Text>}
+            {displayError && (
+              <Text style={styles.errorText}>{displayError}</Text>
+            )}
 
             <Pressable
               testID="send-magic-link-button"
               style={[
                 styles.primaryButton,
-                !canSubmit && styles.buttonDisabled,
+                (!canSubmit || anyLoading) && styles.buttonDisabled,
               ]}
               onPress={handleSendMagicLink}
-              disabled={!canSubmit}
-              accessibilityState={{ disabled: !canSubmit }}
+              disabled={!canSubmit || anyLoading}
+              accessibilityState={{ disabled: !canSubmit || anyLoading }}
             >
               <Text style={styles.primaryButtonText}>
                 {isLoading ? "Sending..." : "Send Magic Link"}
@@ -182,31 +234,39 @@ export default function SignInScreen() {
           {/* OAuth Buttons */}
           <View style={styles.oauthSection}>
             <Pressable
+              testID="google-signin-button"
               style={[
                 styles.oauthButton,
                 {
                   backgroundColor: colors.backgroundSecondary,
                   borderColor: colors.border,
                 },
+                anyLoading && styles.buttonDisabled,
               ]}
-              onPress={() => handleOAuthSignIn("google")}
-              disabled={isLoading}
+              onPress={googleSignIn}
+              disabled={anyLoading}
             >
-              <Text style={[styles.oauthButtonText, { color: colors.text }]}>
-                Continue with Google
-              </Text>
+              {googleLoading ? (
+                <ActivityIndicator size="small" color={colors.text} />
+              ) : (
+                <Text style={[styles.oauthButtonText, { color: colors.text }]}>
+                  Continue with Google
+                </Text>
+              )}
             </Pressable>
 
             <Pressable
+              testID="apple-signin-button"
               style={[
                 styles.oauthButton,
                 {
                   backgroundColor: colors.backgroundSecondary,
                   borderColor: colors.border,
                 },
+                anyLoading && styles.buttonDisabled,
               ]}
-              onPress={() => handleOAuthSignIn("apple")}
-              disabled={isLoading}
+              onPress={handleAppleSignIn}
+              disabled={anyLoading}
             >
               <Text style={[styles.oauthButtonText, { color: colors.text }]}>
                 Continue with Apple

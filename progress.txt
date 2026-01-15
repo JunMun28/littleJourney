@@ -2156,3 +2156,34 @@
 **Verification:** tsc, lint, test (438 passed), build all pass.
 
 **Next:** Continue remaining PRD items: backend integration (AUTH, SHARE, VIDEO, PAY), SEARCH-002 (semantic search), Web Viewer (Phase 2)
+
+## 2026-01-16: Google OAuth Authentication (AUTH-002)
+
+**PRD ref:** Phase 1, Section 1 (Authentication), AUTH-002
+
+**Task:** Implement Google OAuth authentication using expo-auth-session
+
+**Decisions:**
+- Installed expo-auth-session and expo-crypto for OAuth flow
+- Created hooks/use-google-auth.ts with full OAuth flow using expo-auth-session/providers/google
+- Hook returns signIn function, isLoading state, and error state
+- onSuccess callback receives GoogleAuthResult with accessToken, idToken, etc.
+- onError callback for error handling
+- Uses makeRedirectUri with scheme "littlejourney" and path "oauth"
+- Fetches user info from Google's userinfo endpoint after successful OAuth
+- Integrated into sign-in.tsx - replaced mock OAuth with real Google sign-in flow
+- Added ActivityIndicator for loading state on Google button
+- Combined loading state (anyLoading) for disabling all inputs during OAuth
+- TDD approach: 12 tests for use-google-auth hook
+
+**Files changed:**
+- package.json - Added expo-auth-session, expo-crypto dependencies
+- hooks/use-google-auth.ts - New: Google OAuth hook using expo-auth-session
+- app/(auth)/sign-in.tsx - Integrated useGoogleAuth hook, fetch Google user info
+- __tests__/hooks/use-google-auth.test.ts - New: 12 TDD tests for OAuth hook
+- __tests__/app/auth/sign-in.test.tsx - Added mocks for expo-auth-session
+- prd-items.json - Updated AUTH-002 to passes: true
+
+**Verification:** tsc, lint, test (450 passed), build all pass.
+
+**Next:** Continue remaining PRD items: AUTH-003 (Apple Sign-In), AUTH-001 (magic link - requires backend), backend integration (SHARE, VIDEO, PAY), Web Viewer (Phase 2)

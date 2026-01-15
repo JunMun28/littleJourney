@@ -23,6 +23,22 @@ jest.mock("expo-router", () => ({
   }),
 }));
 
+// Mock expo-auth-session
+jest.mock("expo-auth-session", () => ({
+  makeRedirectUri: jest.fn(() => "littlejourney://oauth"),
+}));
+
+// Mock expo-auth-session/providers/google
+const mockGoogleSignIn = jest.fn();
+jest.mock("expo-auth-session/providers/google", () => ({
+  useAuthRequest: jest.fn(() => [null, null, mockGoogleSignIn]),
+}));
+
+// Mock expo-web-browser
+jest.mock("expo-web-browser", () => ({
+  maybeCompleteAuthSession: jest.fn(),
+}));
+
 const renderSignIn = () => {
   return render(
     <AuthProvider>
