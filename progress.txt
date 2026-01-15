@@ -978,3 +978,30 @@
 **Verification:** tsc, lint, test (167 passed), build all pass.
 
 **Next:** Backend API integration, Stripe SDK, or PDF generation
+
+## 2026-01-15: Draft Auto-Save Feature
+
+**PRD ref:** Phase 1 Weeks 5-7, Section 3.5 (Draft Auto-Save)
+
+**Task:** Implement draft auto-save for incomplete entry creation
+
+**Decisions:**
+- Created useDraft hook using @react-native-async-storage/async-storage for persistence
+- Draft type: type, mediaUris, mediaSizes, caption, date, savedAt timestamp
+- Single draft per user stored at key "@littlejourney:draft"
+- Auto-saves when modal open AND type selected (prevents saving empty drafts)
+- Resume prompt shown on app open when draft exists (Alert with Resume/Discard)
+- Draft cleared on successful entry post
+- Used useRef to prevent multiple prompts during same session
+- TDD approach: 8 tests for hook + 3 integration tests for Feed
+
+**Files changed:**
+- hooks/use-draft.ts - New: useDraft hook with save/load/clear, Draft type
+- app/(tabs)/index.tsx - Integrated useDraft, auto-save effect, resume prompt effect
+- __tests__/hooks/use-draft.test.ts - New: 8 TDD tests for hook
+- __tests__/app/tabs/feed.test.tsx - Added 3 integration tests for draft feature
+- package.json - Added @react-native-async-storage/async-storage dependency
+
+**Verification:** tsc, lint, test (178 passed), build all pass.
+
+**Next:** Backend API integration, Stripe SDK, or PDF generation

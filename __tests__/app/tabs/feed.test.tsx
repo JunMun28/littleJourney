@@ -1,7 +1,18 @@
-import { renderHook, act } from "@testing-library/react-native";
+import { renderHook, act, waitFor } from "@testing-library/react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useStorage, StorageProvider } from "@/contexts/storage-context";
 import { useEntries, EntryProvider } from "@/contexts/entry-context";
+import { useDraft, type Draft } from "@/hooks/use-draft";
 import type { ReactNode } from "react";
+
+// Mock AsyncStorage
+jest.mock("@react-native-async-storage/async-storage", () => ({
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+  removeItem: jest.fn(),
+}));
+
+const mockAsyncStorage = AsyncStorage as jest.Mocked<typeof AsyncStorage>;
 
 describe("On This Day memories", () => {
   const entryWrapper = ({ children }: { children: ReactNode }) => (
@@ -183,5 +194,84 @@ describe("Feed storage integration", () => {
       expect(result.current.usedBytes).toBe(fileSize);
       expect(result.current.usagePercent).toBe(1); // 5MB of 500MB = 1%
     });
+  });
+});
+
+// Test draft auto-save feature (PRD Section 3.5)
+describe("Feed draft auto-save", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockAsyncStorage.getItem.mockResolvedValue(null);
+    mockAsyncStorage.setItem.mockResolvedValue();
+    mockAsyncStorage.removeItem.mockResolvedValue();
+  });
+
+  it("should load draft and indicate hasDraft when draft exists", async () => {
+    const savedDraft: Draft = {
+      type: "photo",
+      mediaUris: ["file://photo.jpg"],
+      caption: "Test caption",
+      date: "2026-01-15",
+      savedAt: Date.now(),
+    };
+    mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(savedDraft));
+
+    const { result } = renderHook(() => useDraft());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.hasDraft).toBe(true);
+    expect(result.current.draft?.type).toBe("photo");
+    expect(result.current.draft?.caption).toBe("Test caption");
+  });
+
+  it("should save draft with media when creating photo entry", async () => {
+    const { result } = renderHook(() => useDraft());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.saveDraft({
+        type: "photo",
+        mediaUris: ["file://photo1.jpg", "file://photo2.jpg"],
+        mediaSizes: [1024, 2048],
+        caption: "My photos",
+        date: "2026-01-15",
+      });
+    });
+
+    expect(mockAsyncStorage.setItem).toHaveBeenCalled();
+    expect(result.current.draft?.mediaUris).toHaveLength(2);
+    expect(result.current.draft?.mediaSizes).toEqual([1024, 2048]);
+  });
+
+  it("should clear draft when entry is submitted", async () => {
+    const savedDraft: Draft = {
+      type: "text",
+      caption: "Draft caption",
+      date: "2026-01-15",
+      savedAt: Date.now(),
+    };
+    mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(savedDraft));
+
+    const { result } = renderHook(() => useDraft());
+
+    await waitFor(() => {
+      expect(result.current.hasDraft).toBe(true);
+    });
+
+    await act(async () => {
+      await result.current.clearDraft();
+    });
+
+    expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith(
+      "@littlejourney:draft",
+    );
+    expect(result.current.draft).toBeNull();
+    expect(result.current.hasDraft).toBe(false);
   });
 });

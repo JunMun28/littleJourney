@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import {
   StyleSheet,
   FlatList,
@@ -31,6 +31,7 @@ import {
 import { useChild } from "@/contexts/child-context";
 import { useStorage } from "@/contexts/storage-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useDraft } from "@/hooks/use-draft";
 import {
   PRIMARY_COLOR,
   Colors,
@@ -165,6 +166,13 @@ export default function FeedScreen() {
   const { entries, addEntry, getOnThisDayEntries } = useEntries();
   const { child } = useChild();
   const { canUpload, canUploadVideo, addUsage, tier } = useStorage();
+  const {
+    draft,
+    hasDraft,
+    saveDraft,
+    clearDraft,
+    isLoading: draftLoading,
+  } = useDraft();
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
   const onThisDayMemories = getOnThisDayEntries();
@@ -178,6 +186,62 @@ export default function FeedScreen() {
   const [caption, setCaption] = useState("");
   const [entryDate, setEntryDate] = useState<Date>(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const hasShownDraftPrompt = useRef(false);
+
+  // Show draft resume prompt when draft exists (PRD Section 3.5)
+  useEffect(() => {
+    if (!draftLoading && hasDraft && !hasShownDraftPrompt.current) {
+      hasShownDraftPrompt.current = true;
+      Alert.alert(
+        "Resume Draft?",
+        "You have an unsaved entry. Would you like to continue where you left off?",
+        [
+          {
+            text: "Discard",
+            style: "destructive",
+            onPress: () => clearDraft(),
+          },
+          {
+            text: "Resume",
+            onPress: () => {
+              if (draft) {
+                setSelectedType(draft.type);
+                setSelectedMedia(draft.mediaUris ?? []);
+                setSelectedMediaSizes(draft.mediaSizes ?? []);
+                setCaption(draft.caption);
+                setEntryDate(new Date(draft.date));
+                setCreateStep(draft.type ? "caption" : "type");
+                setIsCreating(true);
+              }
+            },
+          },
+        ],
+      );
+    }
+  }, [draftLoading, hasDraft, draft, clearDraft]);
+
+  // Auto-save draft when creation state changes (PRD Section 3.5)
+  useEffect(() => {
+    // Only save when modal is open and we have meaningful state
+    if (isCreating && selectedType) {
+      saveDraft({
+        type: selectedType,
+        mediaUris: selectedMedia.length > 0 ? selectedMedia : undefined,
+        mediaSizes:
+          selectedMediaSizes.length > 0 ? selectedMediaSizes : undefined,
+        caption,
+        date: entryDate.toISOString().split("T")[0],
+      });
+    }
+  }, [
+    isCreating,
+    selectedType,
+    selectedMedia,
+    selectedMediaSizes,
+    caption,
+    entryDate,
+    saveDraft,
+  ]);
 
   const resetCreation = () => {
     setIsCreating(false);
@@ -328,6 +392,8 @@ export default function FeedScreen() {
       addUsage(totalSize);
     }
 
+    // Clear draft on successful post (PRD Section 3.5)
+    clearDraft();
     resetCreation();
   };
 
