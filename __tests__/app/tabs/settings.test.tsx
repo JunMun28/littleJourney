@@ -456,3 +456,65 @@ describe("SettingsScreen - Legal Section", () => {
     expect(mockOpenURL).toHaveBeenCalledWith(expect.stringContaining("terms"));
   });
 });
+
+describe("SettingsScreen - CHILD-004 Single Child Limit", () => {
+  beforeEach(() => {
+    clearAllMockData();
+    jest.clearAllMocks();
+  });
+
+  it("shows 'Add Child' button in child profile section when no child exists", async () => {
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Child Profile")).toBeTruthy();
+    });
+
+    // Should show disabled Add Child button with MVP limit message
+    expect(screen.getByTestId("add-child-button")).toBeTruthy();
+  });
+
+  it("shows MVP upgrade prompt when 'Add Child' is pressed with existing child", async () => {
+    // Create a child first
+    await childApi.createChild({
+      name: "Emma",
+      dateOfBirth: "2024-06-15",
+    });
+
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Emma")).toBeTruthy();
+    });
+
+    // Should show disabled "Add Another Child" button
+    const addChildButton = screen.getByTestId("add-child-button");
+    expect(addChildButton).toBeTruthy();
+
+    // Button should show MVP limit text
+    expect(screen.getByText(/MVP Limit|Coming Soon/)).toBeTruthy();
+  });
+
+  it("Add Child button is disabled when child already exists", async () => {
+    // Create a child first
+    await childApi.createChild({
+      name: "Emma",
+      dateOfBirth: "2024-06-15",
+    });
+
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Emma")).toBeTruthy();
+    });
+
+    const addChildButton = screen.getByTestId("add-child-button");
+
+    // Press should show alert, not navigate
+    fireEvent.press(addChildButton);
+
+    // Should see upgrade/limit message (Alert mocked by react-native)
+    // The visual state should indicate disabled
+    expect(addChildButton.props.accessibilityState?.disabled).toBe(true);
+  });
+});

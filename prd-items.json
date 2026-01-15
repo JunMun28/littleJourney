@@ -248,7 +248,7 @@
         "Verify option is disabled or shows upgrade prompt"
       ],
       "acceptanceCriteria": "MVP limits accounts to single child",
-      "passes": false
+      "passes": true
     },
     {
       "id": "ENTRY-001",

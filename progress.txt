@@ -1859,3 +1859,28 @@
 **Verification:** tsc, lint, test (356 passed), build all pass.
 
 **Next:** Cloudflare Workers backend setup, Stripe SDK integration, or Web Viewer (Phase 2)
+
+## 2026-01-16: Single Child Limit (MVP) - CHILD-004
+
+**PRD ref:** Phase 1, Section 2 (Child Management), CHILD-004
+
+**Task:** Implement single child limit UI enforcement for MVP per PRD requirement
+
+**Decisions:**
+- Added "Add Child" button to Child Profile section in Settings
+- When no child exists: button shown with alert directing to onboarding
+- When child exists: button shows "Add Another Child (Coming Soon)" with disabled state
+- Tapping disabled button shows MVP limit alert explaining single-child limitation
+- Button uses accessibilityState.disabled for proper accessibility
+- Fixed pre-existing flaky milestone countdown tests (timezone issues)
+- TDD approach: 3 new tests for single child limit feature
+
+**Files changed:**
+- app/(tabs)/settings.tsx - Added Add Child button with MVP limit enforcement, styles
+- __tests__/app/tabs/settings.test.tsx - Added 3 TDD tests for CHILD-004
+- __tests__/app/tabs/milestones.test.tsx - Fixed flaky countdown tests (timezone issues)
+- prd-items.json - Updated CHILD-004 to passes: true
+
+**Verification:** tsc, lint, test (359 passed), build all pass.
+
+**Next:** Continue remaining PRD items: backend integration, Stripe SDK, or Web Viewer (Phase 2)

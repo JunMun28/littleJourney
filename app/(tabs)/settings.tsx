@@ -574,6 +574,44 @@ export default function SettingsScreen() {
             No child profile added
           </Text>
         )}
+
+        {/* Add Child Button - MVP Limited */}
+        <Pressable
+          style={[
+            styles.addChildButton,
+            child && styles.addChildButtonDisabled,
+            { borderColor: child ? colors.border : PRIMARY_COLOR },
+          ]}
+          onPress={() => {
+            if (child) {
+              Alert.alert(
+                "MVP Limit",
+                "Multiple children support is coming soon! The current version supports one child per account.",
+                [{ text: "OK" }],
+              );
+            } else {
+              // Navigate to onboarding add-child flow
+              // For MVP, onboarding handles child creation
+              Alert.alert(
+                "Add Child",
+                "To add a child, please complete the onboarding process.",
+                [{ text: "OK" }],
+              );
+            }
+          }}
+          testID="add-child-button"
+          disabled={!!child}
+          accessibilityState={{ disabled: !!child }}
+        >
+          <Text
+            style={[
+              styles.addChildButtonText,
+              child && { color: colors.textMuted },
+            ]}
+          >
+            {child ? "Add Another Child (Coming Soon)" : "Add Child"}
+          </Text>
+        </Pressable>
       </View>
 
       {/* Family Section */}
@@ -2400,5 +2438,21 @@ const styles = StyleSheet.create({
   cultureOptionTextSelected: {
     color: PRIMARY_COLOR,
     fontWeight: "600",
+  },
+  // Add Child button (MVP limit)
+  addChildButton: {
+    marginTop: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    borderWidth: 1,
+  },
+  addChildButtonDisabled: {
+    opacity: 0.5,
+  },
+  addChildButtonText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: PRIMARY_COLOR,
   },
 });

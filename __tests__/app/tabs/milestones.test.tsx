@@ -182,13 +182,15 @@ describe("MilestonesScreen", () => {
   describe("milestone countdown", () => {
     it("shows countdown days for upcoming milestones", async () => {
       const child = await createTestChild();
-      // Create milestone 10 days from now
+      // Create milestone 10 days from now using local date to avoid timezone issues
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 10);
+      futureDate.setHours(12, 0, 0, 0); // Set to noon to avoid edge cases
+      const futureDateStr = `${futureDate.getFullYear()}-${String(futureDate.getMonth() + 1).padStart(2, "0")}-${String(futureDate.getDate()).padStart(2, "0")}`;
       await milestoneApi.createMilestone({
         templateId: "first_smile",
         childId: child.id,
-        milestoneDate: futureDate.toISOString().split("T")[0],
+        milestoneDate: futureDateStr,
       });
 
       render(
@@ -204,12 +206,15 @@ describe("MilestonesScreen", () => {
 
     it("shows 'Tomorrow' for milestone 1 day away", async () => {
       const child = await createTestChild();
+      // Use local date to avoid timezone issues
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(12, 0, 0, 0); // Set to noon to avoid edge cases
+      const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, "0")}-${String(tomorrow.getDate()).padStart(2, "0")}`;
       await milestoneApi.createMilestone({
         templateId: "first_smile",
         childId: child.id,
-        milestoneDate: tomorrow.toISOString().split("T")[0],
+        milestoneDate: tomorrowStr,
       });
 
       render(
@@ -225,11 +230,14 @@ describe("MilestonesScreen", () => {
 
     it("shows 'Today' for milestone on current day", async () => {
       const child = await createTestChild();
-      const today = new Date().toISOString().split("T")[0];
+      // Use local date to avoid timezone issues
+      const today = new Date();
+      today.setHours(12, 0, 0, 0); // Set to noon to avoid edge cases
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
       await milestoneApi.createMilestone({
         templateId: "first_smile",
         childId: child.id,
-        milestoneDate: today,
+        milestoneDate: todayStr,
       });
 
       render(
