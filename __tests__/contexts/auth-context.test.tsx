@@ -1,6 +1,14 @@
 import { render, screen, act, waitFor } from "@testing-library/react-native";
 import { Text } from "react-native";
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
+import * as SecureStore from "expo-secure-store";
+
+// Mock expo-secure-store
+jest.mock("expo-secure-store", () => ({
+  getItemAsync: jest.fn(),
+  setItemAsync: jest.fn(),
+  deleteItemAsync: jest.fn(),
+}));
 
 function TestConsumer() {
   const {
@@ -44,6 +52,11 @@ function TestConsumer() {
 }
 
 describe("AuthContext", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (SecureStore.getItemAsync as jest.Mock).mockResolvedValue(null);
+  });
+
   it("provides initial unauthenticated state", async () => {
     render(
       <AuthProvider>
@@ -319,6 +332,106 @@ describe("AuthContext", () => {
       expect(screen.getByTestId("deletion-scheduled")).toHaveTextContent(
         "not-scheduled",
       );
+    });
+  });
+
+  // Secure Storage tests
+  describe("Secure Storage persistence", () => {
+    it("stores auth data in SecureStore on signIn", async () => {
+      render(
+        <AuthProvider>
+          <TestConsumer />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId("loading")).toHaveTextContent("ready");
+      });
+
+      await act(async () => {
+        screen.getByTestId("sign-in").props.onPress();
+      });
+
+      await waitFor(() => {
+        expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
+          "auth_session",
+          expect.any(String),
+        );
+      });
+    });
+
+    it("clears SecureStore on signOut", async () => {
+      render(
+        <AuthProvider>
+          <TestConsumer />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId("loading")).toHaveTextContent("ready");
+      });
+
+      await act(async () => {
+        screen.getByTestId("sign-in").props.onPress();
+      });
+      await act(async () => {
+        screen.getByTestId("sign-out").props.onPress();
+      });
+
+      await waitFor(() => {
+        expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith(
+          "auth_session",
+        );
+      });
+    });
+
+    it("restores session from SecureStore on mount", async () => {
+      const storedSession = JSON.stringify({
+        user: { id: "stored-user-id", email: "stored@example.com" },
+        hasCompletedOnboarding: true,
+      });
+      (SecureStore.getItemAsync as jest.Mock).mockResolvedValue(storedSession);
+
+      render(
+        <AuthProvider>
+          <TestConsumer />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId("loading")).toHaveTextContent("ready");
+      });
+      expect(screen.getByTestId("authenticated")).toHaveTextContent("yes");
+      expect(screen.getByTestId("user")).toHaveTextContent(
+        "stored@example.com",
+      );
+      expect(screen.getByTestId("onboarded")).toHaveTextContent("yes");
+    });
+
+    it("persists onboarding completion to SecureStore", async () => {
+      render(
+        <AuthProvider>
+          <TestConsumer />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId("loading")).toHaveTextContent("ready");
+      });
+
+      await act(async () => {
+        screen.getByTestId("sign-in").props.onPress();
+      });
+      await act(async () => {
+        screen.getByTestId("complete-onboarding").props.onPress();
+      });
+
+      await waitFor(() => {
+        expect(SecureStore.setItemAsync).toHaveBeenLastCalledWith(
+          "auth_session",
+          expect.stringContaining('"hasCompletedOnboarding":true'),
+        );
+      });
     });
   });
 });

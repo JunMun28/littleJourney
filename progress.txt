@@ -1579,3 +1579,30 @@
 **Verification:** tsc, lint, test (300 passed), build all pass.
 
 **Next:** Cloudflare Workers backend setup, Stripe SDK integration, or Web Viewer (Phase 2)
+
+## 2026-01-15: Auth Token Persistence with expo-secure-store
+
+**PRD ref:** Phase 1 Weeks 3-4, Section 1.2 (Token Storage)
+
+**Task:** Implement expo-secure-store for auth session persistence per PRD requirement
+
+**Decisions:**
+- Installed expo-secure-store for secure token storage (PRD Section 1.2)
+- Created StoredSession interface: user, hasCompletedOnboarding, deletionScheduledAt
+- AUTH_SESSION_KEY constant for storage key consistency
+- Session restored from SecureStore on app mount (restoreSession in useEffect)
+- signIn persists session immediately after setting user state
+- signOut clears SecureStore via deleteItemAsync
+- completeOnboarding updates stored session with onboarding flag
+- requestAccountDeletion/cancelAccountDeletion also persist deletion state
+- persistSession helper centralizes storage logic
+- TDD approach: 4 new tests for storage persistence
+
+**Files changed:**
+- contexts/auth-context.tsx - Added SecureStore import, StoredSession interface, persistSession helper, updated all auth methods to persist
+- __tests__/contexts/auth-context.test.tsx - Added expo-secure-store mock, 4 new persistence tests
+- package.json - Added expo-secure-store dependency
+
+**Verification:** tsc, lint, test (304 passed), build all pass.
+
+**Next:** Cloudflare Workers backend setup, Stripe SDK integration, or Web Viewer (Phase 2)
