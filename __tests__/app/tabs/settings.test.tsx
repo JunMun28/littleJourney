@@ -290,6 +290,7 @@ describe("SettingsScreen - Family Member Management", () => {
       email: "grandma@example.com",
       relationship: "Grandmother",
       permissionLevel: "view_interact",
+      childId: "child-test-123",
     });
   }
 
@@ -330,6 +331,7 @@ describe("SettingsScreen - Family Member Management", () => {
       email: "grandpa@example.com",
       relationship: "Grandfather",
       permissionLevel: "view_interact",
+      childId: "child-test-123",
     });
 
     // Then record a view (simulates family member opening the app)

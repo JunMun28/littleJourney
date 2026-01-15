@@ -220,7 +220,7 @@ export default function SettingsScreen() {
   };
 
   const handleInviteFamily = () => {
-    if (!inviteEmail.trim() || !inviteRelationship.trim()) {
+    if (!inviteEmail.trim() || !inviteRelationship.trim() || !child?.id) {
       return;
     }
 
@@ -228,6 +228,7 @@ export default function SettingsScreen() {
       email: inviteEmail.trim(),
       relationship: inviteRelationship.trim(),
       permissionLevel: invitePermission,
+      childId: child.id,
     });
 
     setInviteEmail("");

@@ -2529,3 +2529,42 @@
 **Verification:** tsc, lint, test (636 passed), build all pass.
 
 **Next:** Continue remaining PRD items: SHARE-002-004 (Web Viewer magic links), WEBVIEW-001/002 (Web Viewer app - separate TanStack Start project)
+
+
+## 2026-01-16: Magic Link Service for Family Sharing (SHARE-002, SHARE-003, SHARE-004)
+
+**PRD ref:** Phase 1 Weeks 10-11, Section 6 (Family Sharing), SHARE-002, SHARE-003, SHARE-004
+
+**Task:** Implement magic link token generation/validation service as foundation for web viewer access
+
+**Decisions:**
+- Created magic-link.ts service with token generation, validation, expiry check, refresh
+- Token payload encodes: familyMemberId, permissionLevel, childId, createdAt, expiresAt, version
+- 90-day expiry from creation (SHARE-004), refreshable on access (SHARE-003)
+- Base64-encoded JSON payload (simple, works without crypto dependencies)
+- URL format: https://view.littlejourney.app/view/{token}
+- Version field for future backward compatibility
+- Added id field to Child interface (needed for token generation)
+- Added magicLinkUrl and magicLinkToken fields to FamilyMember interface
+- InviteFamilyRequest now requires childId parameter
+- inviteFamilyMember generates magic link token and URL on invite
+- resendInvite regenerates magic link with fresh 90-day expiry (SHARE-009)
+- TDD approach: 21 service tests + 2 api-client integration tests
+
+**Files changed:**
+- services/magic-link.ts - New: Token generation/validation service
+- contexts/family-context.tsx - Added magicLinkUrl, magicLinkToken to FamilyMember
+- contexts/child-context.tsx - Added id field to Child interface
+- services/api-client.ts - Added childId to InviteFamilyRequest, generate magic links on invite/resend
+- app/(onboarding)/invite-family.tsx - Pass childId to invite
+- app/(tabs)/settings.tsx - Pass childId to invite
+- __tests__/services/magic-link.test.ts - New: 21 TDD tests
+- __tests__/services/api-client.test.ts - Added magic link tests
+- __tests__/hooks/use-family.test.ts - Updated with childId
+- __tests__/app/tabs/settings.test.tsx - Updated with childId
+
+**Note:** SHARE-002/003/004 are NOT marked as passes:true yet because they require the Web Viewer (TanStack Start) to be built. This implementation provides the backend/service foundation. Web Viewer is a separate project.
+
+**Verification:** tsc, lint, test (659 passed), build all pass.
+
+**Next:** Build Web Viewer (TanStack Start) to consume magic links and complete SHARE-002-004, WEBVIEW-001-002

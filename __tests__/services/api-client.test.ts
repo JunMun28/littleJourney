@@ -154,6 +154,7 @@ describe("API Client", () => {
         email: "grandma@example.com",
         relationship: "Grandmother",
         permissionLevel: "view_interact",
+        childId: "child-test-123",
       });
 
       expect(isApiError(result)).toBe(false);
@@ -164,11 +165,30 @@ describe("API Client", () => {
       }
     });
 
+    // PRD SHARE-002: Magic link generation when inviting
+    it("generates magic link URL when inviting family member", async () => {
+      const result = await familyApi.inviteFamilyMember({
+        email: "grandma@example.com",
+        relationship: "Grandmother",
+        permissionLevel: "view_interact",
+        childId: "child-test-123",
+      });
+
+      expect(isApiError(result)).toBe(false);
+      if (!isApiError(result)) {
+        expect(result.data.magicLinkUrl).toBeDefined();
+        expect(result.data.magicLinkUrl).toContain("https://");
+        expect(result.data.magicLinkUrl).toContain("/view/");
+        expect(result.data.magicLinkToken).toBeDefined();
+      }
+    });
+
     it("gets all family members", async () => {
       await familyApi.inviteFamilyMember({
         email: "grandma@example.com",
         relationship: "Grandmother",
         permissionLevel: "view_interact",
+        childId: "child-test-123",
       });
 
       const result = await familyApi.getFamilyMembers();
@@ -184,6 +204,7 @@ describe("API Client", () => {
         email: "grandma@example.com",
         relationship: "Grandmother",
         permissionLevel: "view_interact",
+        childId: "child-test-123",
       });
       if (isApiError(invited)) throw new Error("Failed to invite");
 
@@ -201,6 +222,7 @@ describe("API Client", () => {
         email: "grandma@example.com",
         relationship: "Grandmother",
         permissionLevel: "view_interact",
+        childId: "child-test-123",
       });
       if (isApiError(invited)) throw new Error("Failed to invite");
 
@@ -223,6 +245,7 @@ describe("API Client", () => {
         email: "grandma@example.com",
         relationship: "Grandmother",
         permissionLevel: "view_interact",
+        childId: "child-test-123",
       });
       if (isApiError(invited)) throw new Error("Failed to invite");
 
@@ -233,6 +256,33 @@ describe("API Client", () => {
       expect(isApiError(list)).toBe(false);
       if (!isApiError(list)) {
         expect(list.data[0].lastViewedAt).toBeDefined();
+      }
+    });
+
+    // PRD SHARE-009: Resend invite regenerates magic link
+    it("resends invite and regenerates magic link with fresh expiry", async () => {
+      const invited = await familyApi.inviteFamilyMember({
+        email: "grandma@example.com",
+        relationship: "Grandmother",
+        permissionLevel: "view_interact",
+        childId: "child-test-123",
+      });
+      if (isApiError(invited)) throw new Error("Failed to invite");
+
+      const originalToken = invited.data.magicLinkToken;
+      const originalUrl = invited.data.magicLinkUrl;
+
+      // Resend the invite
+      const result = await familyApi.resendInvite(invited.data.id);
+      expect(isApiError(result)).toBe(false);
+      if (!isApiError(result)) {
+        // New magic link should be generated
+        expect(result.data.magicLinkToken).toBeDefined();
+        expect(result.data.magicLinkUrl).toBeDefined();
+        expect(result.data.magicLinkToken).not.toBe(originalToken);
+        expect(result.data.magicLinkUrl).not.toBe(originalUrl);
+        // Status should be reset to pending
+        expect(result.data.status).toBe("pending");
       }
     });
 

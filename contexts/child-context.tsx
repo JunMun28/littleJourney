@@ -9,6 +9,7 @@ import {
 export type CulturalTradition = "chinese" | "malay" | "indian" | "none";
 
 export interface Child {
+  id?: string; // Generated when saved to backend
   name: string;
   dateOfBirth: string; // ISO date string (YYYY-MM-DD)
   nickname?: string;

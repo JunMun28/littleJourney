@@ -16,6 +16,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useInviteFamilyMember } from "@/hooks/use-family";
 import type { PermissionLevel } from "@/contexts/family-context";
+import { useChild } from "@/contexts/child-context";
 import { PRIMARY_COLOR, Colors, Spacing } from "@/constants/theme";
 
 const PERMISSION_OPTIONS: {
@@ -42,6 +43,7 @@ function isValidEmail(email: string): boolean {
 export default function InviteFamilyScreen() {
   const router = useRouter();
   const inviteMutation = useInviteFamilyMember();
+  const { child } = useChild();
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
 
@@ -53,13 +55,14 @@ export default function InviteFamilyScreen() {
   const isFormValid = isValidEmail(email) && relationship.trim().length > 0;
 
   const handleSendInvite = () => {
-    if (!isFormValid) return;
+    if (!isFormValid || !child?.id) return;
 
     inviteMutation.mutate(
       {
         email: email.trim(),
         relationship: relationship.trim(),
         permissionLevel,
+        childId: child.id,
       },
       {
         onSuccess: () => {

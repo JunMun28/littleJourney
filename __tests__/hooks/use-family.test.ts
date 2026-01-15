@@ -49,6 +49,7 @@ describe("useFamily hooks", () => {
         email: "grandma@example.com",
         relationship: "Grandmother",
         permissionLevel: "view_interact",
+        childId: "child-test-123",
       });
 
       const { result } = renderHook(() => useFamilyMembers(), {
@@ -74,6 +75,7 @@ describe("useFamily hooks", () => {
           email: "uncle@example.com",
           relationship: "Uncle",
           permissionLevel: "view_only",
+          childId: "child-test-123",
         });
       });
 
@@ -94,6 +96,7 @@ describe("useFamily hooks", () => {
         email: "aunt@example.com",
         relationship: "Aunt",
         permissionLevel: "view_interact",
+        childId: "child-test-123",
       });
 
       if ("error" in inviteResult) throw new Error("Failed to invite member");
@@ -137,11 +140,13 @@ describe("useFamily hooks", () => {
         email: "grandma@example.com",
         relationship: "Grandmother",
         permissionLevel: "view_interact",
+        childId: "child-test-123",
       });
       await familyApi.inviteFamilyMember({
         email: "uncle@example.com",
         relationship: "Uncle",
         permissionLevel: "view_only",
+        childId: "child-test-123",
       });
 
       const { result } = renderHook(() => useFamilyMembersFlat(), {

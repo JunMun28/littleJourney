@@ -16,6 +16,11 @@ import {
 import { FamilyMember, PermissionLevel } from "@/contexts/family-context";
 import { Milestone } from "@/contexts/milestone-context";
 import { getAuthHeaders } from "./auth-api";
+import {
+  generateMagicLinkToken,
+  getMagicLinkUrl,
+  validateMagicLinkToken,
+} from "./magic-link";
 
 // API version of Child with ID (context version may not have it yet)
 export interface Child extends ChildBase {
@@ -86,6 +91,7 @@ export interface InviteFamilyRequest {
   email: string;
   relationship: string;
   permissionLevel: PermissionLevel;
+  childId: string; // PRD SHARE-002: Child ID for magic link token generation
 }
 
 // Milestone API types
@@ -368,13 +374,25 @@ export const familyApi = {
     await simulateDelay();
 
     if (API_CONFIG.useMock) {
+      const memberId = generateId("family");
+
+      // PRD SHARE-002: Generate magic link token for web viewer access
+      const magicLinkToken = generateMagicLinkToken({
+        familyMemberId: memberId,
+        permissionLevel: request.permissionLevel,
+        childId: request.childId,
+      });
+      const magicLinkUrl = getMagicLinkUrl(magicLinkToken);
+
       const member: FamilyMember = {
-        id: generateId("family"),
+        id: memberId,
         email: request.email,
         relationship: request.relationship,
         permissionLevel: request.permissionLevel,
         status: "pending",
         invitedAt: new Date().toISOString(),
+        magicLinkUrl, // PRD SHARE-002: URL for family access
+        magicLinkToken, // Token for refresh operations
       };
       mockFamilyMembers.push(member);
       return { data: member };
@@ -421,11 +439,32 @@ export const familyApi = {
           error: { code: "NOT_FOUND", message: "Family member not found" },
         };
       }
-      // Update invitedAt to now (simulates resending invite)
+
+      const existingMember = mockFamilyMembers[index];
+
+      // PRD SHARE-009: Regenerate magic link with fresh expiry
+      let newMagicLinkToken = existingMember.magicLinkToken;
+      let newMagicLinkUrl = existingMember.magicLinkUrl;
+
+      // Extract childId from existing token and regenerate
+      if (existingMember.magicLinkToken) {
+        const payload = validateMagicLinkToken(existingMember.magicLinkToken);
+        if (payload) {
+          newMagicLinkToken = generateMagicLinkToken({
+            familyMemberId: existingMember.id,
+            permissionLevel: existingMember.permissionLevel,
+            childId: payload.childId,
+          });
+          newMagicLinkUrl = getMagicLinkUrl(newMagicLinkToken);
+        }
+      }
+
       const updated: FamilyMember = {
-        ...mockFamilyMembers[index],
+        ...existingMember,
         invitedAt: new Date().toISOString(),
         status: "pending",
+        magicLinkToken: newMagicLinkToken,
+        magicLinkUrl: newMagicLinkUrl,
       };
       mockFamilyMembers[index] = updated;
       return { data: updated };

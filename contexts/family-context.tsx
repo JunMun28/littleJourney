@@ -18,6 +18,8 @@ export interface FamilyMember {
   status: InviteStatus;
   invitedAt: string;
   lastViewedAt?: string; // PRD SHARE-007: Track when family member last viewed entries
+  magicLinkUrl?: string; // PRD SHARE-002: Magic link URL for web viewer access
+  magicLinkToken?: string; // Token portion for refresh operations
 }
 
 interface InviteFamilyMemberParams {
