@@ -1285,7 +1285,7 @@
         "Verify resumes to same screen"
       ],
       "acceptanceCriteria": "App resumes correctly from background",
-      "passes": false
+      "passes": true
     },
     {
       "id": "MOBILE-006",

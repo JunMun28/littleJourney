@@ -1984,3 +1984,30 @@
 **Verification:** tsc, lint, test (375 passed), build all pass.
 
 **Next:** Continue remaining PRD items: backend integration (AUTH, SHARE, VIDEO, PAY), analytics, or Web Viewer (Phase 2)
+
+## 2026-01-16: Background/Foreground Transition (MOBILE-005)
+
+**PRD ref:** Phase 1, Section 14 (Mobile Experience), MOBILE-005
+
+**Task:** Implement proper app state handling for background/foreground transitions
+
+**Decisions:**
+- Created useAppState hook to track AppState changes (active, background, inactive)
+- Hook provides onForeground and onBackground callbacks for state transitions
+- onForeground only triggers when returning from background (not from inactive)
+- Created AppStateProvider that integrates with TanStack Query
+- Provider invalidates stale queries when app returns from foreground
+- This ensures data refresh after returning from background
+- Expo Router already preserves navigation state across background transitions
+- TDD approach: 7 new tests for useAppState hook
+
+**Files changed:**
+- hooks/use-app-state.ts - New hook for tracking app state transitions
+- providers/app-state-provider.tsx - New provider integrating with QueryClient
+- app/_layout.tsx - Added AppStateProvider to provider tree
+- __tests__/hooks/use-app-state.test.ts - 7 TDD tests for MOBILE-005
+- prd-items.json - Updated MOBILE-005 to passes: true
+
+**Verification:** tsc, lint, test (382 passed), build all pass.
+
+**Next:** Continue remaining PRD items: backend integration (AUTH, SHARE, VIDEO, PAY), MOBILE-006 (offline), analytics
