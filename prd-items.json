@@ -962,7 +962,7 @@
         "Verify only milestones shown"
       ],
       "acceptanceCriteria": "Search filterable to milestones only",
-      "passes": false
+      "passes": true
     },
     {
       "id": "SEARCH-006",

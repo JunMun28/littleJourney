@@ -19,6 +19,7 @@ import { type Entry, type EntryType } from "@/contexts/entry-context";
 import { PRIMARY_COLOR, Colors, Spacing, Shadows } from "@/constants/theme";
 
 type FilterType = "all" | EntryType;
+type MilestoneFilter = "all" | "milestones";
 
 interface DateRange {
   year: number;
@@ -147,9 +148,14 @@ function SearchResultCard({ entry, onPress, colors }: SearchResultCardProps) {
         </View>
       )}
       <View style={styles.resultContent}>
-        <ThemedText style={styles.resultCaption} numberOfLines={2}>
-          {entry.caption || "No caption"}
-        </ThemedText>
+        <View style={styles.captionRow}>
+          <ThemedText style={styles.resultCaption} numberOfLines={2}>
+            {entry.caption || "No caption"}
+          </ThemedText>
+          {entry.milestoneId && (
+            <ThemedText style={styles.milestoneIndicator}>⭐</ThemedText>
+          )}
+        </View>
         <ThemedText
           style={[styles.resultDate, { color: colors.textSecondary }]}
         >
@@ -178,6 +184,8 @@ export default function SearchScreen() {
   const { entries } = useEntriesFlat();
   const [query, setQuery] = useState("");
   const [filterType, setFilterType] = useState<FilterType>("all");
+  const [milestoneFilter, setMilestoneFilter] =
+    useState<MilestoneFilter>("all");
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
   const [showDateModal, setShowDateModal] = useState(false);
   const [tempDateRange, setTempDateRange] = useState<DateRange | null>(null);
@@ -194,6 +202,11 @@ export default function SearchScreen() {
     return entries.filter((entry) => {
       // Filter by type
       if (filterType !== "all" && entry.type !== filterType) {
+        return false;
+      }
+
+      // Filter by milestone (SEARCH-005)
+      if (milestoneFilter === "milestones" && !entry.milestoneId) {
         return false;
       }
 
@@ -214,7 +227,7 @@ export default function SearchScreen() {
 
       return false;
     });
-  }, [entries, query, filterType, dateRange]);
+  }, [entries, query, filterType, milestoneFilter, dateRange]);
 
   const handleEntryPress = useCallback(
     (entryId: string) => {
@@ -291,7 +304,11 @@ export default function SearchScreen() {
       </View>
 
       {/* Filter Chips */}
-      <View style={styles.filterRow}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filterRow}
+      >
         <FilterChip
           label="All"
           isActive={filterType === "all"}
@@ -317,12 +334,22 @@ export default function SearchScreen() {
           colors={colors}
         />
         <FilterChip
+          label="Milestones"
+          isActive={milestoneFilter === "milestones"}
+          onPress={() =>
+            setMilestoneFilter((prev) =>
+              prev === "milestones" ? "all" : "milestones",
+            )
+          }
+          colors={colors}
+        />
+        <FilterChip
           label={formatDateRange(dateRange)}
           isActive={dateRange !== null}
           onPress={handleOpenDateModal}
           colors={colors}
         />
-      </View>
+      </ScrollView>
 
       {/* Results */}
       {filteredEntries.length > 0 ? (
@@ -432,6 +459,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.md,
+    paddingRight: Spacing.lg,
     gap: Spacing.sm,
   },
   filterChip: {
@@ -482,10 +510,19 @@ const styles = StyleSheet.create({
     padding: 10,
     justifyContent: "center",
   },
+  captionRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: Spacing.xs,
+  },
   resultCaption: {
+    flex: 1,
     fontSize: 14,
     fontWeight: "500",
-    marginBottom: Spacing.xs,
+  },
+  milestoneIndicator: {
+    fontSize: 14,
+    marginLeft: Spacing.xs,
   },
   resultDate: {
     fontSize: 12,

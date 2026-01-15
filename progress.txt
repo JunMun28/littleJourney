@@ -1909,3 +1909,29 @@
 **Verification:** tsc, lint, test (363 passed), build all pass.
 
 **Next:** Continue remaining PRD items: SEARCH-005 (milestone filter), FEEDBACK-001, or backend integration
+
+## 2026-01-16: Milestone Filter for Search (SEARCH-005)
+
+**PRD ref:** Phase 1, Section 8 (Search & Discovery), SEARCH-005
+
+**Task:** Implement milestone filter for Search screen per PRD requirement
+
+**Decisions:**
+- Added `milestoneId` optional field to Entry interface to link entries to milestones
+- Added "Milestones" filter chip to search screen filter row
+- When Milestones filter active, only entries with milestoneId are shown
+- Milestones filter toggles on/off (independent of type filter)
+- Filter row now uses horizontal ScrollView for overflow handling
+- SearchResultCard shows ⭐ indicator next to caption for milestone entries
+- Combines with existing filters (type, date range, search query)
+- TDD approach: 4 new tests for milestone filter functionality
+
+**Files changed:**
+- contexts/entry-context.tsx - Added milestoneId field to Entry interface
+- app/(tabs)/search.tsx - Added MilestoneFilter type, milestoneFilter state, filter chip, milestone badge on result cards
+- __tests__/app/tabs/search.test.tsx - Added 4 TDD tests for milestone filter
+- prd-items.json - Updated SEARCH-005 to passes: true
+
+**Verification:** tsc, lint, test (367 passed), build all pass.
+
+**Next:** Continue remaining PRD items: FEEDBACK-001 (in-app feedback), or backend integration

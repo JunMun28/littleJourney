@@ -202,6 +202,171 @@ describe("SearchScreen", () => {
     });
   });
 
+  // Milestone filter tests (SEARCH-005)
+  describe("milestone filter", () => {
+    it("shows Milestones filter chip", () => {
+      const TestWrapper = createTestWrapper();
+      const { getByText } = render(
+        <TestWrapper>
+          <SearchScreen />
+        </TestWrapper>,
+      );
+
+      expect(getByText("Milestones")).toBeTruthy();
+    });
+
+    it("filters to show only milestone entries when Milestones chip pressed", async () => {
+      const TestWrapper = createTestWrapper();
+      // Add regular entry with "moment" tag to match search
+      await entryApi.createEntry({
+        entry: {
+          type: "photo",
+          caption: "Regular park photo",
+          date: "2025-01-10",
+          mediaUris: ["regular.jpg"],
+          tags: ["moment"],
+        },
+      });
+      // Add milestone entry with "moment" tag
+      await entryApi.createEntry({
+        entry: {
+          type: "photo",
+          caption: "First smile photo",
+          date: "2025-01-15",
+          mediaUris: ["milestone.jpg"],
+          milestoneId: "milestone-123",
+          tags: ["moment"],
+        },
+      });
+      // Add another milestone entry with "moment" tag
+      await entryApi.createEntry({
+        entry: {
+          type: "photo",
+          caption: "First steps photo",
+          date: "2025-01-20",
+          mediaUris: ["steps.jpg"],
+          milestoneId: "milestone-456",
+          tags: ["moment"],
+        },
+      });
+
+      const { getByPlaceholderText, getByText, queryByText } = render(
+        <TestWrapper>
+          <SearchScreen />
+        </TestWrapper>,
+      );
+
+      // Search for a common tag
+      const searchInput = getByPlaceholderText("Search memories...");
+      fireEvent.changeText(searchInput, "moment");
+
+      // Should show all entries initially
+      await waitFor(() => {
+        expect(getByText("Regular park photo")).toBeTruthy();
+        expect(getByText("First smile photo")).toBeTruthy();
+      });
+
+      // Press Milestones filter
+      fireEvent.press(getByText("Milestones"));
+
+      // Should only show milestone entries
+      await waitFor(() => {
+        expect(queryByText("Regular park photo")).toBeNull();
+        expect(getByText("First smile photo")).toBeTruthy();
+        expect(getByText("First steps photo")).toBeTruthy();
+      });
+    });
+
+    it("combines milestone filter with other filters", async () => {
+      const TestWrapper = createTestWrapper();
+      // Add photo milestone with "baby" tag
+      await entryApi.createEntry({
+        entry: {
+          type: "photo",
+          caption: "Photo milestone",
+          date: "2025-01-15",
+          mediaUris: ["photo.jpg"],
+          milestoneId: "milestone-123",
+          tags: ["baby"],
+        },
+      });
+      // Add text milestone with "baby" tag
+      await entryApi.createEntry({
+        entry: {
+          type: "text",
+          caption: "Text milestone",
+          date: "2025-01-20",
+          milestoneId: "milestone-456",
+          tags: ["baby"],
+        },
+      });
+      // Add regular text entry with "baby" tag
+      await entryApi.createEntry({
+        entry: {
+          type: "text",
+          caption: "Regular text entry",
+          date: "2025-01-22",
+          tags: ["baby"],
+        },
+      });
+
+      const { getByPlaceholderText, getByText, queryByText } = render(
+        <TestWrapper>
+          <SearchScreen />
+        </TestWrapper>,
+      );
+
+      // Search for "baby" tag to get all entries
+      const searchInput = getByPlaceholderText("Search memories...");
+      fireEvent.changeText(searchInput, "baby");
+
+      // Should show all entries initially
+      await waitFor(() => {
+        expect(getByText("Photo milestone")).toBeTruthy();
+        expect(getByText("Text milestone")).toBeTruthy();
+        expect(getByText("Regular text entry")).toBeTruthy();
+      });
+
+      // Filter to milestones + text only
+      fireEvent.press(getByText("Milestones"));
+      fireEvent.press(getByText("Text"));
+
+      // Should only show text milestone
+      await waitFor(() => {
+        expect(queryByText("Photo milestone")).toBeNull();
+        expect(queryByText("Regular text entry")).toBeNull();
+        expect(getByText("Text milestone")).toBeTruthy();
+      });
+    });
+
+    it("shows milestone badge on result cards for milestone entries", async () => {
+      const TestWrapper = createTestWrapper();
+      await entryApi.createEntry({
+        entry: {
+          type: "photo",
+          caption: "First smile moment",
+          date: "2025-01-15",
+          mediaUris: ["photo.jpg"],
+          milestoneId: "milestone-123",
+        },
+      });
+
+      const { getByPlaceholderText, getByText } = render(
+        <TestWrapper>
+          <SearchScreen />
+        </TestWrapper>,
+      );
+
+      const searchInput = getByPlaceholderText("Search memories...");
+      fireEvent.changeText(searchInput, "smile");
+
+      await waitFor(() => {
+        expect(getByText("First smile moment")).toBeTruthy();
+        expect(getByText("⭐")).toBeTruthy(); // Milestone indicator
+      });
+    });
+  });
+
   // Date range filter tests (SEARCH-003)
   describe("date range filter", () => {
     it("shows date range filter button", () => {

@@ -15,6 +15,7 @@ export interface Entry {
   caption?: string;
   date: string; // ISO date string (YYYY-MM-DD)
   tags?: string[];
+  milestoneId?: string; // Reference to linked milestone (PRD SEARCH-005)
   createdAt: string; // ISO timestamp
   updatedAt: string; // ISO timestamp
   createdBy?: string; // User ID who created (for attribution)
