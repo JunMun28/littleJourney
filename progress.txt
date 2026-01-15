@@ -1081,3 +1081,27 @@
 **Verification:** tsc, lint, test (191 passed), build all pass.
 
 **Next:** Integrate smart frequency with notification scheduling, Backend API, Stripe SDK, or Web Viewer (Phase 2)
+
+## 2026-01-15: Smart Notification Frequency Integration
+
+**PRD ref:** Phase 1 Weeks 10-11, Section 7.3 (Smart Frequency)
+
+**Task:** Integrate smart frequency with notification scheduling and entry creation
+
+**Decisions:**
+- scheduleDailyPrompt now uses promptFrequency to determine interval
+- DAILY trigger used when frequency=daily (interval=1)
+- TIME_INTERVAL trigger with repeats:true for every_2_days (2 days) and weekly (7 days)
+- TIME_INTERVAL doesn't support specific time of day - fires at interval after scheduling
+- recordEntryPosted() called in Feed handleSubmit after entry added
+- Resets frequency to daily when user posts entry (per PRD: "Resets to daily after user posts")
+
+**Files changed:**
+- contexts/notification-context.tsx - Updated scheduleDailyPrompt to use frequency interval, added promptFrequency dependency
+- app/(tabs)/index.tsx - Added useNotifications import, call recordEntryPosted in handleSubmit
+- __tests__/contexts/notification-context.test.tsx - Added test for interval-based scheduling, updated mock with TIME_INTERVAL
+- __tests__/app/tabs/feed.test.tsx - Added mocks for expo-notifications/device, test for smart frequency integration
+
+**Verification:** tsc, lint, test (193 passed), build all pass.
+
+**Next:** Backend API integration, Stripe SDK, or Web Viewer (Phase 2)

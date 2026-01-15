@@ -32,6 +32,7 @@ import { useChild } from "@/contexts/child-context";
 import { useStorage } from "@/contexts/storage-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useDraft } from "@/hooks/use-draft";
+import { useNotifications } from "@/contexts/notification-context";
 import {
   PRIMARY_COLOR,
   Colors,
@@ -166,6 +167,7 @@ export default function FeedScreen() {
   const { entries, addEntry, getOnThisDayEntries } = useEntries();
   const { child } = useChild();
   const { canUpload, canUploadVideo, addUsage, tier } = useStorage();
+  const { recordEntryPosted } = useNotifications();
   const {
     draft,
     hasDraft,
@@ -399,6 +401,9 @@ export default function FeedScreen() {
       const totalSize = selectedMediaSizes.reduce((sum, size) => sum + size, 0);
       addUsage(totalSize);
     }
+
+    // Reset notification frequency to daily (PRD Section 7.3)
+    recordEntryPosted();
 
     // Clear draft on successful post (PRD Section 3.5)
     clearDraft();

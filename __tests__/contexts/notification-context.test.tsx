@@ -25,6 +25,7 @@ jest.mock("expo-notifications", () => ({
   })),
   SchedulableTriggerInputTypes: {
     DAILY: "daily",
+    TIME_INTERVAL: "timeInterval",
   },
 }));
 
@@ -112,6 +113,38 @@ describe("NotificationContext", () => {
       Notifications.cancelAllScheduledNotificationsAsync,
     ).toHaveBeenCalled();
     expect(Notifications.scheduleNotificationAsync).toHaveBeenCalled();
+  });
+
+  it("schedules notification using smart frequency interval", async () => {
+    const { result } = renderHook(() => useNotifications(), { wrapper });
+    const Notifications = require("expo-notifications");
+
+    // Simulate every_2_days frequency (3 ignored prompts)
+    await act(async () => {
+      result.current.recordIgnoredPrompt();
+      result.current.recordIgnoredPrompt();
+      result.current.recordIgnoredPrompt();
+    });
+
+    expect(result.current.promptFrequency).toBe("every_2_days");
+
+    // Clear mock to check new schedule call
+    Notifications.scheduleNotificationAsync.mockClear();
+
+    await act(async () => {
+      await result.current.scheduleDailyPrompt("20:00");
+    });
+
+    // Should schedule with interval trigger, not daily
+    expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        trigger: expect.objectContaining({
+          type: expect.any(String),
+          seconds: 2 * 24 * 60 * 60, // 2 days in seconds
+          repeats: true,
+        }),
+      }),
+    );
   });
 
   // Smart Frequency tests (PRD Section 7.3)

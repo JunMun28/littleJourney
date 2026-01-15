@@ -2,8 +2,41 @@ import { renderHook, act, waitFor } from "@testing-library/react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useStorage, StorageProvider } from "@/contexts/storage-context";
 import { useEntries, EntryProvider } from "@/contexts/entry-context";
+import {
+  useNotifications,
+  NotificationProvider,
+} from "@/contexts/notification-context";
 import { useDraft, type Draft } from "@/hooks/use-draft";
 import type { ReactNode } from "react";
+
+// Mock expo-notifications
+jest.mock("expo-notifications", () => ({
+  setNotificationHandler: jest.fn(),
+  getPermissionsAsync: jest.fn(() =>
+    Promise.resolve({ status: "undetermined" }),
+  ),
+  requestPermissionsAsync: jest.fn(() =>
+    Promise.resolve({ status: "granted" }),
+  ),
+  getExpoPushTokenAsync: jest.fn(() =>
+    Promise.resolve({ data: "ExponentPushToken[mock-token]" }),
+  ),
+  scheduleNotificationAsync: jest.fn(() => Promise.resolve("notification-id")),
+  cancelAllScheduledNotificationsAsync: jest.fn(() => Promise.resolve()),
+  addNotificationReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  addNotificationResponseReceivedListener: jest.fn(() => ({
+    remove: jest.fn(),
+  })),
+  SchedulableTriggerInputTypes: {
+    DAILY: "daily",
+    TIME_INTERVAL: "timeInterval",
+  },
+}));
+
+// Mock expo-device
+jest.mock("expo-device", () => ({
+  isDevice: true,
+}));
 
 // Mock AsyncStorage
 jest.mock("@react-native-async-storage/async-storage", () => ({
@@ -261,6 +294,36 @@ describe("Entry tags", () => {
     });
 
     expect(result.current.entries[0].tags).toEqual(["updated", "new"]);
+  });
+});
+
+// Test smart notification frequency integration (PRD Section 7.3)
+describe("Smart notification frequency", () => {
+  const notificationWrapper = ({ children }: { children: ReactNode }) => (
+    <NotificationProvider>{children}</NotificationProvider>
+  );
+
+  it("should reset frequency to daily when recordEntryPosted is called", async () => {
+    const { result } = renderHook(() => useNotifications(), {
+      wrapper: notificationWrapper,
+    });
+
+    // Simulate frequency reduced to every_2_days (3 ignored days)
+    await act(async () => {
+      result.current.recordIgnoredPrompt();
+      result.current.recordIgnoredPrompt();
+      result.current.recordIgnoredPrompt();
+    });
+
+    expect(result.current.promptFrequency).toBe("every_2_days");
+
+    // Simulate entry posted - should reset to daily
+    await act(async () => {
+      result.current.recordEntryPosted();
+    });
+
+    expect(result.current.promptFrequency).toBe("daily");
+    expect(result.current.consecutiveIgnoredDays).toBe(0);
   });
 });
 

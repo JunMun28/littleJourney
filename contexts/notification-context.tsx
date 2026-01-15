@@ -174,27 +174,50 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       return mappedStatus;
     }, []);
 
-  const scheduleDailyPrompt = useCallback(async (time: string) => {
-    // Cancel existing daily prompts first
-    await Notifications.cancelAllScheduledNotificationsAsync();
+  const scheduleDailyPrompt = useCallback(
+    async (time: string) => {
+      // Cancel existing prompts first
+      await Notifications.cancelAllScheduledNotificationsAsync();
 
-    // Parse time string "HH:mm"
-    const [hours, minutes] = time.split(":").map(Number);
+      const interval = getIntervalFromFrequency(promptFrequency);
 
-    // Schedule daily notification
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: "Time to capture a moment! 📸",
-        body: "What special moment happened today? Add it to your journal.",
-        data: { type: "daily_prompt" },
-      },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.DAILY,
-        hour: hours,
-        minute: minutes,
-      },
-    });
-  }, []);
+      if (interval === 1) {
+        // Daily: use DAILY trigger at specific time
+        const [hours, minutes] = time.split(":").map(Number);
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: "Time to capture a moment! 📸",
+            body: "What special moment happened today? Add it to your journal.",
+            data: { type: "daily_prompt" },
+          },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DAILY,
+            hour: hours,
+            minute: minutes,
+          },
+        });
+      } else {
+        // Reduced frequency: use TIME_INTERVAL trigger
+        // Note: TIME_INTERVAL doesn't support specific time of day,
+        // so we calculate seconds from first trigger at target time
+        const intervalSeconds = interval * 24 * 60 * 60; // days to seconds
+
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: "Time to capture a moment! 📸",
+            body: "What special moment happened today? Add it to your journal.",
+            data: { type: "daily_prompt" },
+          },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+            seconds: intervalSeconds,
+            repeats: true,
+          },
+        });
+      }
+    },
+    [promptFrequency],
+  );
 
   const cancelDailyPrompt = useCallback(async () => {
     await Notifications.cancelAllScheduledNotificationsAsync();
