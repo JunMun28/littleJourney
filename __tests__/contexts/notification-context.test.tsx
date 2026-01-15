@@ -233,4 +233,84 @@ describe("NotificationContext", () => {
       expect(result.current.getScheduleInterval()).toBe(7);
     });
   });
+
+  // On This Day memories notification tests (PRD Section 4.5)
+  describe("On This Day Memories Notification", () => {
+    it("provides sendMemoriesNotification method", () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+
+      expect(typeof result.current.sendMemoriesNotification).toBe("function");
+    });
+
+    it("sends notification when memories exist and setting is enabled", async () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+      const Notifications = require("expo-notifications");
+
+      Notifications.scheduleNotificationAsync.mockClear();
+
+      await act(async () => {
+        await result.current.sendMemoriesNotification(2); // 2 memories
+      });
+
+      expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: expect.objectContaining({
+            title: expect.stringContaining("memories"),
+            data: { type: "memories" },
+          }),
+          trigger: null, // Immediate notification
+        }),
+      );
+    });
+
+    it("does not send notification when memories setting is disabled", async () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+      const Notifications = require("expo-notifications");
+
+      // Disable memories notifications
+      await act(async () => {
+        result.current.updateSettings({ memories: false });
+      });
+
+      Notifications.scheduleNotificationAsync.mockClear();
+
+      await act(async () => {
+        await result.current.sendMemoriesNotification(2);
+      });
+
+      expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
+    });
+
+    it("does not send notification when count is 0", async () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+      const Notifications = require("expo-notifications");
+
+      Notifications.scheduleNotificationAsync.mockClear();
+
+      await act(async () => {
+        await result.current.sendMemoriesNotification(0);
+      });
+
+      expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
+    });
+
+    it("uses singular form for single memory", async () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+      const Notifications = require("expo-notifications");
+
+      Notifications.scheduleNotificationAsync.mockClear();
+
+      await act(async () => {
+        await result.current.sendMemoriesNotification(1);
+      });
+
+      expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: expect.objectContaining({
+            title: expect.stringContaining("1 memory"),
+          }),
+        }),
+      );
+    });
+  });
 });

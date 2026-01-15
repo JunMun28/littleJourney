@@ -43,6 +43,8 @@ interface NotificationContextValue {
   expoPushToken: string | null;
   scheduleDailyPrompt: (time: string) => Promise<void>;
   cancelDailyPrompt: () => Promise<void>;
+  // On This Day memories (PRD Section 4.5)
+  sendMemoriesNotification: (memoriesCount: number) => Promise<void>;
   // Smart frequency (PRD Section 7.3)
   promptFrequency: PromptFrequency;
   consecutiveIgnoredDays: number;
@@ -223,6 +225,29 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     await Notifications.cancelAllScheduledNotificationsAsync();
   }, []);
 
+  // On This Day memories notification (PRD Section 4.5)
+  const sendMemoriesNotification = useCallback(
+    async (memoriesCount: number) => {
+      // Skip if no memories or memories notifications disabled
+      if (memoriesCount === 0 || !settings.memories) {
+        return;
+      }
+
+      const memoriesWord = memoriesCount === 1 ? "memory" : "memories";
+      const yearsWord = memoriesCount === 1 ? "year" : "years";
+
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: `📸 ${memoriesCount} ${memoriesWord} from previous ${yearsWord}!`,
+          body: "Take a trip down memory lane and see what happened on this day.",
+          data: { type: "memories" },
+        },
+        trigger: null, // Send immediately
+      });
+    },
+    [settings.memories],
+  );
+
   // Smart frequency methods (PRD Section 7.3)
   const recordIgnoredPrompt = useCallback(() => {
     setConsecutiveIgnoredDays((prev) => {
@@ -250,6 +275,8 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     expoPushToken,
     scheduleDailyPrompt,
     cancelDailyPrompt,
+    // On This Day memories
+    sendMemoriesNotification,
     // Smart frequency
     promptFrequency,
     consecutiveIgnoredDays,

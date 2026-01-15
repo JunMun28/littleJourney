@@ -1105,3 +1105,28 @@
 **Verification:** tsc, lint, test (193 passed), build all pass.
 
 **Next:** Backend API integration, Stripe SDK, or Web Viewer (Phase 2)
+
+## 2026-01-15: On This Day Memories Push Notification
+
+**PRD ref:** Phase 1 Weeks 10-11, Section 4.5 (On This Day - Push notification when memories exist)
+
+**Task:** Implement push notification for "On This Day" memories per PRD requirement
+
+**Decisions:**
+- Added sendMemoriesNotification(count) method to NotificationContext
+- Sends immediate notification (trigger: null) when memories exist
+- Respects settings.memories toggle - no notification if disabled
+- Uses singular/plural forms: "1 memory from previous year" vs "N memories from previous years"
+- Notification data type: "memories" for future tap handling
+- Feed screen sends notification once per session using hasSentMemoriesNotification ref
+- Notification sent when onThisDayMemories.length > 0 and setting enabled
+- TDD approach: 5 new tests for notification sending logic
+
+**Files changed:**
+- contexts/notification-context.tsx - Added sendMemoriesNotification method to interface and implementation
+- app/(tabs)/index.tsx - Added effect to send memories notification on Feed mount
+- __tests__/contexts/notification-context.test.tsx - Added 5 TDD tests for memories notification
+
+**Verification:** tsc, lint, test (198 passed), build all pass.
+
+**Next:** Backend API integration, Stripe SDK, or Web Viewer (Phase 2)

@@ -167,7 +167,8 @@ export default function FeedScreen() {
   const { entries, addEntry, getOnThisDayEntries } = useEntries();
   const { child } = useChild();
   const { canUpload, canUploadVideo, addUsage, tier } = useStorage();
-  const { recordEntryPosted } = useNotifications();
+  const { recordEntryPosted, sendMemoriesNotification, settings } =
+    useNotifications();
   const {
     draft,
     hasDraft,
@@ -191,6 +192,19 @@ export default function FeedScreen() {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const hasShownDraftPrompt = useRef(false);
+  const hasSentMemoriesNotification = useRef(false);
+
+  // Send "On This Day" memories notification once per session (PRD Section 4.5)
+  useEffect(() => {
+    if (
+      !hasSentMemoriesNotification.current &&
+      onThisDayMemories.length > 0 &&
+      settings.memories
+    ) {
+      hasSentMemoriesNotification.current = true;
+      sendMemoriesNotification(onThisDayMemories.length);
+    }
+  }, [onThisDayMemories.length, settings.memories, sendMemoriesNotification]);
 
   // Show draft resume prompt when draft exists (PRD Section 3.5)
   useEffect(() => {
