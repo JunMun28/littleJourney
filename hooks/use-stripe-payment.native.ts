@@ -1,8 +1,17 @@
 /**
  * Stripe Payment Hook - Native Implementation
  *
- * Provides a hook to handle Stripe payment flow for subscriptions
+ * Provides a hook to handle Stripe payment flow for subscriptions.
+ * Supports Singapore payment methods: Credit Card, PayNow, GrabPay.
+ *
  * PRD ref: PAY-002 (Credit card via Stripe)
+ * PRD ref: PAY-003 (PayNow payment)
+ * PRD ref: PAY-004 (GrabPay payment)
+ *
+ * Note: PayNow and GrabPay require backend configuration:
+ * - PaymentIntent must include payment_method_types: ['card', 'paynow', 'grabpay']
+ * - Account must have PayNow and GrabPay enabled in Stripe Dashboard
+ * - Currency must be SGD for these payment methods
  */
 
 import { useState, useCallback, useEffect } from "react";
@@ -24,10 +33,16 @@ import type { BillingCycle } from "@/contexts/subscription-context";
 const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL || "https://api.littlejourney.sg";
 
+/**
+ * Response from backend when creating a PaymentIntent
+ * Backend should configure payment_method_types to enable PayNow/GrabPay
+ */
 interface PaymentIntentResponse {
   clientSecret: string;
   ephemeralKey: string;
   customerId: string;
+  /** Payment methods enabled for this intent (e.g., ['card', 'paynow', 'grabpay']) */
+  paymentMethodTypes?: string[];
 }
 
 interface UseStripePaymentReturn {
@@ -55,10 +70,13 @@ async function fetchPaymentIntent(
   if (useMock) {
     // Mock payment intent for development
     // In production, this calls your backend to create a real PaymentIntent
+    // Backend must enable payment_method_types for PayNow/GrabPay (PAY-003, PAY-004)
     return {
       clientSecret: `pi_mock_${Date.now()}_secret_mock`,
       ephemeralKey: `ek_mock_${Date.now()}`,
       customerId: `cus_mock_${Date.now()}`,
+      // Singapore payment methods - enabled by backend PaymentIntent configuration
+      paymentMethodTypes: ["card", "paynow", "grabpay"],
     };
   }
 

@@ -1,8 +1,20 @@
 /**
  * Stripe Payment Service - Native Implementation
  *
- * Provides payment functionality using @stripe/stripe-react-native
+ * Provides payment functionality using @stripe/stripe-react-native.
+ * Supports Singapore payment methods via Stripe Payment Sheet:
+ * - Credit/Debit Cards (PAY-002)
+ * - PayNow (PAY-003) - Singapore instant bank transfer
+ * - GrabPay (PAY-004) - Singapore e-wallet
+ *
  * PRD ref: PAY-002 (Credit card via Stripe)
+ * PRD ref: PAY-003 (PayNow payment)
+ * PRD ref: PAY-004 (GrabPay payment)
+ *
+ * Note: PayNow and GrabPay availability depends on:
+ * 1. Backend configuring PaymentIntent with payment_method_types: ['card', 'paynow', 'grabpay']
+ * 2. Stripe Dashboard having these payment methods enabled
+ * 3. Currency being SGD (Singapore Dollars)
  */
 
 import { initStripe as initStripeNative } from "@stripe/stripe-react-native";

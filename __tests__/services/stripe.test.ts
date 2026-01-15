@@ -222,4 +222,48 @@ describe("Stripe service", () => {
       );
     });
   });
+
+  describe("Singapore payment methods (PAY-003, PAY-004)", () => {
+    it("configures payment sheet with SGD currency for Singapore payments", async () => {
+      mockInitPaymentSheet.mockResolvedValueOnce({ error: null });
+
+      const result = await createPaymentSheet({
+        amount: 499,
+        currency: "sgd",
+        description: "Standard Monthly Subscription",
+        paymentIntentClientSecret: "pi_test_secret",
+      });
+
+      expect(result).toEqual({ data: { ready: true } });
+      // Payment Sheet will auto-discover PayNow/GrabPay based on currency and backend config
+      expect(mockInitPaymentSheet).toHaveBeenCalledWith(
+        expect.objectContaining({
+          merchantDisplayName: "Little Journey",
+          paymentIntentClientSecret: "pi_test_secret",
+        }),
+      );
+    });
+
+    it("uses Singapore merchant country code for regional payments", async () => {
+      mockInitPaymentSheet.mockResolvedValueOnce({ error: null });
+
+      await createPaymentSheet({
+        amount: 999,
+        currency: "sgd",
+        paymentIntentClientSecret: "pi_test_secret",
+      });
+
+      // Verify Apple Pay and Google Pay use Singapore country code
+      expect(mockInitPaymentSheet).toHaveBeenCalledWith(
+        expect.objectContaining({
+          applePay: expect.objectContaining({
+            merchantCountryCode: "SG",
+          }),
+          googlePay: expect.objectContaining({
+            merchantCountryCode: "SG",
+          }),
+        }),
+      );
+    });
+  });
 });

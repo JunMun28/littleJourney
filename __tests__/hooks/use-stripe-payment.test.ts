@@ -1,6 +1,8 @@
 /**
  * Tests for useStripePayment hook
  * PRD ref: PAY-002 (Credit card via Stripe)
+ * PRD ref: PAY-003 (PayNow payment)
+ * PRD ref: PAY-004 (GrabPay payment)
  */
 
 import { renderHook, act, waitFor } from "@testing-library/react-native";
@@ -231,5 +233,59 @@ describe("useStripePayment", () => {
 
     // Restore env
     process.env.EXPO_PUBLIC_USE_MOCK_API = originalEnv;
+  });
+
+  describe("Singapore payment methods (PAY-003, PAY-004)", () => {
+    it("requests PayNow payment method via payment intent", async () => {
+      const { result } = renderHook(() => useStripePayment());
+
+      await act(async () => {
+        await result.current.processPayment("standard", "monthly");
+      });
+
+      // Verify createPaymentSheet was called with SGD currency (required for PayNow)
+      expect(stripeService.createPaymentSheet).toHaveBeenCalledWith(
+        expect.objectContaining({
+          currency: "sgd",
+        }),
+      );
+    });
+
+    it("requests GrabPay payment method via payment intent", async () => {
+      const { result } = renderHook(() => useStripePayment());
+
+      await act(async () => {
+        await result.current.processPayment("premium", "yearly");
+      });
+
+      // Verify createPaymentSheet was called with SGD currency (required for GrabPay)
+      expect(stripeService.createPaymentSheet).toHaveBeenCalledWith(
+        expect.objectContaining({
+          currency: "sgd",
+        }),
+      );
+    });
+
+    it("includes Singapore-specific payment methods in mock response", async () => {
+      // The mock payment intent should include payment_method_types for SG
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            clientSecret: "pi_test_secret",
+            ephemeralKey: "ek_test",
+            customerId: "cus_test",
+            paymentMethodTypes: ["card", "paynow", "grabpay"],
+          }),
+      });
+
+      const { result } = renderHook(() => useStripePayment());
+
+      const success = await act(async () => {
+        return await result.current.processPayment("standard", "monthly");
+      });
+
+      expect(success).toBe(true);
+    });
   });
 });

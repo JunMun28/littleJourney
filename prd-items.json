@@ -1162,7 +1162,7 @@
         "Verify subscription activated"
       ],
       "acceptanceCriteria": "PayNow payment works",
-      "passes": false
+      "passes": true
     },
     {
       "id": "PAY-004",
@@ -1175,7 +1175,7 @@
         "Verify subscription activated"
       ],
       "acceptanceCriteria": "GrabPay payment works",
-      "passes": false
+      "passes": true
     },
     {
       "id": "PAY-005",

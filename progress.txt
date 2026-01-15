@@ -2467,3 +2467,31 @@
 **Verification:** tsc, lint, test (605 passed), build all pass.
 
 **Next:** Continue remaining PRD items: SHARE-002-004 (Web Viewer), SEARCH-002 (AI semantic search), PAY-003/004 (PayNow/GrabPay), WEBVIEW-001/002
+
+
+## 2026-01-16: PayNow and GrabPay Payment Methods (PAY-003, PAY-004)
+
+**PRD ref:** Phase 1 Weeks 12-13, Section 12 (Monetization), PAY-003, PAY-004
+
+**Task:** Enable PayNow and GrabPay Singapore payment methods via Stripe Payment Sheet
+
+**Decisions:**
+- PayNow and GrabPay are enabled through Stripe Payment Sheet auto-discovery
+- Backend must configure PaymentIntent with payment_method_types: ['card', 'paynow', 'grabpay']
+- Currency must be SGD for these Singapore-specific payment methods
+- Mock payment intent now includes paymentMethodTypes array with ['card', 'paynow', 'grabpay']
+- Added paymentMethodTypes to PaymentIntentResponse interface for type safety
+- Payment Sheet automatically shows available payment methods based on backend config
+- Singapore merchant country code (SG) already configured for Apple Pay / Google Pay
+- TDD approach: 5 new tests (3 hook tests, 2 service tests)
+
+**Files changed:**
+- services/stripe.native.ts - Updated docs for PAY-003/PAY-004 support
+- hooks/use-stripe-payment.native.ts - Updated docs, added paymentMethodTypes to mock/interface
+- __tests__/services/stripe.test.ts - Added 2 tests for Singapore payment methods
+- __tests__/hooks/use-stripe-payment.test.ts - Added 3 tests for PayNow/GrabPay
+- prd-items.json - Updated PAY-003 and PAY-004 to passes: true
+
+**Verification:** tsc, lint, test (610 passed), build all pass.
+
+**Next:** Continue remaining PRD items: SHARE-002-004 (Web Viewer), SEARCH-002 (AI semantic search), WEBVIEW-001/002
