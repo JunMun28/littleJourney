@@ -1,10 +1,177 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
+import * as Print from "expo-print";
+import * as Sharing from "expo-sharing";
 import { useEntries, type Entry } from "@/contexts/entry-context";
 import { useMilestones, type Milestone } from "@/contexts/milestone-context";
 import { useChild } from "@/contexts/child-context";
 import { useSubscription } from "@/contexts/subscription-context";
 
 export type PhotoBookPageType = "title" | "photo" | "milestone" | "blank";
+
+/**
+ * Generates HTML content for photo book PDF export
+ */
+function generatePhotoBookHtml(
+  pages: PhotoBookPage[],
+  childName?: string,
+): string {
+  const pageHtml = pages
+    .map((page, index) => {
+      switch (page.type) {
+        case "title":
+          return `
+          <div class="page title-page">
+            <h1>${escapeHtml(page.title || `${childName || "Baby"}'s First Year`)}</h1>
+            ${page.caption ? `<p class="subtitle">${escapeHtml(page.caption)}</p>` : ""}
+          </div>
+        `;
+        case "milestone":
+          return `
+          <div class="page photo-page milestone-page">
+            ${page.imageUri ? `<img src="${page.imageUri}" class="photo" />` : ""}
+            <div class="milestone-badge">✨ Milestone</div>
+            ${page.title ? `<h2>${escapeHtml(page.title)}</h2>` : ""}
+            ${page.caption ? `<p class="caption">${escapeHtml(page.caption)}</p>` : ""}
+            ${page.date ? `<p class="date">${formatDate(page.date)}</p>` : ""}
+          </div>
+        `;
+        case "photo":
+          return `
+          <div class="page photo-page">
+            ${page.imageUri ? `<img src="${page.imageUri}" class="photo" />` : ""}
+            ${page.caption ? `<p class="caption">${escapeHtml(page.caption)}</p>` : ""}
+            ${page.date ? `<p class="date">${formatDate(page.date)}</p>` : ""}
+          </div>
+        `;
+        case "blank":
+          return `<div class="page blank-page"></div>`;
+        default:
+          return "";
+      }
+    })
+    .join("");
+
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #333;
+            background: #fff;
+          }
+          .page {
+            width: 100%;
+            min-height: 100vh;
+            padding: 40px;
+            page-break-after: always;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+          }
+          .page:last-child {
+            page-break-after: auto;
+          }
+          .title-page {
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+            text-align: center;
+          }
+          .title-page h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #0a7ea4;
+          }
+          .title-page .subtitle {
+            font-size: 18px;
+            color: #666;
+          }
+          .photo-page {
+            padding: 20px;
+          }
+          .photo {
+            max-width: 100%;
+            max-height: 60vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          }
+          .milestone-badge {
+            background: #ffd700;
+            color: #333;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 16px;
+          }
+          .milestone-page h2 {
+            font-size: 24px;
+            margin-top: 16px;
+            color: #0a7ea4;
+          }
+          .caption {
+            font-size: 16px;
+            color: #333;
+            margin-top: 16px;
+            text-align: center;
+            max-width: 80%;
+          }
+          .date {
+            font-size: 14px;
+            color: #666;
+            margin-top: 8px;
+          }
+          .blank-page {
+            background: #fafafa;
+          }
+        </style>
+      </head>
+      <body>
+        ${pageHtml}
+      </body>
+    </html>
+  `;
+}
+
+/**
+ * Escape HTML special characters to prevent XSS
+ */
+function escapeHtml(text: string): string {
+  const map: Record<string, string> = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
+  };
+  return text.replace(/[&<>"']/g, (char) => map[char]);
+}
+
+/**
+ * Format date for display in photo book
+ */
+function formatDate(dateStr: string): string {
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("en-SG", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  } catch {
+    return dateStr;
+  }
+}
 
 export interface PhotoBookPage {
   id: string;
@@ -163,23 +330,35 @@ export function PhotoBookProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const exportPdf = useCallback(async () => {
-    if (!canExportPdf) {
+    if (!canExportPdf || pages.length === 0) {
       return;
     }
 
     setIsExporting(true);
 
     try {
-      // TODO: Implement PDF generation using expo-print or similar
-      // For now, this is a placeholder that simulates export delay
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Generate HTML content for the photo book
+      const html = generatePhotoBookHtml(pages, child?.name);
 
-      // PDF generation will be implemented with expo-print + expo-sharing
-      // Similar pattern to export-context.tsx
+      // Create PDF from HTML
+      const { uri } = await Print.printToFileAsync({
+        html,
+        base64: false,
+      });
+
+      // Share the PDF file
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (isAvailable) {
+        const childName = child?.name || "Baby";
+        await Sharing.shareAsync(uri, {
+          mimeType: "application/pdf",
+          dialogTitle: `${childName}'s Photo Book`,
+        });
+      }
     } finally {
       setIsExporting(false);
     }
-  }, [canExportPdf]);
+  }, [canExportPdf, pages, child?.name]);
 
   return (
     <PhotoBookContext.Provider

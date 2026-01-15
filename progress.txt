@@ -1030,3 +1030,29 @@
 **Verification:** tsc, lint, test (181 passed), build all pass.
 
 **Next:** Backend API integration, Stripe SDK, or PDF generation
+
+## 2026-01-15: Photo Book PDF Export
+
+**PRD ref:** Phase 1 Weeks 12-13, Section 10.3 (Export - PDF download)
+
+**Task:** Implement actual PDF generation for photo book export (was placeholder)
+
+**Decisions:**
+- Installed expo-print for HTML-to-PDF conversion
+- Generated HTML includes: title page, milestone pages, photo pages
+- Each page styled with CSS: title with gradient, photos with shadows, milestone badges
+- escapeHtml() prevents XSS in user content (captions, titles)
+- formatDate() displays dates in Singapore locale (en-SG)
+- PDF shared via expo-sharing with mimeType: application/pdf
+- Premium check (canExportPdf) enforced before generation
+- Empty pages check added (no export if pages.length === 0)
+- TDD approach: 5 tests for PDF export flow
+
+**Files changed:**
+- contexts/photo-book-context.tsx - Added expo-print/sharing imports, generatePhotoBookHtml helper, updated exportPdf with actual implementation
+- __tests__/contexts/photo-book-context.test.tsx - Added 5 TDD tests for PDF export
+- package.json - Added expo-print dependency
+
+**Verification:** tsc, lint, test (186 passed), build all pass.
+
+**Next:** Backend API integration, Stripe SDK, or Web Viewer (Phase 2)
