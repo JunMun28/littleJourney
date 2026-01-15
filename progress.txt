@@ -893,3 +893,32 @@
 **Verification:** tsc, lint, test (157 passed), build all pass.
 
 **Next:** UI polish for onboarding screens or photo book screen
+
+## 2026-01-15: UI Polish - Onboarding Screens Theme Integration
+
+**PRD ref:** Phase 1 Weeks 12-13 (Polish)
+
+**Task:** Apply theme system to all 5 onboarding screens
+
+**Decisions:**
+- All screens now use useColorScheme hook + Colors/Spacing imports from theme
+- Removed local PRIMARY_COLOR definitions, use imported constant
+- Dynamic colors via colors = Colors[colorScheme] pattern for light/dark support
+- add-child.tsx: inputs use colors.background/inputBorder/text/placeholder, photo placeholder uses backgroundSecondary, errors use SemanticColors.error
+- select-culture.tsx: option cards use colors.border/background, descriptions use colors.textSecondary
+- set-prompt-time.tsx: info box uses colors.backgroundSecondary, info text uses colors.textSecondary
+- invite-family.tsx: inputs/permission options use dynamic colors, info box themed
+- first-entry.tsx: uses Spacing constants, buttonDisabled uses opacity:0.5
+- All hardcoded colors replaced: #ccc, #999, #fff, #000, rgba(128,128,128,0.1), #dc2626, #f5f5f5, #666
+- Spacing constants replace hardcoded padding/margin values throughout
+
+**Files changed:**
+- app/(onboarding)/add-child.tsx - Full theme integration
+- app/(onboarding)/select-culture.tsx - Full theme integration
+- app/(onboarding)/set-prompt-time.tsx - Full theme integration
+- app/(onboarding)/invite-family.tsx - Full theme integration
+- app/(onboarding)/first-entry.tsx - Full theme integration
+
+**Verification:** tsc, lint, test (157 passed), build all pass.
+
+**Next:** UI polish for photo book screen or sign-in screen

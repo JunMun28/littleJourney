@@ -8,14 +8,14 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  useColorScheme,
 } from "react-native";
 import { useRouter } from "expo-router";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useFamily, type PermissionLevel } from "@/contexts/family-context";
-
-const PRIMARY_COLOR = "#0a7ea4";
+import { PRIMARY_COLOR, Colors, Spacing } from "@/constants/theme";
 
 const PERMISSION_OPTIONS: {
   value: PermissionLevel;
@@ -41,6 +41,8 @@ function isValidEmail(email: string): boolean {
 export default function InviteFamilyScreen() {
   const router = useRouter();
   const { inviteFamilyMember } = useFamily();
+  const colorScheme = useColorScheme() ?? "light";
+  const colors = Colors[colorScheme];
 
   const [email, setEmail] = useState("");
   const [relationship, setRelationship] = useState("");
@@ -87,11 +89,18 @@ export default function InviteFamilyScreen() {
             <View style={styles.inputGroup}>
               <ThemedText style={styles.label}>Email</ThemedText>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: colors.background,
+                    borderColor: colors.inputBorder,
+                    color: colors.text,
+                  },
+                ]}
                 value={email}
                 onChangeText={setEmail}
                 placeholder="grandma@example.com"
-                placeholderTextColor="#999"
+                placeholderTextColor={colors.placeholder}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -102,11 +111,18 @@ export default function InviteFamilyScreen() {
             <View style={styles.inputGroup}>
               <ThemedText style={styles.label}>Relationship</ThemedText>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: colors.background,
+                    borderColor: colors.inputBorder,
+                    color: colors.text,
+                  },
+                ]}
                 value={relationship}
                 onChangeText={setRelationship}
                 placeholder="Grandmother, Uncle, etc."
-                placeholderTextColor="#999"
+                placeholderTextColor={colors.placeholder}
                 autoCapitalize="words"
                 testID="relationship-input"
               />
@@ -115,38 +131,57 @@ export default function InviteFamilyScreen() {
             <View style={styles.inputGroup}>
               <ThemedText style={styles.label}>Permission Level</ThemedText>
               <View style={styles.permissionOptions}>
-                {PERMISSION_OPTIONS.map((option) => (
-                  <Pressable
-                    key={option.value}
-                    style={[
-                      styles.permissionOption,
-                      permissionLevel === option.value &&
-                        styles.permissionOptionSelected,
-                    ]}
-                    onPress={() => setPermissionLevel(option.value)}
-                    testID={`permission-${option.value}`}
-                  >
-                    <View style={styles.radioOuter}>
-                      {permissionLevel === option.value && (
-                        <View style={styles.radioInner} />
-                      )}
-                    </View>
-                    <View style={styles.permissionText}>
-                      <ThemedText style={styles.permissionLabel}>
-                        {option.label}
-                      </ThemedText>
-                      <ThemedText style={styles.permissionDescription}>
-                        {option.description}
-                      </ThemedText>
-                    </View>
-                  </Pressable>
-                ))}
+                {PERMISSION_OPTIONS.map((option) => {
+                  const isSelected = permissionLevel === option.value;
+                  return (
+                    <Pressable
+                      key={option.value}
+                      style={[
+                        styles.permissionOption,
+                        {
+                          backgroundColor: isSelected
+                            ? `${PRIMARY_COLOR}10`
+                            : colors.background,
+                          borderColor: isSelected
+                            ? PRIMARY_COLOR
+                            : colors.inputBorder,
+                        },
+                      ]}
+                      onPress={() => setPermissionLevel(option.value)}
+                      testID={`permission-${option.value}`}
+                    >
+                      <View style={styles.radioOuter}>
+                        {isSelected && <View style={styles.radioInner} />}
+                      </View>
+                      <View style={styles.permissionText}>
+                        <ThemedText style={styles.permissionLabel}>
+                          {option.label}
+                        </ThemedText>
+                        <ThemedText
+                          style={[
+                            styles.permissionDescription,
+                            { color: colors.textSecondary },
+                          ]}
+                        >
+                          {option.description}
+                        </ThemedText>
+                      </View>
+                    </Pressable>
+                  );
+                })}
               </View>
             </View>
           </View>
 
-          <View style={styles.infoBox}>
-            <ThemedText style={styles.infoText}>
+          <View
+            style={[
+              styles.infoBox,
+              { backgroundColor: colors.backgroundSecondary },
+            ]}
+          >
+            <ThemedText
+              style={[styles.infoText, { color: colors.textSecondary }]}
+            >
               You can invite more family members anytime from Settings. Links
               expire after 90 days of inactivity.
             </ThemedText>
@@ -187,23 +222,23 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    padding: 24,
-    paddingTop: 24,
+    padding: Spacing.xl,
+    paddingTop: Spacing.xl,
   },
   title: {
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   subtitle: {
-    marginBottom: 24,
+    marginBottom: Spacing.xl,
     opacity: 0.7,
     lineHeight: 22,
   },
   form: {
     gap: 20,
-    marginBottom: 24,
+    marginBottom: Spacing.xl,
   },
   inputGroup: {
-    gap: 8,
+    gap: Spacing.sm,
   },
   label: {
     fontSize: 16,
@@ -211,29 +246,20 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: Spacing.md,
+    padding: Spacing.lg,
     fontSize: 16,
-    backgroundColor: "#fff",
-    color: "#000",
   },
   permissionOptions: {
-    gap: 12,
+    gap: Spacing.md,
   },
   permissionOption: {
     flexDirection: "row",
     alignItems: "flex-start",
-    padding: 16,
-    borderRadius: 12,
+    padding: Spacing.lg,
+    borderRadius: Spacing.md,
     borderWidth: 1,
-    borderColor: "#ccc",
-    backgroundColor: "#fff",
-    gap: 12,
-  },
-  permissionOptionSelected: {
-    borderColor: PRIMARY_COLOR,
-    backgroundColor: `${PRIMARY_COLOR}10`,
+    gap: Spacing.md,
   },
   radioOuter: {
     width: 22,
@@ -253,7 +279,7 @@ const styles = StyleSheet.create({
   },
   permissionText: {
     flex: 1,
-    gap: 4,
+    gap: Spacing.xs,
   },
   permissionLabel: {
     fontSize: 16,
@@ -261,35 +287,32 @@ const styles = StyleSheet.create({
   },
   permissionDescription: {
     fontSize: 14,
-    opacity: 0.7,
     lineHeight: 20,
   },
   infoBox: {
-    backgroundColor: "rgba(128, 128, 128, 0.1)",
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 24,
+    padding: Spacing.lg,
+    borderRadius: Spacing.md,
+    marginBottom: Spacing.xl,
   },
   infoText: {
     fontSize: 14,
-    opacity: 0.7,
     textAlign: "center",
     lineHeight: 20,
   },
   footer: {
     marginTop: "auto",
-    paddingTop: 16,
-    gap: 12,
+    paddingTop: Spacing.lg,
+    gap: Spacing.md,
   },
   button: {
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingHorizontal: Spacing.xxl,
+    paddingVertical: Spacing.lg,
+    borderRadius: Spacing.md,
     alignItems: "center",
     backgroundColor: PRIMARY_COLOR,
   },
   buttonDisabled: {
-    backgroundColor: "#ccc",
+    opacity: 0.5,
   },
   buttonText: {
     fontWeight: "600",
@@ -297,7 +320,7 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   skipButton: {
-    paddingVertical: 12,
+    paddingVertical: Spacing.md,
     alignItems: "center",
   },
   skipButtonText: {

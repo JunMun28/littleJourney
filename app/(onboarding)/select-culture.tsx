@@ -1,13 +1,17 @@
 import { useState } from "react";
-import { StyleSheet, Pressable, Text, View } from "react-native";
+import {
+  StyleSheet,
+  Pressable,
+  Text,
+  View,
+  useColorScheme,
+} from "react-native";
 import { router } from "expo-router";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useChild, type CulturalTradition } from "@/contexts/child-context";
-import { useThemeColor } from "@/hooks/use-theme-color";
-
-const PRIMARY_COLOR = "#0a7ea4";
+import { PRIMARY_COLOR, Colors, Spacing } from "@/constants/theme";
 
 interface CultureOption {
   value: CulturalTradition;
@@ -40,7 +44,8 @@ const CULTURE_OPTIONS: CultureOption[] = [
 
 export default function SelectCultureScreen() {
   const { updateChild } = useChild();
-  const borderColor = useThemeColor({}, "icon");
+  const colorScheme = useColorScheme() ?? "light";
+  const colors = Colors[colorScheme];
 
   const [selectedCulture, setSelectedCulture] =
     useState<CulturalTradition | null>(null);
@@ -73,10 +78,10 @@ export default function SelectCultureScreen() {
               style={[
                 styles.option,
                 {
-                  borderColor: isSelected ? PRIMARY_COLOR : borderColor,
+                  borderColor: isSelected ? PRIMARY_COLOR : colors.border,
                   backgroundColor: isSelected
                     ? `${PRIMARY_COLOR}10`
-                    : "transparent",
+                    : colors.background,
                 },
               ]}
               onPress={() => setSelectedCulture(option.value)}
@@ -89,7 +94,12 @@ export default function SelectCultureScreen() {
                 <ThemedText style={styles.optionLabel}>
                   {option.label}
                 </ThemedText>
-                <ThemedText style={styles.optionDescription}>
+                <ThemedText
+                  style={[
+                    styles.optionDescription,
+                    { color: colors.textSecondary },
+                  ]}
+                >
                   {option.description}
                 </ThemedText>
               </View>
@@ -100,12 +110,7 @@ export default function SelectCultureScreen() {
 
       <View style={styles.footer}>
         <Pressable
-          style={[
-            styles.button,
-            {
-              backgroundColor: isFormValid ? PRIMARY_COLOR : "#ccc",
-            },
-          ]}
+          style={[styles.button, !isFormValid && styles.buttonDisabled]}
           onPress={handleContinue}
           disabled={!isFormValid}
           testID="continue-button"
@@ -120,27 +125,27 @@ export default function SelectCultureScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
+    padding: Spacing.xl,
     paddingTop: 48,
   },
   title: {
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   subtitle: {
-    marginBottom: 32,
+    marginBottom: Spacing.xxl,
     opacity: 0.7,
   },
   optionsContainer: {
     flex: 1,
-    gap: 12,
+    gap: Spacing.md,
   },
   option: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
+    padding: Spacing.lg,
     borderWidth: 2,
-    borderRadius: 12,
-    gap: 12,
+    borderRadius: Spacing.md,
+    gap: Spacing.md,
   },
   radioOuter: {
     width: 24,
@@ -163,20 +168,23 @@ const styles = StyleSheet.create({
   optionLabel: {
     fontSize: 16,
     fontWeight: "600",
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
   },
   optionDescription: {
     fontSize: 14,
-    opacity: 0.7,
   },
   footer: {
-    paddingTop: 16,
+    paddingTop: Spacing.lg,
   },
   button: {
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingHorizontal: Spacing.xxl,
+    paddingVertical: Spacing.lg,
+    borderRadius: Spacing.md,
     alignItems: "center",
+    backgroundColor: PRIMARY_COLOR,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
   },
   buttonText: {
     fontWeight: "600",

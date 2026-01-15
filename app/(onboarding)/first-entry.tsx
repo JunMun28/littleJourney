@@ -5,8 +5,7 @@ import * as ImagePicker from "expo-image-picker";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useAuth } from "@/contexts/auth-context";
-
-const PRIMARY_COLOR = "#0a7ea4";
+import { PRIMARY_COLOR, Spacing } from "@/constants/theme";
 
 export default function FirstEntryScreen() {
   const { completeOnboarding } = useAuth();
@@ -99,7 +98,7 @@ export default function FirstEntryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
+    padding: Spacing.xl,
   },
   content: {
     flex: 1,
@@ -113,34 +112,34 @@ const styles = StyleSheet.create({
     backgroundColor: `${PRIMARY_COLOR}15`,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 32,
+    marginBottom: Spacing.xxl,
   },
   icon: {
     fontSize: 56,
   },
   title: {
     textAlign: "center",
-    marginBottom: 16,
+    marginBottom: Spacing.lg,
   },
   description: {
     textAlign: "center",
     opacity: 0.7,
     lineHeight: 24,
-    paddingHorizontal: 16,
+    paddingHorizontal: Spacing.lg,
   },
   footer: {
-    paddingTop: 16,
-    gap: 12,
+    paddingTop: Spacing.lg,
+    gap: Spacing.md,
   },
   button: {
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingHorizontal: Spacing.xxl,
+    paddingVertical: Spacing.lg,
+    borderRadius: Spacing.md,
     alignItems: "center",
     backgroundColor: PRIMARY_COLOR,
   },
   buttonDisabled: {
-    backgroundColor: "#ccc",
+    opacity: 0.5,
   },
   buttonText: {
     fontWeight: "600",
@@ -148,7 +147,7 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   skipButton: {
-    paddingVertical: 12,
+    paddingVertical: Spacing.md,
     alignItems: "center",
   },
   skipButtonText: {

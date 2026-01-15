@@ -10,6 +10,7 @@ import {
   ScrollView,
   Image,
   Alert,
+  useColorScheme,
 } from "react-native";
 import DateTimePicker, {
   type DateTimePickerEvent,
@@ -20,9 +21,12 @@ import { router } from "expo-router";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useChild } from "@/contexts/child-context";
-import { useThemeColor } from "@/hooks/use-theme-color";
-
-const PRIMARY_COLOR = "#0a7ea4";
+import {
+  PRIMARY_COLOR,
+  Colors,
+  SemanticColors,
+  Spacing,
+} from "@/constants/theme";
 
 function formatDate(date: Date): string {
   return date.toLocaleDateString("en-SG", {
@@ -38,7 +42,8 @@ function toISODateString(date: Date): string {
 
 export default function AddChildScreen() {
   const { setChild } = useChild();
-  const textColor = useThemeColor({}, "text");
+  const colorScheme = useColorScheme() ?? "light";
+  const colors = Colors[colorScheme];
 
   const [name, setName] = useState("");
   const [nickname, setNickname] = useState("");
@@ -137,7 +142,10 @@ export default function AddChildScreen() {
             {/* Photo picker */}
             <View style={styles.photoSection}>
               <Pressable
-                style={styles.photoButton}
+                style={[
+                  styles.photoButton,
+                  { borderColor: colors.inputBorder },
+                ]}
                 onPress={handlePickPhoto}
                 testID="photo-button"
               >
@@ -149,15 +157,27 @@ export default function AddChildScreen() {
                   />
                 ) : (
                   <View
-                    style={styles.photoPlaceholder}
+                    style={[
+                      styles.photoPlaceholder,
+                      { backgroundColor: colors.backgroundSecondary },
+                    ]}
                     testID="photo-placeholder"
                   >
                     <Text style={styles.photoPlaceholderIcon}>📷</Text>
-                    <Text style={styles.photoPlaceholderText}>Add Photo</Text>
+                    <Text
+                      style={[
+                        styles.photoPlaceholderText,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      Add Photo
+                    </Text>
                   </View>
                 )}
               </Pressable>
-              <ThemedText style={styles.photoHint}>
+              <ThemedText
+                style={[styles.photoHint, { color: colors.textMuted }]}
+              >
                 Optional profile photo
               </ThemedText>
             </View>
@@ -171,12 +191,15 @@ export default function AddChildScreen() {
                 style={[
                   styles.input,
                   {
-                    color: textColor,
-                    borderColor: errors.name ? "#dc2626" : "#ccc",
+                    color: colors.text,
+                    backgroundColor: colors.background,
+                    borderColor: errors.name
+                      ? SemanticColors.error
+                      : colors.inputBorder,
                   },
                 ]}
                 placeholder="Enter child's name"
-                placeholderTextColor="#999"
+                placeholderTextColor={colors.placeholder}
                 value={name}
                 onChangeText={(text) => {
                   setName(text);
@@ -195,12 +218,22 @@ export default function AddChildScreen() {
             {/* Nickname field (optional) */}
             <View style={styles.field}>
               <ThemedText style={styles.label}>
-                Nickname <Text style={styles.optional}>(optional)</Text>
+                Nickname{" "}
+                <Text style={[styles.optional, { color: colors.textMuted }]}>
+                  (optional)
+                </Text>
               </ThemedText>
               <TextInput
-                style={[styles.input, { color: textColor }]}
+                style={[
+                  styles.input,
+                  {
+                    color: colors.text,
+                    backgroundColor: colors.background,
+                    borderColor: colors.inputBorder,
+                  },
+                ]}
                 placeholder="Shown to family instead of name"
-                placeholderTextColor="#999"
+                placeholderTextColor={colors.placeholder}
                 value={nickname}
                 onChangeText={setNickname}
                 autoCapitalize="words"
@@ -216,7 +249,12 @@ export default function AddChildScreen() {
               <Pressable
                 style={[
                   styles.dateButton,
-                  { borderColor: errors.dob ? "#dc2626" : "#ccc" },
+                  {
+                    backgroundColor: colors.background,
+                    borderColor: errors.dob
+                      ? SemanticColors.error
+                      : colors.inputBorder,
+                  },
                 ]}
                 onPress={() => setShowDatePicker(true)}
                 testID="dob-button"
@@ -224,7 +262,7 @@ export default function AddChildScreen() {
                 <Text
                   style={[
                     styles.dateButtonText,
-                    { color: dateOfBirth ? textColor : "#999" },
+                    { color: dateOfBirth ? colors.text : colors.placeholder },
                   ]}
                 >
                   {dateOfBirth ? formatDate(dateOfBirth) : "Select date"}
@@ -256,12 +294,7 @@ export default function AddChildScreen() {
           </View>
 
           <Pressable
-            style={[
-              styles.button,
-              {
-                backgroundColor: isFormValid ? PRIMARY_COLOR : "#ccc",
-              },
-            ]}
+            style={[styles.button, !isFormValid && styles.buttonDisabled]}
             onPress={handleContinue}
             disabled={!isFormValid}
             testID="continue-button"
@@ -283,14 +316,14 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    padding: 24,
+    padding: Spacing.xl,
     paddingTop: 48,
   },
   title: {
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   subtitle: {
-    marginBottom: 32,
+    marginBottom: Spacing.xxl,
     opacity: 0.7,
   },
   form: {
@@ -298,7 +331,7 @@ const styles = StyleSheet.create({
   },
   photoSection: {
     alignItems: "center",
-    marginBottom: 24,
+    marginBottom: Spacing.xl,
   },
   photoButton: {
     width: 100,
@@ -306,7 +339,6 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     overflow: "hidden",
     borderWidth: 2,
-    borderColor: "#ccc",
     borderStyle: "dashed",
   },
   photoPreview: {
@@ -317,58 +349,52 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f5f5f5",
   },
   photoPlaceholderIcon: {
     fontSize: 24,
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
   },
   photoPlaceholderText: {
     fontSize: 12,
-    color: "#666",
   },
   photoHint: {
     fontSize: 12,
-    opacity: 0.6,
-    marginTop: 8,
+    marginTop: Spacing.sm,
   },
   field: {
-    marginBottom: 24,
+    marginBottom: Spacing.xl,
   },
   label: {
     fontSize: 14,
     fontWeight: "600",
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   required: {
-    color: "#dc2626",
+    color: SemanticColors.error,
   },
   optional: {
     fontWeight: "400",
-    opacity: 0.6,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: Spacing.md,
+    padding: Spacing.lg,
     fontSize: 16,
   },
   dateButton: {
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: Spacing.md,
+    padding: Spacing.lg,
   },
   dateButtonText: {
     fontSize: 16,
   },
   datePickerContainer: {
-    marginTop: 8,
+    marginTop: Spacing.sm,
   },
   datePickerDone: {
     alignItems: "flex-end",
-    paddingVertical: 8,
+    paddingVertical: Spacing.sm,
   },
   datePickerDoneText: {
     color: PRIMARY_COLOR,
@@ -376,16 +402,20 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   errorText: {
-    color: "#dc2626",
+    color: SemanticColors.error,
     fontSize: 12,
-    marginTop: 4,
+    marginTop: Spacing.xs,
   },
   button: {
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 12,
-    marginBottom: 16,
+    paddingHorizontal: Spacing.xxl,
+    paddingVertical: Spacing.lg,
+    borderRadius: Spacing.md,
+    marginBottom: Spacing.lg,
     alignItems: "center",
+    backgroundColor: PRIMARY_COLOR,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
   },
   buttonText: {
     fontWeight: "600",

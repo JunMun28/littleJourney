@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { StyleSheet, Pressable, Text, View, Platform } from "react-native";
+import {
+  StyleSheet,
+  Pressable,
+  Text,
+  View,
+  Platform,
+  useColorScheme,
+} from "react-native";
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
@@ -9,8 +16,8 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useUserPreferences } from "@/contexts/user-preferences-context";
 import { useNotifications } from "@/contexts/notification-context";
+import { PRIMARY_COLOR, Colors, Spacing } from "@/constants/theme";
 
-const PRIMARY_COLOR = "#0a7ea4";
 const DEFAULT_HOUR = 20; // 8:00 PM
 const DEFAULT_MINUTE = 0;
 
@@ -38,6 +45,8 @@ export default function SetPromptTimeScreen() {
   const { setDailyPromptTime } = useUserPreferences();
   const { requestPermissions, scheduleDailyPrompt, permissionStatus } =
     useNotifications();
+  const colorScheme = useColorScheme() ?? "light";
+  const colors = Colors[colorScheme];
 
   const [selectedTime, setSelectedTime] = useState<Date>(getDefaultTime());
   const [showPicker, setShowPicker] = useState(Platform.OS === "ios");
@@ -112,8 +121,13 @@ export default function SetPromptTimeScreen() {
         )}
       </View>
 
-      <View style={styles.infoBox}>
-        <ThemedText style={styles.infoText}>
+      <View
+        style={[
+          styles.infoBox,
+          { backgroundColor: colors.backgroundSecondary },
+        ]}
+      >
+        <ThemedText style={[styles.infoText, { color: colors.textSecondary }]}>
           You can change this anytime in Settings. Notifications will be sent in
           your local timezone.
         </ThemedText>
@@ -143,31 +157,31 @@ export default function SetPromptTimeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
+    padding: Spacing.xl,
     paddingTop: 48,
   },
   title: {
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   subtitle: {
-    marginBottom: 32,
+    marginBottom: Spacing.xxl,
     opacity: 0.7,
     lineHeight: 22,
   },
   timeContainer: {
     alignItems: "center",
-    marginBottom: 24,
+    marginBottom: Spacing.xl,
   },
   timeLabel: {
     fontSize: 16,
     fontWeight: "600",
-    marginBottom: 16,
+    marginBottom: Spacing.lg,
   },
   timeButton: {
     backgroundColor: `${PRIMARY_COLOR}15`,
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingHorizontal: Spacing.xxl,
+    paddingVertical: Spacing.lg,
+    borderRadius: Spacing.md,
     borderWidth: 2,
     borderColor: PRIMARY_COLOR,
   },
@@ -177,26 +191,24 @@ const styles = StyleSheet.create({
     color: PRIMARY_COLOR,
   },
   infoBox: {
-    backgroundColor: "rgba(128, 128, 128, 0.1)",
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 24,
+    padding: Spacing.lg,
+    borderRadius: Spacing.md,
+    marginBottom: Spacing.xl,
   },
   infoText: {
     fontSize: 14,
-    opacity: 0.7,
     textAlign: "center",
     lineHeight: 20,
   },
   footer: {
     marginTop: "auto",
-    paddingTop: 16,
-    gap: 12,
+    paddingTop: Spacing.lg,
+    gap: Spacing.md,
   },
   button: {
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingHorizontal: Spacing.xxl,
+    paddingVertical: Spacing.lg,
+    borderRadius: Spacing.md,
     alignItems: "center",
     backgroundColor: PRIMARY_COLOR,
   },
@@ -206,7 +218,7 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   skipButton: {
-    paddingVertical: 12,
+    paddingVertical: Spacing.md,
     alignItems: "center",
   },
   skipButtonText: {
