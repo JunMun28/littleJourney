@@ -12,6 +12,7 @@ import {
   Pressable,
   RefreshControl,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -24,7 +25,7 @@ import { ThemedView } from "@/components/themed-view";
 import { PhotoCarousel } from "@/components/photo-carousel";
 import { VideoPlayer } from "@/components/video-player";
 import { type Entry, type EntryType } from "@/contexts/entry-context";
-import { useEntriesFlat, useCreateEntry } from "@/hooks/use-entries";
+import { useInfiniteEntries, useCreateEntry } from "@/hooks/use-entries";
 import { useChild } from "@/contexts/child-context";
 import { useStorage, TIER_LIMITS } from "@/contexts/storage-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -47,6 +48,15 @@ function EmptyState() {
       <ThemedText style={styles.emptyText}>
         Tap the + button to add your first memory
       </ThemedText>
+    </View>
+  );
+}
+
+function LoadingFooter({ isLoading }: { isLoading: boolean }) {
+  if (!isLoading) return null;
+  return (
+    <View style={styles.loadingFooter}>
+      <ActivityIndicator size="small" color={PRIMARY_COLOR} />
     </View>
   );
 }
@@ -162,8 +172,15 @@ type CreateStep = "type" | "source" | "caption";
 type MediaSource = "gallery" | "camera";
 
 export default function FeedScreen() {
-  const { entries, getOnThisDayEntries, refetch, isFetching } =
-    useEntriesFlat();
+  const {
+    entries,
+    getOnThisDayEntries,
+    refetch,
+    isFetching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteEntries({ limit: 20 });
   const createEntry = useCreateEntry();
   const { child } = useChild();
   const { canUpload, canUploadVideo, addUsage, tier, usedBytes } = useStorage();
@@ -536,15 +553,22 @@ export default function FeedScreen() {
           />
         }
         ListEmptyComponent={EmptyState}
+        ListFooterComponent={<LoadingFooter isLoading={isFetchingNextPage} />}
         contentContainerStyle={
           entries.length === 0 && onThisDayMemories.length === 0
             ? styles.listEmpty
             : styles.list
         }
         showsVerticalScrollIndicator={false}
+        onEndReached={() => {
+          if (hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+          }
+        }}
+        onEndReachedThreshold={0.5}
         refreshControl={
           <RefreshControl
-            refreshing={isFetching}
+            refreshing={isFetching && !isFetchingNextPage}
             onRefresh={onRefresh}
             tintColor={PRIMARY_COLOR}
             colors={[PRIMARY_COLOR]}
@@ -821,6 +845,11 @@ const styles = StyleSheet.create({
   emptyText: {
     textAlign: "center",
     opacity: 0.7,
+  },
+  loadingFooter: {
+    paddingVertical: 20,
+    alignItems: "center",
+    justifyContent: "center",
   },
   card: {
     marginBottom: 16,

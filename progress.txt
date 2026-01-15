@@ -1529,3 +1529,31 @@
 **Verification:** tsc, lint, test (290 passed), build all pass.
 
 **Next:** Cloudflare Workers backend setup or Stripe SDK integration
+
+## 2026-01-15: Feed Infinite Scroll Implementation
+
+**PRD ref:** Phase 1 Weeks 5-7, Section 4.1 (Infinite scroll with pagination)
+
+**Task:** Implement infinite scroll for Feed using TanStack Query's useInfiniteQuery
+
+**Decisions:**
+- Created useInfiniteEntries hook using TanStack Query's useInfiniteQuery
+- Uses cursor-based pagination from API client (cursor, hasMore fields)
+- getNextPageParam returns cursor when hasMore=true, undefined otherwise
+- Flattens all pages into single entries array via flatMap
+- Feed screen updated: useEntriesFlat -> useInfiniteEntries
+- FlatList onEndReached triggers fetchNextPage when hasNextPage && !isFetchingNextPage
+- onEndReachedThreshold=0.5 (fetch when 50% from bottom)
+- LoadingFooter component shows ActivityIndicator during page load
+- RefreshControl refreshing excludes isFetchingNextPage to avoid spinner during pagination
+- Default page limit: 20 entries per page
+
+**Files changed:**
+- hooks/use-entries.ts - Added useInfiniteEntries hook with useInfiniteQuery
+- app/(tabs)/index.tsx - Updated to useInfiniteEntries, added onEndReached/ListFooterComponent/loadingFooter styles
+- __tests__/hooks/use-entries.test.ts - Added 4 TDD tests for useInfiniteEntries
+- __tests__/app/tabs/feed.test.tsx - Added 3 TDD tests for infinite scroll integration
+
+**Verification:** tsc, lint, test (297 passed), build all pass.
+
+**Next:** Cloudflare Workers backend setup, Stripe SDK integration, or Web Viewer (Phase 2)

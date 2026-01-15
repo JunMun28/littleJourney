@@ -8,7 +8,12 @@
  */
 
 import { useMemo, useCallback } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  useInfiniteQuery,
+} from "@tanstack/react-query";
 import { entryApi, isApiError, GetEntriesParams } from "@/services/api-client";
 import { Entry, NewEntry } from "@/contexts/entry-context";
 
@@ -172,5 +177,74 @@ export function useEntriesFlat(params?: GetEntriesParams) {
     isSuccess: query.isSuccess,
     refetch: query.refetch,
     isFetching: query.isFetching,
+  };
+}
+
+/**
+ * Infinite scroll hook for Feed screen with pagination support
+ *
+ * This hook uses TanStack Query's useInfiniteQuery to:
+ * - Load entries in pages
+ * - Automatically fetch next page on demand
+ * - Flatten all pages into single entries array
+ * - Support "On This Day" across all loaded entries
+ *
+ * PRD Section 4.1: Infinite scroll with pagination
+ */
+export function useInfiniteEntries(params?: { limit?: number }) {
+  const limit = params?.limit ?? 20;
+
+  const query = useInfiniteQuery({
+    queryKey: entryKeys.list({ limit }),
+    queryFn: async ({ pageParam }) => {
+      const result = await entryApi.getEntries({
+        limit,
+        cursor: pageParam as string | undefined,
+      });
+      if (isApiError(result)) {
+        throw new Error(result.error.message);
+      }
+      return result.data;
+    },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) =>
+      lastPage.hasMore ? lastPage.cursor : undefined,
+  });
+
+  // Flatten all pages into single entries array
+  const entries = useMemo(() => {
+    return query.data?.pages.flatMap((page) => page.items) ?? [];
+  }, [query.data?.pages]);
+
+  // Get entries from same day in previous years (PRD Section 4.5)
+  const getOnThisDayEntries = useCallback((): Entry[] => {
+    const today = new Date();
+    const todayMonth = today.getMonth();
+    const todayDay = today.getDate();
+    const todayYear = today.getFullYear();
+
+    return entries.filter((entry) => {
+      const entryDate = new Date(entry.date);
+      return (
+        entryDate.getMonth() === todayMonth &&
+        entryDate.getDate() === todayDay &&
+        entryDate.getFullYear() < todayYear
+      );
+    });
+  }, [entries]);
+
+  return {
+    entries,
+    getOnThisDayEntries,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error,
+    isSuccess: query.isSuccess,
+    refetch: query.refetch,
+    isFetching: query.isFetching,
+    // Infinite scroll specific
+    fetchNextPage: query.fetchNextPage,
+    hasNextPage: query.hasNextPage,
+    isFetchingNextPage: query.isFetchingNextPage,
   };
 }

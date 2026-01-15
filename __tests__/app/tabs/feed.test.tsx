@@ -531,6 +531,113 @@ describe("Feed TanStack Query integration", () => {
   });
 });
 
+// Test infinite scroll (PRD Section 4.1)
+describe("Feed infinite scroll", () => {
+  const { clearAllMockData, entryApi } = require("@/services/api-client");
+  const { QueryClient, QueryClientProvider } = require("@tanstack/react-query");
+  const { useInfiniteEntries } = require("@/hooks/use-entries");
+  const React = require("react");
+
+  function createWrapper() {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false, staleTime: 0 },
+        mutations: { retry: false },
+      },
+    });
+    return ({ children }: { children: React.ReactNode }) =>
+      React.createElement(
+        QueryClientProvider,
+        { client: queryClient },
+        children,
+      );
+  }
+
+  beforeEach(() => {
+    clearAllMockData();
+  });
+
+  it("should load entries with pagination via useInfiniteEntries", async () => {
+    // Create 5 entries
+    for (let i = 1; i <= 5; i++) {
+      await entryApi.createEntry({
+        entry: {
+          type: "photo",
+          date: `2026-01-${String(i).padStart(2, "0")}`,
+          caption: `Entry ${i}`,
+        },
+      });
+    }
+
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useInfiniteEntries({ limit: 2 }), {
+      wrapper,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    // First page should have 2 entries
+    expect(result.current.entries).toHaveLength(2);
+    expect(result.current.hasNextPage).toBe(true);
+  });
+
+  it("should fetch next page when hasNextPage is true", async () => {
+    // Create 4 entries
+    for (let i = 1; i <= 4; i++) {
+      await entryApi.createEntry({
+        entry: {
+          type: "text",
+          date: `2026-01-${String(i).padStart(2, "0")}`,
+          caption: `Entry ${i}`,
+        },
+      });
+    }
+
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useInfiniteEntries({ limit: 2 }), {
+      wrapper,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    expect(result.current.entries).toHaveLength(2);
+    expect(result.current.hasNextPage).toBe(true);
+
+    // Fetch next page
+    await act(async () => {
+      await result.current.fetchNextPage();
+    });
+
+    await waitFor(() => {
+      expect(result.current.entries).toHaveLength(4);
+    });
+
+    expect(result.current.hasNextPage).toBe(false);
+  });
+
+  it("should track isFetchingNextPage state", async () => {
+    await entryApi.createEntry({
+      entry: { type: "photo", date: "2026-01-15", caption: "Entry 1" },
+    });
+
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useInfiniteEntries({ limit: 10 }), {
+      wrapper,
+    });
+
+    // Initially not fetching next page
+    expect(result.current.isFetchingNextPage).toBe(false);
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+  });
+});
+
 // Test camera capture feature (PRD Section 3.2, 3.3)
 describe("Camera capture", () => {
   it("should support launchCameraAsync for photo capture", () => {

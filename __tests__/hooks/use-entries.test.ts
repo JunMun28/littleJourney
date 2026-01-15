@@ -9,6 +9,7 @@ import {
   useUpdateEntry,
   useDeleteEntry,
   useEntriesFlat,
+  useInfiniteEntries,
 } from "@/hooks/use-entries";
 
 // Create wrapper with fresh QueryClient for each test
@@ -282,6 +283,119 @@ describe("useEntries hook", () => {
       expect(
         onThisDay.some((e) => e.caption === "Two years ago same day"),
       ).toBe(true);
+    });
+  });
+
+  describe("useInfiniteEntries", () => {
+    it("should load first page of entries", async () => {
+      // Create entries
+      await entryApi.createEntry({
+        entry: { type: "photo", date: "2024-01-15", caption: "Entry 1" },
+      });
+      await entryApi.createEntry({
+        entry: { type: "text", date: "2024-01-16", caption: "Entry 2" },
+      });
+
+      const { result } = renderHook(() => useInfiniteEntries({ limit: 10 }), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      expect(result.current.entries).toHaveLength(2);
+      expect(result.current.hasNextPage).toBe(false);
+    });
+
+    it("should support fetchNextPage for pagination", async () => {
+      // Create 5 entries
+      for (let i = 1; i <= 5; i++) {
+        await entryApi.createEntry({
+          entry: {
+            type: "text",
+            date: `2024-01-${String(i).padStart(2, "0")}`,
+            caption: `Entry ${i}`,
+          },
+        });
+      }
+
+      const { result } = renderHook(() => useInfiniteEntries({ limit: 2 }), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      // First page: 2 entries
+      expect(result.current.entries).toHaveLength(2);
+      expect(result.current.hasNextPage).toBe(true);
+
+      // Fetch next page
+      await act(async () => {
+        await result.current.fetchNextPage();
+      });
+
+      await waitFor(() => {
+        expect(result.current.entries).toHaveLength(4);
+      });
+
+      // Fetch final page
+      await act(async () => {
+        await result.current.fetchNextPage();
+      });
+
+      await waitFor(() => {
+        expect(result.current.entries).toHaveLength(5);
+      });
+
+      expect(result.current.hasNextPage).toBe(false);
+    });
+
+    it("should provide isFetchingNextPage state", async () => {
+      await entryApi.createEntry({
+        entry: { type: "photo", date: "2024-01-15", caption: "Entry 1" },
+      });
+
+      const { result } = renderHook(() => useInfiniteEntries({ limit: 10 }), {
+        wrapper: createWrapper(),
+      });
+
+      // Initially not fetching next page
+      expect(result.current.isFetchingNextPage).toBe(false);
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+    });
+
+    it("should provide getOnThisDayEntries that works across all pages", async () => {
+      const today = new Date();
+      const todayMonth = String(today.getMonth() + 1).padStart(2, "0");
+      const todayDay = String(today.getDate()).padStart(2, "0");
+      const lastYear = today.getFullYear() - 1;
+
+      // Create memory from last year
+      await entryApi.createEntry({
+        entry: {
+          type: "photo",
+          date: `${lastYear}-${todayMonth}-${todayDay}`,
+          caption: "Memory from last year",
+        },
+      });
+
+      const { result } = renderHook(() => useInfiniteEntries({ limit: 10 }), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      const memories = result.current.getOnThisDayEntries();
+      expect(memories).toHaveLength(1);
+      expect(memories[0].caption).toBe("Memory from last year");
     });
   });
 });
