@@ -25,6 +25,7 @@ import { ThemedView } from "@/components/themed-view";
 import { PhotoCarousel } from "@/components/photo-carousel";
 import { VideoPlayer } from "@/components/video-player";
 import { type Entry, type EntryType } from "@/contexts/entry-context";
+import { useAuth } from "@/contexts/auth-context";
 import { useInfiniteEntries, useCreateEntry } from "@/hooks/use-entries";
 import { useChild } from "@/contexts/child-context";
 import { useStorage, TIER_LIMITS } from "@/contexts/storage-context";
@@ -163,7 +164,16 @@ function EntryCard({ entry, onPress }: EntryCardProps) {
       {entry.caption && (
         <ThemedText style={styles.cardCaption}>{entry.caption}</ThemedText>
       )}
-      <ThemedText style={styles.cardDate}>{formattedDate}</ThemedText>
+      <View style={styles.cardMeta}>
+        {entry.createdByName && (
+          <ThemedText
+            style={[styles.cardAttribution, { color: colors.textSecondary }]}
+          >
+            Posted by {entry.createdByName}
+          </ThemedText>
+        )}
+        <ThemedText style={styles.cardDate}>{formattedDate}</ThemedText>
+      </View>
     </Pressable>
   );
 }
@@ -172,6 +182,7 @@ type CreateStep = "type" | "source" | "caption";
 type MediaSource = "gallery" | "camera";
 
 export default function FeedScreen() {
+  const { user } = useAuth();
   const {
     entries,
     getOnThisDayEntries,
@@ -522,6 +533,8 @@ export default function FeedScreen() {
         caption: caption.trim() || undefined,
         date: dateString,
         tags: tags.length > 0 ? tags : undefined,
+        createdBy: user?.id,
+        createdByName: user?.name || user?.email?.split("@")[0], // Fallback to email prefix
       },
       {
         onSuccess: () => {
@@ -885,9 +898,18 @@ const styles = StyleSheet.create({
     padding: 12,
     paddingBottom: 4,
   },
-  cardDate: {
-    padding: 12,
+  cardMeta: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 12,
     paddingTop: 4,
+    paddingBottom: 12,
+  },
+  cardAttribution: {
+    fontSize: 12,
+  },
+  cardDate: {
     opacity: 0.6,
     fontSize: 14,
   },

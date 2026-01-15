@@ -1715,3 +1715,28 @@
 **Verification:** tsc, lint, test (320 passed), build all pass.
 
 **Next:** Cloudflare Workers backend setup, Stripe SDK integration, or Web Viewer (Phase 2)
+
+## 2026-01-15: Entry Attribution Display ("Posted by")
+
+**PRD ref:** Phase 1 Weeks 5-7, Section 4.2 (Entry Card Display - "Posted by" attribution), Section 3.6 (Entry Ownership)
+
+**Task:** Implement "Posted by" attribution display on entry cards per PRD requirement
+
+**Decisions:**
+- Added `name` optional field to User interface for display name
+- Added `createdByName` field to Entry interface (denormalized for display efficiency)
+- EntryCard shows "Posted by [name]" between caption and date when available
+- Feed passes user.id and user.name (or email prefix fallback) when creating entries
+- Attribution styled with textSecondary color, 12px font size
+- Date and attribution in horizontal flex row layout
+- TDD approach: 3 tests for API entry attribution
+
+**Files changed:**
+- contexts/auth-context.tsx - Added name field to User interface
+- contexts/entry-context.tsx - Added createdByName field to Entry interface
+- app/(tabs)/index.tsx - Added useAuth, passed createdBy/createdByName in createEntry, EntryCard shows attribution
+- __tests__/app/tabs/feed.test.tsx - Added 3 TDD tests for entry attribution
+
+**Verification:** tsc, lint, test (323 passed), build all pass.
+
+**Next:** Cloudflare Workers backend setup, Stripe SDK integration, or Web Viewer (Phase 2)

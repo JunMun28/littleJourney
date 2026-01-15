@@ -749,6 +749,59 @@ describe("Feed draft auto-save", () => {
   });
 });
 
+// Test entry attribution display (PRD Section 4.2, 3.6)
+describe("Entry attribution", () => {
+  const { clearAllMockData, entryApi } = require("@/services/api-client");
+
+  beforeEach(() => {
+    clearAllMockData();
+  });
+
+  it("should include createdByName in entry when created", async () => {
+    const result = await entryApi.createEntry({
+      entry: {
+        type: "photo",
+        date: "2026-01-15",
+        caption: "Test entry",
+        createdBy: "user_123",
+        createdByName: "John Doe",
+      },
+    });
+
+    expect(result.data.createdByName).toBe("John Doe");
+    expect(result.data.createdBy).toBe("user_123");
+  });
+
+  it("should return createdByName when fetching entry", async () => {
+    const createResult = await entryApi.createEntry({
+      entry: {
+        type: "photo",
+        date: "2026-01-15",
+        caption: "Entry with attribution",
+        createdBy: "user_456",
+        createdByName: "Jane Smith",
+      },
+    });
+
+    const fetchResult = await entryApi.getEntry(createResult.data.id);
+
+    expect(fetchResult.data.createdByName).toBe("Jane Smith");
+  });
+
+  it("should handle entries without attribution gracefully", async () => {
+    const result = await entryApi.createEntry({
+      entry: {
+        type: "text",
+        date: "2026-01-15",
+        caption: "Entry without attribution",
+      },
+    });
+
+    expect(result.data.createdByName).toBeUndefined();
+    expect(result.data.createdBy).toBeUndefined();
+  });
+});
+
 // Test photo book birthday prompt (PRD Section 10.1)
 describe("Photo book birthday prompt", () => {
   const combinedWrapper = ({ children }: { children: ReactNode }) => (

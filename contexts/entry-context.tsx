@@ -18,6 +18,7 @@ export interface Entry {
   createdAt: string; // ISO timestamp
   updatedAt: string; // ISO timestamp
   createdBy?: string; // User ID who created (for attribution)
+  createdByName?: string; // Display name for "Posted by" (PRD Section 4.2)
   updatedBy?: string; // User ID who last edited
 }
 

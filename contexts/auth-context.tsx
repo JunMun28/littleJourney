@@ -21,6 +21,7 @@ interface StoredSession {
 export interface User {
   id: string;
   email: string;
+  name?: string; // Display name for attribution (PRD Section 3.6, 4.2)
 }
 
 interface AuthContextValue {
