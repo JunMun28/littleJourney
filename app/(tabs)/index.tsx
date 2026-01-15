@@ -23,11 +23,8 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { PhotoCarousel } from "@/components/photo-carousel";
 import { VideoPlayer } from "@/components/video-player";
-import {
-  useEntries,
-  type Entry,
-  type EntryType,
-} from "@/contexts/entry-context";
+import { type Entry, type EntryType } from "@/contexts/entry-context";
+import { useEntriesFlat, useCreateEntry } from "@/hooks/use-entries";
 import { useChild } from "@/contexts/child-context";
 import { useStorage, TIER_LIMITS } from "@/contexts/storage-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -165,7 +162,9 @@ type CreateStep = "type" | "source" | "caption";
 type MediaSource = "gallery" | "camera";
 
 export default function FeedScreen() {
-  const { entries, addEntry, getOnThisDayEntries } = useEntries();
+  const { entries, getOnThisDayEntries, refetch, isFetching } =
+    useEntriesFlat();
+  const createEntry = useCreateEntry();
   const { child } = useChild();
   const { canUpload, canUploadVideo, addUsage, tier, usedBytes } = useStorage();
   const {
@@ -185,7 +184,6 @@ export default function FeedScreen() {
   const colors = Colors[colorScheme];
   const onThisDayMemories = getOnThisDayEntries();
 
-  const [refreshing, setRefreshing] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [createStep, setCreateStep] = useState<CreateStep>("type");
   const [selectedType, setSelectedType] = useState<EntryType | null>(null);
@@ -283,12 +281,8 @@ export default function FeedScreen() {
   };
 
   const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    // Simulate refresh delay - will be replaced with TanStack Query invalidation
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
-  }, []);
+    refetch();
+  }, [refetch]);
 
   const handleTypeSelect = async (type: EntryType) => {
     setSelectedType(type);
@@ -479,41 +473,49 @@ export default function FeedScreen() {
     // Use entryDate (may be from EXIF or user-selected)
     const dateString = entryDate.toISOString().split("T")[0];
 
-    addEntry({
-      type: selectedType,
-      mediaUris: selectedMedia.length > 0 ? selectedMedia : undefined,
-      caption: caption.trim() || undefined,
-      date: dateString,
-      tags: tags.length > 0 ? tags : undefined,
-    });
+    createEntry.mutate(
+      {
+        type: selectedType,
+        mediaUris: selectedMedia.length > 0 ? selectedMedia : undefined,
+        caption: caption.trim() || undefined,
+        date: dateString,
+        tags: tags.length > 0 ? tags : undefined,
+      },
+      {
+        onSuccess: () => {
+          // Track storage usage for uploaded media and check for threshold warnings (PRD Section 7.1)
+          if (selectedMediaSizes.length > 0) {
+            const totalSize = selectedMediaSizes.reduce(
+              (sum, size) => sum + size,
+              0,
+            );
+            const limitBytes = TIER_LIMITS[tier];
+            const previousPercent = Math.round((usedBytes / limitBytes) * 100);
+            const newPercent = Math.round(
+              ((usedBytes + totalSize) / limitBytes) * 100,
+            );
 
-    // Track storage usage for uploaded media and check for threshold warnings (PRD Section 7.1)
-    if (selectedMediaSizes.length > 0) {
-      const totalSize = selectedMediaSizes.reduce((sum, size) => sum + size, 0);
-      const limitBytes = TIER_LIMITS[tier];
-      const previousPercent = Math.round((usedBytes / limitBytes) * 100);
-      const newPercent = Math.round(
-        ((usedBytes + totalSize) / limitBytes) * 100,
-      );
+            addUsage(totalSize);
 
-      addUsage(totalSize);
+            // Check if we crossed a storage threshold (80%, 90%, 100%)
+            const thresholds = [80, 90, 100];
+            for (const threshold of thresholds) {
+              if (previousPercent < threshold && newPercent >= threshold) {
+                sendStorageWarningNotification(threshold);
+                break; // Only send one notification (the first threshold crossed)
+              }
+            }
+          }
 
-      // Check if we crossed a storage threshold (80%, 90%, 100%)
-      const thresholds = [80, 90, 100];
-      for (const threshold of thresholds) {
-        if (previousPercent < threshold && newPercent >= threshold) {
-          sendStorageWarningNotification(threshold);
-          break; // Only send one notification (the first threshold crossed)
-        }
-      }
-    }
+          // Reset notification frequency to daily (PRD Section 7.3)
+          recordEntryPosted();
 
-    // Reset notification frequency to daily (PRD Section 7.3)
-    recordEntryPosted();
-
-    // Clear draft on successful post (PRD Section 3.5)
-    clearDraft();
-    resetCreation();
+          // Clear draft on successful post (PRD Section 3.5)
+          clearDraft();
+          resetCreation();
+        },
+      },
+    );
   };
 
   return (
@@ -542,7 +544,7 @@ export default function FeedScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={refreshing}
+            refreshing={isFetching}
             onRefresh={onRefresh}
             tintColor={PRIMARY_COLOR}
             colors={[PRIMARY_COLOR]}

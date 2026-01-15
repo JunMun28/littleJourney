@@ -432,6 +432,105 @@ describe("Storage warning notifications", () => {
   });
 });
 
+// Test Feed screen with TanStack Query hooks (migration from EntryContext)
+describe("Feed TanStack Query integration", () => {
+  const { clearAllMockData, entryApi } = require("@/services/api-client");
+  const { QueryClient, QueryClientProvider } = require("@tanstack/react-query");
+  const { useEntriesFlat, useCreateEntry } = require("@/hooks/use-entries");
+  const React = require("react");
+
+  function createWrapper() {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false, staleTime: 0 },
+        mutations: { retry: false },
+      },
+    });
+    return ({ children }: { children: React.ReactNode }) =>
+      React.createElement(
+        QueryClientProvider,
+        { client: queryClient },
+        children,
+      );
+  }
+
+  beforeEach(() => {
+    clearAllMockData();
+  });
+
+  it("should create entry via useCreateEntry mutation", async () => {
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useCreateEntry(), { wrapper });
+
+    await act(async () => {
+      result.current.mutate({
+        type: "photo",
+        date: "2026-01-15",
+        caption: "New entry via TanStack Query",
+        mediaUris: ["file://photo.jpg"],
+        tags: ["test"],
+      });
+    });
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    expect(result.current.data?.caption).toBe("New entry via TanStack Query");
+    expect(result.current.data?.tags).toEqual(["test"]);
+  });
+
+  it("should fetch entries via useEntriesFlat hook", async () => {
+    // Create entries directly via API
+    await entryApi.createEntry({
+      entry: { type: "photo", date: "2026-01-15", caption: "Entry 1" },
+    });
+    await entryApi.createEntry({
+      entry: { type: "text", date: "2026-01-14", caption: "Entry 2" },
+    });
+
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useEntriesFlat(), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    expect(result.current.entries).toHaveLength(2);
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  it("should provide refetch capability for pull-to-refresh", async () => {
+    await entryApi.createEntry({
+      entry: { type: "photo", date: "2026-01-15", caption: "Initial" },
+    });
+
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useEntriesFlat(), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    expect(result.current.entries).toHaveLength(1);
+
+    // Add another entry directly
+    await entryApi.createEntry({
+      entry: { type: "text", date: "2026-01-16", caption: "Added later" },
+    });
+
+    // Refetch and wait for the new data
+    await act(async () => {
+      await result.current.refetch();
+    });
+
+    // Wait for entries to update after refetch
+    await waitFor(() => {
+      expect(result.current.entries).toHaveLength(2);
+    });
+  });
+});
+
 // Test camera capture feature (PRD Section 3.2, 3.3)
 describe("Camera capture", () => {
   it("should support launchCameraAsync for photo capture", () => {

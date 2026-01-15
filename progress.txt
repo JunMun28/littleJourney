@@ -1359,3 +1359,26 @@
 **Verification:** tsc, lint, test (268 passed), build all pass.
 
 **Next:** Integrate useEntriesFlat + useCreateEntry with Feed screen to replace EntryContext usage
+
+## 2026-01-15: Feed Screen TanStack Query Migration
+
+**PRD ref:** Phase 1 Technical Architecture (TanStack Query for server state)
+
+**Task:** Migrate Feed screen from EntryContext to TanStack Query hooks
+
+**Decisions:**
+- Replaced useEntries (context) with useEntriesFlat + useCreateEntry (TanStack Query hooks)
+- useEntriesFlat provides: entries array, getOnThisDayEntries(), refetch, isFetching
+- useCreateEntry.mutate() replaces addEntry() with onSuccess callback for side effects
+- Removed local refreshing state - now uses isFetching from TanStack Query
+- Pull-to-refresh now calls refetch() which invalidates and refetches from API
+- Storage tracking, notification frequency reset, draft clear moved to onSuccess callback
+- EntryContext still exists for type exports (Entry, EntryType, NewEntry)
+
+**Files changed:**
+- app/(tabs)/index.tsx - Replaced context with TanStack Query hooks, updated handlers
+- __tests__/app/tabs/feed.test.tsx - Added 3 TDD integration tests for TanStack Query
+
+**Verification:** tsc, lint, test (271 passed), build all pass.
+
+**Next:** Continue backend API integration, remaining screens migration, or Cloudflare Workers setup
