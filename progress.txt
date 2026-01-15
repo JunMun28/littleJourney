@@ -1633,3 +1633,34 @@
 **Verification:** tsc, lint, test (312 passed), build all pass. UI verified via Chrome MCP.
 
 **Next:** Cloudflare Workers backend setup, Stripe SDK integration, or Web Viewer (Phase 2)
+
+## 2026-01-15: EAS Build Configuration Setup
+
+**PRD ref:** Phase 1 Week 14 (Launch - App Store + Play Store submission)
+
+**Task:** Set up EAS Build configuration for development, preview, and production builds
+
+**Decisions:**
+- Created eas.json with 3 build profiles: development, preview, production
+- development: simulator builds with dev client, mock API enabled
+- preview: internal distribution for testing, mock API enabled
+- production: auto-increment version, app-bundle for Android, mock API disabled
+- Submit config uses env vars for Apple credentials (APPLE_ID, ASC_APP_ID, APPLE_TEAM_ID)
+- Android submit uses Google service account JSON file
+- app.json updated with iOS bundleIdentifier and Android package: sg.littlejourney.app
+- Added iOS infoPlist with camera/photo library usage descriptions
+- Added Android permissions for camera and media access
+- App name changed to "Little Journey" (display name)
+- Added runtimeVersion policy: appVersion for EAS Update compatibility
+- Added EAS Update config with placeholder projectId
+- Added EAS CLI (eas-cli) as dev dependency
+- Added npm scripts: build:dev, build:preview, build:prod, submit:ios, submit:android, update
+
+**Files changed:**
+- eas.json - New: EAS Build configuration with 3 profiles + submit config
+- app.json - Added bundleIdentifier, package, permissions, infoPlist, runtimeVersion, updates config
+- package.json - Added eas-cli dev dependency, 6 new npm scripts for EAS
+
+**Verification:** tsc, lint, test (312 passed), build all pass.
+
+**Next:** Run `eas init` to get actual projectId, Cloudflare Workers backend setup, or Stripe SDK integration
