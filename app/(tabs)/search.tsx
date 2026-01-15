@@ -12,11 +12,8 @@ import { useRouter } from "expo-router";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import {
-  useEntries,
-  type Entry,
-  type EntryType,
-} from "@/contexts/entry-context";
+import { useEntriesFlat } from "@/hooks/use-entries";
+import { type Entry, type EntryType } from "@/contexts/entry-context";
 import { PRIMARY_COLOR, Colors, Spacing, Shadows } from "@/constants/theme";
 
 type FilterType = "all" | EntryType;
@@ -124,7 +121,7 @@ function SearchResultCard({ entry, onPress, colors }: SearchResultCardProps) {
 
 export default function SearchScreen() {
   const router = useRouter();
-  const { entries } = useEntries();
+  const { entries } = useEntriesFlat();
   const [query, setQuery] = useState("");
   const [filterType, setFilterType] = useState<FilterType>("all");
   const colorScheme = useColorScheme() ?? "light";

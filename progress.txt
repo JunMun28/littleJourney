@@ -1407,3 +1407,26 @@
 **Verification:** tsc, lint, test (274 passed), build all pass.
 
 **Next:** Continue remaining screens migration (Search, Settings) or Cloudflare Workers backend setup
+
+## 2026-01-15: Search Screen TanStack Query Migration
+
+**PRD ref:** Phase 1 Technical Architecture (TanStack Query for server state)
+
+**Task:** Migrate Search screen from EntryContext to TanStack Query hooks
+
+**Decisions:**
+- Replaced useEntries (context) with useEntriesFlat (TanStack Query hook)
+- useEntriesFlat provides entries array for client-side filtering
+- Search filtering logic unchanged (caption + tags text search)
+- Type filter logic unchanged (all/photo/video/text)
+- Tests updated from EntryProvider to QueryClientProvider wrapper
+- Tests use entryApi.createEntry() directly for setup instead of context helper
+- Added 2 new tests: loading state, tag search
+
+**Files changed:**
+- app/(tabs)/search.tsx - Replaced context with useEntriesFlat hook
+- __tests__/app/tabs/search.test.tsx - Updated to use QueryClientProvider, added 2 tests
+
+**Verification:** tsc, lint, test (276 passed), build all pass.
+
+**Next:** Settings screen TanStack Query migration (family, child hooks) or Cloudflare Workers backend setup
