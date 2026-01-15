@@ -18,6 +18,7 @@ import DateTimePicker, {
   type DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
+import * as Linking from "expo-linking";
 import { router } from "expo-router";
 import { useAuth } from "@/contexts/auth-context";
 import { type CulturalTradition } from "@/contexts/child-context";
@@ -851,6 +852,41 @@ export default function SettingsScreen() {
         <Text style={[styles.exportDescription, { color: colors.textMuted }]}>
           Export all your entries, milestones, and child data as a JSON file.
         </Text>
+      </View>
+
+      {/* Legal Section */}
+      <View style={[styles.section, { backgroundColor: colors.card }]}>
+        <Text style={[styles.sectionHeader, { color: colors.textSecondary }]}>
+          Legal
+        </Text>
+
+        <Pressable
+          style={[styles.legalLink, { borderBottomColor: colors.border }]}
+          onPress={() =>
+            Linking.openURL("https://littlejourney.sg/privacy-policy")
+          }
+        >
+          <Text style={[styles.legalLinkText, { color: colors.text }]}>
+            Privacy Policy
+          </Text>
+          <Text style={[styles.legalLinkArrow, { color: colors.textMuted }]}>
+            →
+          </Text>
+        </Pressable>
+
+        <Pressable
+          style={styles.legalLink}
+          onPress={() =>
+            Linking.openURL("https://littlejourney.sg/terms-of-service")
+          }
+        >
+          <Text style={[styles.legalLinkText, { color: colors.text }]}>
+            Terms of Service
+          </Text>
+          <Text style={[styles.legalLinkArrow, { color: colors.textMuted }]}>
+            →
+          </Text>
+        </Pressable>
       </View>
 
       {/* Account Section */}
@@ -1927,6 +1963,20 @@ const styles = StyleSheet.create({
     color: "#999",
     marginTop: 8,
     textAlign: "center",
+  },
+  // Legal styles
+  legalLink: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  legalLinkText: {
+    fontSize: 16,
+  },
+  legalLinkArrow: {
+    fontSize: 16,
   },
   // Account deletion styles
   deleteAccountButton: {

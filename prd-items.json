@@ -6,7 +6,7 @@
   "totalItems": 98,
   "categories": [
     "Authentication",
-    "Onboarding", 
+    "Onboarding",
     "Child Management",
     "Entry Creation",
     "Timeline & Feed",
@@ -1349,7 +1349,7 @@
         "Verify document loads"
       ],
       "acceptanceCriteria": "Privacy Policy accessible from app",
-      "passes": false
+      "passes": true
     },
     {
       "id": "LEGAL-002",
@@ -1361,7 +1361,7 @@
         "Verify document loads"
       ],
       "acceptanceCriteria": "Terms of Service accessible from app",
-      "passes": false
+      "passes": true
     },
     {
       "id": "ANALYTICS-001",

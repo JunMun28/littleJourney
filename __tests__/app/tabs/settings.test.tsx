@@ -70,6 +70,11 @@ jest.mock("expo-sharing", () => ({
   shareAsync: jest.fn().mockResolvedValue(undefined),
 }));
 
+// Mock expo-linking
+jest.mock("expo-linking", () => ({
+  openURL: jest.fn().mockResolvedValue(undefined),
+}));
+
 // Create fresh QueryClient for each test
 function createTestQueryClient() {
   return new QueryClient({
@@ -382,5 +387,72 @@ describe("SettingsScreen - Child Profile with Data", () => {
     await waitFor(() => {
       expect(screen.getByText("Chinese tradition")).toBeTruthy();
     });
+  });
+});
+
+describe("SettingsScreen - Legal Section", () => {
+  beforeEach(async () => {
+    clearAllMockData();
+    jest.clearAllMocks();
+  });
+
+  it("renders Legal section header", async () => {
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Legal")).toBeTruthy();
+    });
+  });
+
+  it("renders Privacy Policy link", async () => {
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Privacy Policy")).toBeTruthy();
+    });
+  });
+
+  it("renders Terms of Service link", async () => {
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Terms of Service")).toBeTruthy();
+    });
+  });
+
+  it("opens Privacy Policy URL when tapped", async () => {
+    const mockOpenURL = jest.fn();
+    jest
+      .spyOn(require("expo-linking"), "openURL")
+      .mockImplementation(mockOpenURL);
+
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Privacy Policy")).toBeTruthy();
+    });
+
+    fireEvent.press(screen.getByText("Privacy Policy"));
+
+    expect(mockOpenURL).toHaveBeenCalledWith(
+      expect.stringContaining("privacy"),
+    );
+  });
+
+  it("opens Terms of Service URL when tapped", async () => {
+    const mockOpenURL = jest.fn();
+    jest
+      .spyOn(require("expo-linking"), "openURL")
+      .mockImplementation(mockOpenURL);
+
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Terms of Service")).toBeTruthy();
+    });
+
+    fireEvent.press(screen.getByText("Terms of Service"));
+
+    expect(mockOpenURL).toHaveBeenCalledWith(expect.stringContaining("terms"));
   });
 });

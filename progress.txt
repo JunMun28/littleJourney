@@ -1816,3 +1816,26 @@
 **Verification:** tsc, lint, test (351 passed), build all pass.
 
 **Next:** Cloudflare Workers backend setup, Stripe SDK integration, or Web Viewer (Phase 2)
+
+## 2026-01-15: Privacy Policy and Terms of Service Links
+
+**PRD ref:** Section 17 (Legal & Compliance), LEGAL-001, LEGAL-002
+
+**Task:** Add Privacy Policy and Terms of Service links to Settings screen
+
+**Decisions:**
+- Added expo-linking import for opening external URLs
+- Created Legal section between Data & Privacy and Account sections
+- Privacy Policy link opens https://littlejourney.sg/privacy-policy
+- Terms of Service link opens https://littlejourney.sg/terms-of-service
+- Consistent styling with other settings rows (flexbox, arrow indicator)
+- Dynamic colors using theme system for light/dark mode support
+- TDD approach: 5 tests for Legal section (render + tap handling)
+
+**Files changed:**
+- app/(tabs)/settings.tsx - Added expo-linking import, Legal section with links, styles
+- __tests__/app/tabs/settings.test.tsx - Added expo-linking mock, 5 TDD tests for Legal section
+
+**Verification:** tsc, lint, test (356 passed), build all pass.
+
+**Next:** Cloudflare Workers backend setup, Stripe SDK integration, or Web Viewer (Phase 2)
