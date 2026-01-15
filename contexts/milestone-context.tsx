@@ -170,7 +170,7 @@ interface MilestoneContextValue {
   milestones: Milestone[];
   completedMilestones: Milestone[];
   upcomingMilestones: Milestone[];
-  addMilestone: (input: AddMilestoneInput) => void;
+  addMilestone: (input: AddMilestoneInput) => Milestone;
   completeMilestone: (id: string, input: CompleteMilestoneInput) => void;
   deleteMilestone: (id: string) => void;
   getMilestonesForChild: (childId: string) => Milestone[];
@@ -195,7 +195,7 @@ export function MilestoneProvider({ children }: MilestoneProviderProps) {
     [milestones],
   );
 
-  const addMilestone = useCallback((input: AddMilestoneInput) => {
+  const addMilestone = useCallback((input: AddMilestoneInput): Milestone => {
     const now = new Date().toISOString();
     const newMilestone: Milestone = {
       id: `milestone-${Date.now()}`,
@@ -209,6 +209,7 @@ export function MilestoneProvider({ children }: MilestoneProviderProps) {
       updatedAt: now,
     };
     setMilestones((prev) => [...prev, newMilestone]);
+    return newMilestone;
   }, []);
 
   const completeMilestone = useCallback(

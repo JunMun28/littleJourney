@@ -21,6 +21,7 @@ import {
   type MilestoneTemplate,
 } from "@/contexts/milestone-context";
 import { useChild } from "@/contexts/child-context";
+import { useNotifications } from "@/contexts/notification-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
   PRIMARY_COLOR,
@@ -45,6 +46,11 @@ export default function MilestonesScreen() {
     deleteMilestone,
   } = useMilestones();
   const { child } = useChild();
+  const { scheduleMilestoneReminder, cancelMilestoneReminder } =
+    useNotifications();
+
+  // Default days before milestone to send reminder (PRD Section 7.1)
+  const REMINDER_DAYS_BEFORE = 7;
 
   const [modalState, setModalState] = useState<ModalState>("closed");
   const [customTitle, setCustomTitle] = useState("");
@@ -72,7 +78,7 @@ export default function MilestonesScreen() {
     );
   }, [child?.culturalTradition]);
 
-  const handleAddFromTemplate = (template: MilestoneTemplate) => {
+  const handleAddFromTemplate = async (template: MilestoneTemplate) => {
     if (!child) return;
 
     // Calculate date if daysFromBirth is specified
@@ -83,23 +89,46 @@ export default function MilestonesScreen() {
       date.setDate(birthDate.getDate() + template.daysFromBirth);
     }
 
-    addMilestone({
+    const milestoneDateStr = date.toISOString().split("T")[0];
+
+    const newMilestone = addMilestone({
       templateId: template.id,
       childId: "child-1", // TODO: Get from child context
-      milestoneDate: date.toISOString().split("T")[0],
+      milestoneDate: milestoneDateStr,
     });
+
+    // Schedule reminder notification (PRD 7.1)
+    await scheduleMilestoneReminder(
+      newMilestone.id,
+      template.title,
+      milestoneDateStr,
+      REMINDER_DAYS_BEFORE,
+    );
+
     setModalState("closed");
   };
 
-  const handleAddCustom = () => {
+  const handleAddCustom = async () => {
     if (!customTitle.trim()) return;
 
-    addMilestone({
+    const milestoneDateStr = milestoneDate.toISOString().split("T")[0];
+    const title = customTitle.trim();
+
+    const newMilestone = addMilestone({
       childId: "child-1", // TODO: Get from child context
-      milestoneDate: milestoneDate.toISOString().split("T")[0],
-      customTitle: customTitle.trim(),
+      milestoneDate: milestoneDateStr,
+      customTitle: title,
       customDescription: customDescription.trim() || undefined,
     });
+
+    // Schedule reminder notification (PRD 7.1)
+    await scheduleMilestoneReminder(
+      newMilestone.id,
+      title,
+      milestoneDateStr,
+      REMINDER_DAYS_BEFORE,
+    );
+
     setModalState("closed");
     setCustomTitle("");
     setCustomDescription("");
@@ -113,22 +142,30 @@ export default function MilestonesScreen() {
     setModalState("complete");
   };
 
-  const handleCompleteMilestone = () => {
+  const handleCompleteMilestone = async () => {
     if (!selectedMilestone) return;
 
     completeMilestone(selectedMilestone.id, {
       celebrationDate: celebrationDate.toISOString().split("T")[0],
       notes: completionNotes.trim() || undefined,
     });
+
+    // Cancel reminder notification since milestone is completed (PRD 7.1)
+    await cancelMilestoneReminder(selectedMilestone.id);
+
     setModalState("closed");
     setSelectedMilestone(null);
     setCompletionNotes("");
   };
 
-  const handleDeleteMilestone = () => {
+  const handleDeleteMilestone = async () => {
     if (!selectedMilestone) return;
 
     deleteMilestone(selectedMilestone.id);
+
+    // Cancel reminder notification since milestone is deleted (PRD 7.1)
+    await cancelMilestoneReminder(selectedMilestone.id);
+
     setModalState("closed");
     setSelectedMilestone(null);
     setCompletionNotes("");

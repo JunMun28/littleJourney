@@ -1155,3 +1155,28 @@
 **Verification:** tsc, lint, test (203 passed), build all pass.
 
 **Next:** Integrate milestone reminder with MilestoneContext addMilestone, Backend API, or Web Viewer (Phase 2)
+
+## 2026-01-15: Milestone Reminder Notification Integration
+
+**PRD ref:** Phase 1 Weeks 10-11, Section 7.1 (Milestone Reminder integration with MilestoneContext)
+
+**Task:** Integrate milestone reminder scheduling with milestone add/complete/delete in milestones.tsx
+
+**Decisions:**
+- Integration happens at UI level (milestones.tsx) where both contexts are available
+- MilestoneContext.addMilestone now returns the created Milestone (was void)
+- handleAddFromTemplate: calls scheduleMilestoneReminder after addMilestone
+- handleAddCustom: calls scheduleMilestoneReminder with custom title after addMilestone
+- handleCompleteMilestone: calls cancelMilestoneReminder when milestone completed
+- handleDeleteMilestone: calls cancelMilestoneReminder when milestone deleted
+- Default REMINDER_DAYS_BEFORE = 7 (reminder 7 days before milestone)
+- Handlers now async to await notification scheduling
+
+**Files changed:**
+- contexts/milestone-context.tsx - addMilestone now returns Milestone instead of void
+- app/(tabs)/milestones.tsx - Added useNotifications, integrated schedule/cancel reminders in handlers
+- __tests__/app/tabs/milestones.test.tsx - Added 4 TDD tests for reminder integration, added notification mocks
+
+**Verification:** tsc, lint, test (207 passed), build all pass.
+
+**Next:** Backend API integration, Stripe SDK, or Web Viewer (Phase 2)
