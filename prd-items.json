@@ -1374,7 +1374,7 @@
         "Verify entry_created event"
       ],
       "acceptanceCriteria": "Core user actions tracked in analytics",
-      "passes": false
+      "passes": true
     },
     {
       "id": "ANALYTICS-002",

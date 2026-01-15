@@ -16,6 +16,12 @@ import {
   clearUserContext,
   addBreadcrumb,
 } from "@/services/sentry";
+import {
+  initAnalytics,
+  identifyUser,
+  resetUser,
+  trackScreenView,
+} from "@/services/analytics";
 import { OfflineBanner } from "@/components/offline-banner";
 import { QueryProvider } from "@/providers/query-provider";
 import { AppStateProvider } from "@/providers/app-state-provider";
@@ -36,7 +42,7 @@ function RootLayoutNav() {
     useAuth();
   const segments = useSegments();
 
-  // Set/clear Sentry user context when auth state changes
+  // Set/clear Sentry and PostHog user context when auth state changes
   useEffect(() => {
     if (user) {
       setUserContext({
@@ -44,19 +50,26 @@ function RootLayoutNav() {
         email: user.email,
         username: user.name,
       });
+      identifyUser(user.id, {
+        email: user.email ?? null,
+        name: user.name ?? null,
+      });
     } else {
       clearUserContext();
+      resetUser();
     }
   }, [user]);
 
-  // Add navigation breadcrumbs for debugging
+  // Add navigation breadcrumbs and track screen views
   useEffect(() => {
     if (segments.length > 0) {
+      const screenName = segments.join("/");
       addBreadcrumb({
         category: "navigation",
-        message: `Navigated to ${segments.join("/")}`,
+        message: `Navigated to ${screenName}`,
         level: "info",
       });
+      trackScreenView(screenName);
     }
   }, [segments]);
 
@@ -103,8 +116,9 @@ const styles = StyleSheet.create({
   },
 });
 
-// Initialize Sentry as early as possible (outside component render)
+// Initialize Sentry and PostHog as early as possible (outside component render)
 initSentry();
+initAnalytics();
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();

@@ -39,6 +39,7 @@ import {
   SemanticColors,
   Shadows,
 } from "@/constants/theme";
+import { trackEvent, AnalyticsEvent } from "@/services/analytics";
 
 function EmptyState() {
   return (
@@ -583,6 +584,14 @@ export default function FeedScreen() {
 
           // Reset notification frequency to daily (PRD Section 7.3)
           recordEntryPosted();
+
+          // Track entry creation (PRD Section 18 - ANALYTICS-001)
+          trackEvent(AnalyticsEvent.ENTRY_CREATED, {
+            type: selectedType,
+            hasCaption: caption.trim().length > 0,
+            hasMedia: selectedMedia.length > 0,
+            tagCount: tags.length,
+          });
 
           // Clear draft on successful post (PRD Section 3.5)
           clearDraft();

@@ -15,6 +15,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useAuth } from "@/contexts/auth-context";
 import { Colors, PRIMARY_COLOR, Spacing } from "@/constants/theme";
+import { trackEvent, AnalyticsEvent } from "@/services/analytics";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -51,6 +52,7 @@ export default function SignInScreen() {
       // Auto sign-in after short delay for demo purposes
       setTimeout(async () => {
         await signIn(email);
+        trackEvent(AnalyticsEvent.SIGNUP_COMPLETED, { method: "magic_link" });
       }, 1500);
     } catch {
       setError("Failed to send magic link. Please try again.");
@@ -65,6 +67,7 @@ export default function SignInScreen() {
     try {
       // TODO: In production, initiate OAuth flow
       await signIn(`${provider}@demo.littlejourney.sg`);
+      trackEvent(AnalyticsEvent.SIGNUP_COMPLETED, { method: provider });
     } catch {
       setError(`Failed to sign in with ${provider}. Please try again.`);
     } finally {

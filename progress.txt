@@ -2072,3 +2072,37 @@
 **Verification:** tsc, lint, test (406 passed), build all pass.
 
 **Next:** Continue remaining PRD items: ANALYTICS-001 (PostHog events), MOBILE-001 (app launch perf), backend integration
+
+## 2026-01-16: PostHog Analytics Integration (ANALYTICS-001)
+
+**PRD ref:** Phase 1, Section 18 (Analytics), ANALYTICS-001
+
+**Task:** Implement PostHog analytics for core event tracking per PRD requirement
+
+**Decisions:**
+- Installed posthog-react-native for React Native event tracking
+- Created services/analytics.ts with typed API similar to Sentry service pattern
+- AnalyticsEvent enum for type-safe event names: signup_completed, entry_created, etc.
+- initAnalytics() called at module level in _layout.tsx (earliest possible)
+- PostHog API key loaded from: Constants.expoConfig.extra.posthogApiKey OR EXPO_PUBLIC_POSTHOG_API_KEY env var
+- enableInDev option allows testing in development (disabled by default)
+- identifyUser() called on auth state change for user identification
+- resetUser() called on logout to clear PostHog session
+- trackScreenView() called on navigation segment change for automatic screen tracking
+- signup_completed tracked in sign-in.tsx after magic link/OAuth sign-in
+- entry_created tracked in Feed handleSubmit with properties: type, hasCaption, hasMedia, tagCount
+- PostHogEventProperties type from @posthog/core for type-safe properties
+- TDD approach: 13 tests for analytics service
+
+**Files changed:**
+- package.json - Added posthog-react-native dependency
+- services/analytics.ts - New: PostHog initialization and event tracking API
+- app/_layout.tsx - Integrated analytics init, identifyUser/resetUser on auth, trackScreenView on navigation
+- app/(auth)/sign-in.tsx - Track signup_completed on sign-in
+- app/(tabs)/index.tsx - Track entry_created in handleSubmit onSuccess
+- __tests__/services/analytics.test.ts - New: 13 TDD tests for analytics service
+- prd-items.json - Updated ANALYTICS-001 to passes: true
+
+**Verification:** tsc, lint, test (419 passed), build all pass.
+
+**Next:** Continue remaining PRD items: MOBILE-001 (app launch perf), backend integration (AUTH, SHARE, VIDEO, PAY), Web Viewer (Phase 2)
