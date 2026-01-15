@@ -2495,3 +2495,37 @@
 **Verification:** tsc, lint, test (610 passed), build all pass.
 
 **Next:** Continue remaining PRD items: SHARE-002-004 (Web Viewer), SEARCH-002 (AI semantic search), WEBVIEW-001/002
+
+
+## 2026-01-16: Semantic Search in Images (SEARCH-002)
+
+**PRD ref:** Phase 1 Weeks 8-9, Section 8 (Search & Discovery), SEARCH-002
+
+**Task:** Implement AI-powered semantic image search to find entries by visual content
+
+**Decisions:**
+- Created image-analysis.ts service with mock mode (useMock default true)
+- Mock generates contextual labels based on filename hints (beach, baby, park, etc.)
+- Real API would call Cloudflare Workers AI or similar vision API
+- Added aiLabels field to Entry interface for storing AI-detected labels
+- Search relevance scoring updated: AI_LABEL_EXACT (25), AI_LABEL_CONTAINS (12)
+- AI labels rank between caption matches and tags
+- Created useImageAnalysis hook with state (isAnalyzing, labels, error)
+- Image analysis runs async when photos selected, parallel with caption writing
+- Visual indicator "Analyzing photo content..." during analysis
+- TDD approach: 12 service tests, 6 hook tests, 7 search relevance tests = 25 new tests
+
+**Files changed:**
+- services/image-analysis.ts - New: AI image analysis service with mock
+- hooks/use-image-analysis.ts - New: React hook for image analysis state
+- contexts/entry-context.tsx - Added aiLabels field to Entry interface
+- utils/search-relevance.ts - Added AI_LABEL_EXACT/CONTAINS scoring
+- app/(tabs)/index.tsx - Integrated useImageAnalysis, added analysis indicator
+- __tests__/services/image-analysis.test.ts - New: 12 TDD tests
+- __tests__/hooks/use-image-analysis.test.ts - New: 6 TDD tests
+- __tests__/utils/search-relevance.test.ts - Added 7 AI label tests
+- prd-items.json - Updated SEARCH-002 to passes: true
+
+**Verification:** tsc, lint, test (636 passed), build all pass.
+
+**Next:** Continue remaining PRD items: SHARE-002-004 (Web Viewer magic links), WEBVIEW-001/002 (Web Viewer app - separate TanStack Start project)

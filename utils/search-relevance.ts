@@ -8,6 +8,8 @@ const SCORE_WEIGHTS = {
   CAPTION_CONTAINS: 15, // Match anywhere in caption
   TAG_EXACT: 20, // Exact tag match
   TAG_CONTAINS: 10, // Partial tag match
+  AI_LABEL_EXACT: 25, // Exact AI label match (SEARCH-002)
+  AI_LABEL_CONTAINS: 12, // Partial AI label match (SEARCH-002)
 };
 
 /**
@@ -54,6 +56,17 @@ export function calculateRelevanceScore(entry: Entry, query: string): number {
       score += SCORE_WEIGHTS.TAG_EXACT;
     } else if (tagLower.includes(searchTerm)) {
       score += SCORE_WEIGHTS.TAG_CONTAINS;
+    }
+  }
+
+  // Score AI label matches (SEARCH-002)
+  const aiLabels = entry.aiLabels ?? [];
+  for (const label of aiLabels) {
+    const labelLower = label.toLowerCase();
+    if (labelLower === searchTerm) {
+      score += SCORE_WEIGHTS.AI_LABEL_EXACT;
+    } else if (labelLower.includes(searchTerm)) {
+      score += SCORE_WEIGHTS.AI_LABEL_CONTAINS;
     }
   }
 

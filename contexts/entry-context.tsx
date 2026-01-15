@@ -16,6 +16,7 @@ export interface Entry {
   caption?: string;
   date: string; // ISO date string (YYYY-MM-DD)
   tags?: string[];
+  aiLabels?: string[]; // AI-generated labels from image analysis (SEARCH-002)
   milestoneId?: string; // Reference to linked milestone (PRD SEARCH-005)
   createdAt: string; // ISO timestamp
   updatedAt: string; // ISO timestamp

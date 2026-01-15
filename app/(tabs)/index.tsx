@@ -21,6 +21,7 @@ import { router } from "expo-router";
 import { extractDateFromExif, type ExifData } from "@/utils/exif-date";
 import { useRateLimit } from "@/hooks/use-rate-limit";
 import { useVideoUpload } from "@/hooks/use-video-upload";
+import { useImageAnalysis } from "@/hooks/use-image-analysis";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -222,6 +223,12 @@ export default function FeedScreen() {
     uploadVideoFile,
     resetUploadState: resetVideoUploadState,
   } = useVideoUpload();
+  const {
+    isAnalyzing: isAnalyzingImages,
+    labels: aiLabels,
+    analyzeImages,
+    reset: resetImageAnalysis,
+  } = useImageAnalysis();
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
   const onThisDayMemories = getOnThisDayEntries();
@@ -347,6 +354,7 @@ export default function FeedScreen() {
     setTags([]);
     setTagInput("");
     resetVideoUploadState();
+    resetImageAnalysis();
   };
 
   const onRefresh = useCallback(() => {
@@ -532,7 +540,8 @@ export default function FeedScreen() {
       return;
     }
 
-    setSelectedMedia(assets.map((a) => a.uri));
+    const imageUris = assets.map((a) => a.uri);
+    setSelectedMedia(imageUris);
     setSelectedMediaSizes(assets.map((a) => a.fileSize ?? 0));
 
     // Extract date from first photo's EXIF (PRD Section 3.4)
@@ -543,6 +552,10 @@ export default function FeedScreen() {
     } else {
       setEntryDate(new Date());
     }
+
+    // Analyze images for AI labels (SEARCH-002)
+    // This runs async in the background while user writes caption
+    analyzeImages(imageUris);
 
     setCreateStep("caption");
   };
@@ -590,6 +603,7 @@ export default function FeedScreen() {
         caption: caption.trim() || undefined,
         date: dateString,
         tags: tags.length > 0 ? tags : undefined,
+        aiLabels: aiLabels.length > 0 ? aiLabels : undefined, // AI labels for semantic search (SEARCH-002)
         createdBy: user?.id,
         createdByName: user?.name || user?.email?.split("@")[0], // Fallback to email prefix
       },
@@ -911,6 +925,21 @@ export default function FeedScreen() {
                 />
               </View>
 
+              {/* AI image analysis indicator (SEARCH-002) */}
+              {isAnalyzingImages && selectedType === "photo" && (
+                <View style={styles.aiAnalysisIndicator}>
+                  <ActivityIndicator size="small" color={PRIMARY_COLOR} />
+                  <ThemedText
+                    style={[
+                      styles.aiAnalysisText,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    Analyzing photo content...
+                  </ThemedText>
+                </View>
+              )}
+
               {/* Video upload progress indicator (VIDEO-001) */}
               {videoUploadState.isUploading && (
                 <View style={styles.uploadProgressContainer}>
@@ -1168,6 +1197,17 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 14,
     opacity: 0.8,
+  },
+  aiAnalysisIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+    paddingVertical: 8,
+  },
+  aiAnalysisText: {
+    marginLeft: 8,
+    fontSize: 14,
   },
   onThisDayCard: {
     backgroundColor: SemanticColors.goldLight,

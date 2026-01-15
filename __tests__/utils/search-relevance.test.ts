@@ -5,7 +5,12 @@ import {
 import type { Entry } from "@/contexts/entry-context";
 
 // Helper to create a minimal entry for testing
-function createTestEntry(id: string, caption: string, tags?: string[]): Entry {
+function createTestEntry(
+  id: string,
+  caption: string,
+  tags?: string[],
+  aiLabels?: string[],
+): Entry {
   const now = new Date().toISOString();
   return {
     id,
@@ -17,6 +22,7 @@ function createTestEntry(id: string, caption: string, tags?: string[]): Entry {
     createdBy: "user1",
     mediaUris: ["test.jpg"],
     tags,
+    aiLabels,
   };
 }
 
@@ -85,6 +91,52 @@ describe("calculateRelevanceScore", () => {
     });
   });
 
+  describe("AI label matching (SEARCH-002)", () => {
+    it("returns score for AI label match", () => {
+      const entry = createTestEntry("1", "photo", [], ["beach", "ocean"]);
+      const score = calculateRelevanceScore(entry, "beach");
+      expect(score).toBeGreaterThan(0);
+    });
+
+    it("returns higher score for exact AI label match", () => {
+      const entryExact = createTestEntry("1", "photo", [], ["beach"]);
+      const entryPartial = createTestEntry("2", "photo", [], ["beachfront"]);
+
+      const scoreExact = calculateRelevanceScore(entryExact, "beach");
+      const scorePartial = calculateRelevanceScore(entryPartial, "beach");
+
+      expect(scoreExact).toBeGreaterThan(scorePartial);
+    });
+
+    it("matches AI labels case insensitively", () => {
+      const entry = createTestEntry("1", "photo", [], ["Beach", "OCEAN"]);
+      const score = calculateRelevanceScore(entry, "beach");
+      expect(score).toBeGreaterThan(0);
+    });
+
+    it("adds scores from multiple AI label matches", () => {
+      const entryMultiple = createTestEntry(
+        "1",
+        "photo",
+        [],
+        ["beach", "sandy beach"],
+      );
+      const entrySingle = createTestEntry("2", "photo", [], ["beach"]);
+
+      const scoreMultiple = calculateRelevanceScore(entryMultiple, "beach");
+      const scoreSingle = calculateRelevanceScore(entrySingle, "beach");
+
+      expect(scoreMultiple).toBeGreaterThan(scoreSingle);
+    });
+
+    it("handles entries with undefined aiLabels", () => {
+      const entry = createTestEntry("1", "beach day", []);
+      // aiLabels is undefined
+      const score = calculateRelevanceScore(entry, "beach");
+      expect(score).toBeGreaterThan(0); // Still matches caption
+    });
+  });
+
   describe("combined scoring", () => {
     it("adds scores from multiple matches", () => {
       const entryBoth = createTestEntry("1", "beach day", ["beach"]);
@@ -100,6 +152,19 @@ describe("calculateRelevanceScore", () => {
       const entry = createTestEntry("1", "beach day with family");
       const score = calculateRelevanceScore(entry, "beach day");
       expect(score).toBeGreaterThan(0);
+    });
+
+    it("combines caption, tag, and AI label scores", () => {
+      const entryAll = createTestEntry("1", "beach day", ["beach"], ["beach"]);
+      const entryTwo = createTestEntry("2", "beach day", ["beach"]);
+      const entryOne = createTestEntry("3", "beach day", []);
+
+      const scoreAll = calculateRelevanceScore(entryAll, "beach");
+      const scoreTwo = calculateRelevanceScore(entryTwo, "beach");
+      const scoreOne = calculateRelevanceScore(entryOne, "beach");
+
+      expect(scoreAll).toBeGreaterThan(scoreTwo);
+      expect(scoreTwo).toBeGreaterThan(scoreOne);
     });
   });
 });
@@ -172,5 +237,31 @@ describe("sortByRelevance", () => {
 
     const sorted = sortByRelevance([entry], "beach");
     expect(sorted).toHaveLength(1);
+  });
+
+  it("finds entries by AI labels only (SEARCH-002)", () => {
+    const entries = [
+      createTestEntry("1", "photo", [], ["beach", "ocean", "sunset"]),
+      createTestEntry("2", "park day", [], []),
+    ];
+
+    const sorted = sortByRelevance(entries, "beach");
+
+    expect(sorted).toHaveLength(1);
+    expect(sorted[0].id).toBe("1");
+  });
+
+  it("ranks entries with AI labels appropriately in mixed results", () => {
+    const entries = [
+      createTestEntry("1", "photo", [], ["beach"]), // AI label only
+      createTestEntry("2", "beach day", [], []), // Caption match
+      createTestEntry("3", "photo", ["beach"], []), // Tag only
+    ];
+
+    const sorted = sortByRelevance(entries, "beach");
+
+    expect(sorted).toHaveLength(3);
+    // Caption match should rank higher than AI label or tag
+    expect(sorted[0].id).toBe("2");
   });
 });
