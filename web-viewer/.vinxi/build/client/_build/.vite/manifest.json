@@ -1,0 +1,44 @@
+{
+  "_client-BXl7ZxVm.js": {
+    "file": "assets/client-BXl7ZxVm.js",
+    "name": "client",
+    "dynamicImports": [
+      "src/routes/index.tsx?tsr-split",
+      "src/routes/view/$token.tsx?tsr-split"
+    ],
+    "css": [
+      "assets/client-CaYapVRU.css"
+    ]
+  },
+  "_client-CaYapVRU.css": {
+    "file": "assets/client-CaYapVRU.css",
+    "src": "_client-CaYapVRU.css"
+  },
+  "src/routes/index.tsx?tsr-split": {
+    "file": "assets/index-BQdxFPlH.js",
+    "name": "index",
+    "src": "src/routes/index.tsx?tsr-split",
+    "isDynamicEntry": true,
+    "imports": [
+      "_client-BXl7ZxVm.js"
+    ]
+  },
+  "src/routes/view/$token.tsx?tsr-split": {
+    "file": "assets/_token-DGU4spFF.js",
+    "name": "_token",
+    "src": "src/routes/view/$token.tsx?tsr-split",
+    "isDynamicEntry": true,
+    "imports": [
+      "_client-BXl7ZxVm.js"
+    ]
+  },
+  "virtual:$vinxi/handler/client": {
+    "file": "assets/client-Dm27tvEQ.js",
+    "name": "client",
+    "src": "virtual:$vinxi/handler/client",
+    "isEntry": true,
+    "imports": [
+      "_client-BXl7ZxVm.js"
+    ]
+  }
+}

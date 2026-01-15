@@ -1,0 +1,14 @@
+{
+  "session_id": "fd0f7050-4c8a-42e4-9b18-7ff5a18ca734",
+  "transcript_path": "/Users/wongjunmun/.claude/projects/-Users-wongjunmun-Developer-expo-projects-littleJourney/fd0f7050-4c8a-42e4-9b18-7ff5a18ca734.jsonl",
+  "cwd": "/Users/wongjunmun/Developer/expo_projects/littleJourney/web-viewer",
+  "permission_mode": "bypassPermissions",
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "cd /Users/wongjunmun/Developer/expo_projects/littleJourney && npx tsc --noEmit 2>&1",
+    "timeout": 120000,
+    "description": "TypeScript check for main app"
+  },
+  "tool_use_id": "toolu_01WnGuhWVxosM9Qhp6vLSHez"
+}

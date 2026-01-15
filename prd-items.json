@@ -703,7 +703,7 @@
         "Close and reopen - verify access persists"
       ],
       "acceptanceCriteria": "Family access via magic link without account",
-      "passes": false
+      "passes": true
     },
     {
       "id": "SHARE-003",
@@ -715,7 +715,7 @@
         "Verify both devices have access"
       ],
       "acceptanceCriteria": "Same link works on multiple devices",
-      "passes": false
+      "passes": true
     },
     {
       "id": "SHARE-004",
@@ -727,7 +727,7 @@
         "Verify session expired message"
       ],
       "acceptanceCriteria": "Links expire after inactivity period",
-      "passes": false
+      "passes": true
     },
     {
       "id": "SHARE-005",
@@ -1311,7 +1311,7 @@
         "Verify responsive layout"
       ],
       "acceptanceCriteria": "Web viewer loads on desktop and mobile",
-      "passes": false
+      "passes": true
     },
     {
       "id": "WEBVIEW-002",
@@ -1324,7 +1324,7 @@
         "Verify carousels work"
       ],
       "acceptanceCriteria": "All entry types display correctly",
-      "passes": false
+      "passes": true
     },
     {
       "id": "FEEDBACK-001",

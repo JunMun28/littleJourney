@@ -1,0 +1,42 @@
+{
+  "session_id": "fd0f7050-4c8a-42e4-9b18-7ff5a18ca734",
+  "transcript_path": "/Users/wongjunmun/.claude/projects/-Users-wongjunmun-Developer-expo-projects-littleJourney/fd0f7050-4c8a-42e4-9b18-7ff5a18ca734.jsonl",
+  "cwd": "/Users/wongjunmun/Developer/expo_projects/littleJourney/web-viewer",
+  "permission_mode": "bypassPermissions",
+  "hook_event_name": "PostToolUse",
+  "tool_name": "Edit",
+  "tool_input": {
+    "file_path": "/Users/wongjunmun/Developer/expo_projects/littleJourney/tsconfig.json",
+    "old_string": "\"include\": [\n    \"**/*.ts\",\n    \"**/*.tsx\",\n    \".expo/types/**/*.ts\",\n    \"expo-env.d.ts\"\n  ]\n}",
+    "new_string": "\"include\": [\n    \"**/*.ts\",\n    \"**/*.tsx\",\n    \".expo/types/**/*.ts\",\n    \"expo-env.d.ts\"\n  ],\n  \"exclude\": [\n    \"node_modules\",\n    \"web-viewer\"\n  ]\n}",
+    "replace_all": false
+  },
+  "tool_response": {
+    "filePath": "/Users/wongjunmun/Developer/expo_projects/littleJourney/tsconfig.json",
+    "oldString": "\"include\": [\n    \"**/*.ts\",\n    \"**/*.tsx\",\n    \".expo/types/**/*.ts\",\n    \"expo-env.d.ts\"\n  ]\n}",
+    "newString": "\"include\": [\n    \"**/*.ts\",\n    \"**/*.tsx\",\n    \".expo/types/**/*.ts\",\n    \"expo-env.d.ts\"\n  ],\n  \"exclude\": [\n    \"node_modules\",\n    \"web-viewer\"\n  ]\n}",
+    "originalFile": "{\n  \"extends\": \"expo/tsconfig.base\",\n  \"compilerOptions\": {\n    \"strict\": true,\n    \"paths\": {\n      \"@/*\": [\n        \"./*\"\n      ]\n    }\n  },\n  \"include\": [\n    \"**/*.ts\",\n    \"**/*.tsx\",\n    \".expo/types/**/*.ts\",\n    \"expo-env.d.ts\"\n  ]\n}\n",
+    "structuredPatch": [
+      {
+        "oldStart": 13,
+        "oldLines": 5,
+        "newStart": 13,
+        "newLines": 9,
+        "lines": [
+          "     \"**/*.tsx\",",
+          "     \".expo/types/**/*.ts\",",
+          "     \"expo-env.d.ts\"",
+          "+  ],",
+          "+  \"exclude\": [",
+          "+    \"node_modules\",",
+          "+    \"web-viewer\"",
+          "   ]",
+          " }"
+        ]
+      }
+    ],
+    "userModified": false,
+    "replaceAll": false
+  },
+  "tool_use_id": "toolu_01A9jzdx9X4EPuhizpQeUXRL"
+}

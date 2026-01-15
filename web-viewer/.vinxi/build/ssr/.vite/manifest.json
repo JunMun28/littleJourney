@@ -1,0 +1,41 @@
+{
+  "_ssr-BvwCsXc8.js": {
+    "file": "assets/ssr-BvwCsXc8.js",
+    "name": "ssr",
+    "dynamicImports": [
+      "src/routes/index.tsx?tsr-split",
+      "src/routes/view/$token.tsx?tsr-split"
+    ],
+    "css": [
+      "assets/ssr-CaYapVRU.css"
+    ]
+  },
+  "_ssr-CaYapVRU.css": {
+    "file": "assets/ssr-CaYapVRU.css",
+    "src": "_ssr-CaYapVRU.css"
+  },
+  "src/routes/index.tsx?tsr-split": {
+    "file": "assets/index-CQjyKwuU.js",
+    "name": "index",
+    "src": "src/routes/index.tsx?tsr-split",
+    "isDynamicEntry": true
+  },
+  "src/routes/view/$token.tsx?tsr-split": {
+    "file": "assets/_token-D40ldlJf.js",
+    "name": "_token",
+    "src": "src/routes/view/$token.tsx?tsr-split",
+    "isDynamicEntry": true,
+    "imports": [
+      "_ssr-BvwCsXc8.js"
+    ]
+  },
+  "virtual:$vinxi/handler/ssr": {
+    "file": "ssr.js",
+    "name": "ssr",
+    "src": "virtual:$vinxi/handler/ssr",
+    "isEntry": true,
+    "imports": [
+      "_ssr-BvwCsXc8.js"
+    ]
+  }
+}

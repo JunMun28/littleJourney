@@ -2568,3 +2568,48 @@
 **Verification:** tsc, lint, test (659 passed), build all pass.
 
 **Next:** Build Web Viewer (TanStack Start) to consume magic links and complete SHARE-002-004, WEBVIEW-001-002
+
+## 2026-01-16: Web Viewer (TanStack Start) for Family Magic Links (SHARE-002-004, WEBVIEW-001-002)
+
+**PRD ref:** Phase 2, Section 6 (Family Sharing), Section 15 (Web Viewer)
+
+**Task:** Build web viewer application for family members to view shared memories via magic links
+
+**Decisions:**
+- Created separate TanStack Start project in /web-viewer subdirectory
+- TanStack Start 1.95.0 with npm overrides to pin @tanstack/router-generator and router-plugin versions
+- File-based routing matching main Expo app patterns: /view/$token dynamic route
+- Magic link validation reuses logic from services/magic-link.ts (copied to web-viewer/src/lib/magic-link.ts)
+- Mock data for development, ready for backend API integration
+- Responsive design: works on desktop and mobile browsers (inline styles)
+- Features implemented:
+  - Token validation and expiry checking (SHARE-004)
+  - Multi-device support via stateless token validation (SHARE-003)
+  - No account required - token-based access (SHARE-002)
+  - Feed view with photo carousel, video thumbnails, text entries (WEBVIEW-002)
+  - Expired link handling with user-friendly message
+  - Invalid link handling with error state
+- Main app tsconfig.json excludes web-viewer to avoid type conflicts
+- Build outputs to .output directory for Node.js deployment
+
+**Files changed:**
+- web-viewer/ - New TanStack Start application
+  - package.json - Dependencies with overrides for version pinning
+  - tsconfig.json - TypeScript configuration
+  - app.config.ts - TanStack Start config with src/ paths
+  - src/entry-client.tsx - Client entry point
+  - src/entry-server.tsx - Server entry point
+  - src/router.tsx - Router setup
+  - src/styles.css - Global styles with spinner animation
+  - src/routeTree.gen.ts - Auto-generated route tree
+  - src/routes/__root.tsx - Root layout with meta tags
+  - src/routes/index.tsx - Homepage for direct visitors
+  - src/routes/view/$token.tsx - Main view route with token validation, feed display
+  - src/lib/magic-link.ts - Token validation (copied from main app)
+  - src/lib/types.ts - Shared types (Entry, Child)
+  - src/lib/api.ts - API client with mock data
+- tsconfig.json - Added web-viewer to exclude list
+
+**Verification:** tsc, lint, test (659 passed), build all pass. Web viewer builds successfully.
+
+**Note:** All 98 PRD items now pass. COMPLETE.
