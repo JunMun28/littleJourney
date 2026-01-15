@@ -6,11 +6,12 @@ import {
 } from "@testing-library/react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import MilestonesScreen from "@/app/(tabs)/milestones";
-import { ChildProvider, useChild } from "@/contexts/child-context";
 import { NotificationProvider } from "@/contexts/notification-context";
-import { milestoneApi, clearAllMockData } from "@/services/api-client";
-import { useEffect } from "react";
-import { View, Text } from "react-native";
+import {
+  milestoneApi,
+  childApi,
+  clearAllMockData,
+} from "@/services/api-client";
 
 // Mock expo-notifications
 const mockScheduleMilestoneReminder = jest.fn();
@@ -105,67 +106,37 @@ function createTestQueryClient() {
   });
 }
 
-// Wrapper with child set up
-function TestWrapper({
-  children,
-  culturalTradition = "none" as const,
-}: {
-  children: React.ReactNode;
-  culturalTradition?: "chinese" | "malay" | "indian" | "none";
-}) {
+// Wrapper for tests
+function TestWrapper({ children }: { children: React.ReactNode }) {
   const queryClient = createTestQueryClient();
   return (
     <QueryClientProvider client={queryClient}>
-      <NotificationProvider>
-        <ChildProvider>
-          <ChildSetup culturalTradition={culturalTradition}>
-            {children}
-          </ChildSetup>
-        </ChildProvider>
-      </NotificationProvider>
+      <NotificationProvider>{children}</NotificationProvider>
     </QueryClientProvider>
   );
 }
 
-// Sets up child in context for tests
-function ChildSetup({
-  children,
-  culturalTradition,
-}: {
-  children: React.ReactNode;
-  culturalTradition: "chinese" | "malay" | "indian" | "none";
-}) {
-  const { setChild } = useChild();
-  useEffect(() => {
-    setChild({
-      name: "Test Baby",
-      dateOfBirth: "2024-06-15",
-      culturalTradition,
-    });
-  }, [setChild, culturalTradition]);
-  return <>{children}</>;
+// Helper to create test child via API - returns child with guaranteed ID
+async function createTestChild(
+  culturalTradition: "chinese" | "malay" | "indian" | "none" = "none",
+  dateOfBirth = "2024-06-15",
+): Promise<{ id: string }> {
+  const result = await childApi.createChild({
+    name: "Test Baby",
+    dateOfBirth,
+    culturalTradition,
+  });
+  if ("data" in result && result.data && result.data.id) {
+    return { id: result.data.id };
+  }
+  throw new Error("Failed to create test child with ID");
 }
 
-// Sets up child with recent birth date (for future milestone tests)
-function FutureChildSetup({ children }: { children: React.ReactNode }) {
-  const { setChild } = useChild();
-  useEffect(() => {
-    // Use today's date so future milestones (like Zhua Zhou at 365 days) are in the future
-    const today = new Date();
-    setChild({
-      name: "Test Baby",
-      dateOfBirth: today.toISOString().split("T")[0],
-      culturalTradition: "chinese", // Include cultural milestones
-    });
-  }, [setChild]);
-  return <>{children}</>;
-}
-
-// Async helper to add a milestone before rendering
-async function addTestMilestone() {
+// Async helper to add a milestone before rendering (uses actual child ID)
+async function addTestMilestone(childId: string) {
   await milestoneApi.createMilestone({
     templateId: "first_smile",
-    childId: "child-1",
+    childId,
     milestoneDate: "2024-07-15",
   });
 }
@@ -177,6 +148,8 @@ describe("MilestonesScreen", () => {
   });
 
   it("renders empty state when no milestones", async () => {
+    await createTestChild();
+
     render(
       <TestWrapper>
         <MilestonesScreen />
@@ -190,7 +163,8 @@ describe("MilestonesScreen", () => {
   });
 
   it("renders milestone cards in upcoming section", async () => {
-    await addTestMilestone();
+    const child = await createTestChild();
+    await addTestMilestone(child.id!);
 
     render(
       <TestWrapper>
@@ -205,7 +179,8 @@ describe("MilestonesScreen", () => {
   });
 
   it("opens completion modal when tapping upcoming milestone card", async () => {
-    await addTestMilestone();
+    const child = await createTestChild();
+    await addTestMilestone(child.id!);
 
     render(
       <TestWrapper>
@@ -227,7 +202,8 @@ describe("MilestonesScreen", () => {
   });
 
   it("completes milestone with celebration date and notes", async () => {
-    await addTestMilestone();
+    const child = await createTestChild();
+    await addTestMilestone(child.id!);
 
     render(
       <TestWrapper>
@@ -263,7 +239,8 @@ describe("MilestonesScreen", () => {
   });
 
   it("shows delete option in completion modal", async () => {
-    await addTestMilestone();
+    const child = await createTestChild();
+    await addTestMilestone(child.id!);
 
     render(
       <TestWrapper>
@@ -282,6 +259,44 @@ describe("MilestonesScreen", () => {
     });
   });
 
+  it("uses child ID from API when creating milestones", async () => {
+    const child = await createTestChild("chinese");
+
+    render(
+      <TestWrapper>
+        <MilestonesScreen />
+      </TestWrapper>,
+    );
+
+    // Open template selection
+    await waitFor(() => {
+      expect(screen.getByText("Add First Milestone")).toBeTruthy();
+    });
+    fireEvent.press(screen.getByText("Add First Milestone"));
+
+    // Wait for Chinese templates to appear (child loaded)
+    await waitFor(() => {
+      expect(screen.getByText(/Full Month/)).toBeTruthy();
+    });
+
+    // Add milestone
+    fireEvent.press(screen.getByText("First Smile"));
+
+    // Wait for milestone to be created and verify it uses correct childId
+    await waitFor(async () => {
+      const result = await milestoneApi.getMilestones();
+      // Verify milestone was created with correct childId
+      if (!("data" in result) || !result.data) {
+        throw new Error("Expected data in result");
+      }
+      const milestones = result.data;
+      expect(milestones.length).toBeGreaterThan(0);
+      // Find the milestone we just created
+      const createdMilestone = milestones.find((m) => m.childId === child.id);
+      expect(createdMilestone).toBeTruthy();
+    });
+  });
+
   // Milestone reminder notification integration tests (PRD 7.1)
   describe("milestone reminder notifications", () => {
     const mockScheduleNotification =
@@ -295,33 +310,28 @@ describe("MilestonesScreen", () => {
     });
 
     it("schedules reminder notification when adding milestone from template", async () => {
-      // Use a future date for the child DOB so milestone will be in future
-      const queryClient = createTestQueryClient();
-      const futureChildWrapper = ({
-        children,
-      }: {
-        children: React.ReactNode;
-      }) => (
-        <QueryClientProvider client={queryClient}>
-          <NotificationProvider>
-            <ChildProvider>
-              <FutureChildSetup>{children}</FutureChildSetup>
-            </ChildProvider>
-          </NotificationProvider>
-        </QueryClientProvider>
+      // Create child with today's DOB so Zhua Zhou (365 days) is in the future
+      const today = new Date().toISOString().split("T")[0];
+      await createTestChild("chinese", today);
+
+      render(
+        <TestWrapper>
+          <MilestonesScreen />
+        </TestWrapper>,
       );
 
-      render(<MilestonesScreen />, { wrapper: futureChildWrapper });
-
       // Open template selection
+      await waitFor(() => {
+        expect(screen.getByText("Add First Milestone")).toBeTruthy();
+      });
       fireEvent.press(screen.getByText("Add First Milestone"));
 
+      // Wait for Chinese milestones to appear (child data loaded)
       await waitFor(() => {
-        expect(screen.getByText("Add Milestone")).toBeTruthy();
+        expect(screen.getByText(/Zhua Zhou/)).toBeTruthy();
       });
 
       // Add a milestone from template (Zhua Zhou is 365 days from birth - in future)
-      // Use regex to match the text that includes Zhua Zhou (with titleLocal in nested Text)
       fireEvent.press(screen.getByText(/Zhua Zhou/));
 
       // Should schedule a reminder notification
@@ -344,17 +354,24 @@ describe("MilestonesScreen", () => {
     });
 
     it("schedules reminder notification when adding custom milestone", async () => {
+      // Create child with specific cultural tradition so we know templates list is from loaded child
+      await createTestChild("chinese");
+
       render(
         <TestWrapper>
           <MilestonesScreen />
         </TestWrapper>,
       );
 
-      // Open template selection
+      // Wait for child to load and modal to be available
+      await waitFor(() => {
+        expect(screen.getByText("Add First Milestone")).toBeTruthy();
+      });
       fireEvent.press(screen.getByText("Add First Milestone"));
 
+      // Wait for Chinese templates to appear (confirms child data is loaded with ID)
       await waitFor(() => {
-        expect(screen.getByText("+ Custom Milestone")).toBeTruthy();
+        expect(screen.getByText(/Full Month/)).toBeTruthy();
       });
 
       // Open custom milestone modal
@@ -393,7 +410,8 @@ describe("MilestonesScreen", () => {
     });
 
     it("cancels reminder notification when completing milestone", async () => {
-      await addTestMilestone();
+      const child = await createTestChild();
+      await addTestMilestone(child.id!);
 
       render(
         <TestWrapper>
@@ -422,7 +440,8 @@ describe("MilestonesScreen", () => {
     });
 
     it("cancels reminder notification when deleting milestone", async () => {
-      await addTestMilestone();
+      const child = await createTestChild();
+      await addTestMilestone(child.id!);
 
       render(
         <TestWrapper>

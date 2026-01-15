@@ -1482,3 +1482,26 @@
 **Verification:** tsc, lint, test (287 passed), build all pass.
 
 **Next:** Cloudflare Workers backend setup or Stripe SDK integration
+
+## 2026-01-15: Milestones Screen TanStack Query Child Hook Fix
+
+**PRD ref:** Phase 1 Technical Architecture (TanStack Query for server state)
+
+**Task:** Fix milestones.tsx to use useChildFlat hook from TanStack Query instead of useChild context, and use actual child.id instead of hardcoded "child-1"
+
+**Decisions:**
+- Replaced useChild (context) import with useChildFlat (TanStack Query hook)
+- Changed child guard from `if (!child)` to `if (!child?.id)` for API requirement
+- Removed hardcoded "child-1" values, now uses child.id from API response
+- Updated test wrapper to remove ChildProvider, use QueryClientProvider only
+- Tests now create child via childApi.createChild before rendering
+- Test helper createTestChild returns `{ id: string }` for guaranteed ID type
+- Tests wait for cultural templates (e.g., "Full Month" for Chinese) to confirm child loaded
+
+**Files changed:**
+- app/(tabs)/milestones.tsx - useChildFlat replaces useChild, child.id replaces "child-1"
+- __tests__/app/tabs/milestones.test.tsx - Updated test wrapper, createTestChild helper, all tests use API child
+
+**Verification:** tsc, lint, test (288 passed), build all pass.
+
+**Next:** Cloudflare Workers backend setup or Stripe SDK integration

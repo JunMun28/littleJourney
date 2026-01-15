@@ -25,7 +25,7 @@ import {
   useCompleteMilestone,
   useDeleteMilestone,
 } from "@/hooks/use-milestones";
-import { useChild } from "@/contexts/child-context";
+import { useChildFlat } from "@/hooks/use-children";
 import { useNotifications } from "@/contexts/notification-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
@@ -49,7 +49,7 @@ export default function MilestonesScreen() {
   const completeMilestoneMutation = useCompleteMilestone();
   const deleteMilestoneMutation = useDeleteMilestone();
 
-  const { child } = useChild();
+  const { child } = useChildFlat();
   const { scheduleMilestoneReminder, cancelMilestoneReminder } =
     useNotifications();
 
@@ -83,7 +83,7 @@ export default function MilestonesScreen() {
   }, [child?.culturalTradition]);
 
   const handleAddFromTemplate = async (template: MilestoneTemplate) => {
-    if (!child) return;
+    if (!child?.id) return;
 
     // Calculate date if daysFromBirth is specified
     let date = milestoneDate;
@@ -98,7 +98,7 @@ export default function MilestonesScreen() {
     createMilestone.mutate(
       {
         templateId: template.id,
-        childId: "child-1", // TODO: Get from child context
+        childId: child.id,
         milestoneDate: milestoneDateStr,
       },
       {
@@ -118,14 +118,14 @@ export default function MilestonesScreen() {
   };
 
   const handleAddCustom = () => {
-    if (!customTitle.trim()) return;
+    if (!customTitle.trim() || !child?.id) return;
 
     const milestoneDateStr = milestoneDate.toISOString().split("T")[0];
     const title = customTitle.trim();
 
     createMilestone.mutate(
       {
-        childId: "child-1", // TODO: Get from child context
+        childId: child.id,
         milestoneDate: milestoneDateStr,
         customTitle: title,
         customDescription: customDescription.trim() || undefined,
