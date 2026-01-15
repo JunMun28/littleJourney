@@ -1935,3 +1935,27 @@
 **Verification:** tsc, lint, test (367 passed), build all pass.
 
 **Next:** Continue remaining PRD items: FEEDBACK-001 (in-app feedback), or backend integration
+
+## 2026-01-16: In-App Feedback Feature (FEEDBACK-001)
+
+**PRD ref:** Phase 1, Section 16 (User Feedback), FEEDBACK-001
+
+**Task:** Implement in-app feedback submission feature per PRD requirement
+
+**Decisions:**
+- Added "Feedback" section to Settings between Legal and Account sections
+- Feedback button opens modal with multiline text input
+- Submit button disabled until user enters text (validation)
+- On submit: logs feedback, shows thank you Alert, closes modal
+- Handler ready for backend API integration (console.log placeholder)
+- Modal follows existing settings modal patterns (pageSheet, KeyboardAvoidingView)
+- TDD approach: 5 new tests for feedback UI and submission flow
+
+**Files changed:**
+- app/(tabs)/settings.tsx - Added feedback modal state, feedbackText state, handleSubmitFeedback handler, Feedback section UI, feedback modal UI, styles
+- __tests__/app/tabs/settings.test.tsx - Added 5 TDD tests for FEEDBACK-001
+- prd-items.json - Updated FEEDBACK-001 to passes: true
+
+**Verification:** tsc, lint, test (372 passed), build all pass.
+
+**Next:** Continue remaining PRD items: backend integration (AUTH, SHARE, VIDEO, PAY), analytics, or Web Viewer (Phase 2)

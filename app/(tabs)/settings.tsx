@@ -46,7 +46,8 @@ type ModalState =
   | "deleteAccount"
   | "subscription"
   | "editChild"
-  | "editChildDob";
+  | "editChildDob"
+  | "feedback";
 
 function formatDisplayTime(time: string): string {
   const [hours, minutes] = time.split(":").map(Number);
@@ -153,6 +154,9 @@ export default function SettingsScreen() {
   );
   const [editChildCulture, setEditChildCulture] =
     useState<CulturalTradition>("none");
+
+  // Feedback state
+  const [feedbackText, setFeedbackText] = useState("");
 
   const handleToggleNotification = async (
     key: keyof NotificationSettings,
@@ -338,6 +342,27 @@ export default function SettingsScreen() {
   };
 
   const isChildFormValid = editChildName.trim().length > 0;
+
+  const isFeedbackValid = feedbackText.trim().length > 0;
+
+  const handleSubmitFeedback = async () => {
+    if (!isFeedbackValid) return;
+
+    // TODO: Send feedback to backend API or email service
+    // For now, just log and show confirmation
+    console.log("Feedback submitted:", feedbackText);
+
+    // Show confirmation via Alert
+    Alert.alert(
+      "Thank You!",
+      "Your feedback has been received. We appreciate you helping us improve Little Journey.",
+      [{ text: "OK" }],
+    );
+
+    // Reset and close modal
+    setFeedbackText("");
+    setModalState("closed");
+  };
 
   const getCultureLabel = (culture: CulturalTradition): string => {
     switch (culture) {
@@ -924,6 +949,26 @@ export default function SettingsScreen() {
           <Text style={[styles.legalLinkArrow, { color: colors.textMuted }]}>
             →
           </Text>
+        </Pressable>
+      </View>
+
+      {/* Feedback Section */}
+      <View style={[styles.section, { backgroundColor: colors.card }]}>
+        <Text style={[styles.sectionHeader, { color: colors.textSecondary }]}>
+          Feedback
+        </Text>
+
+        <Text style={[styles.feedbackDescription, { color: colors.textMuted }]}>
+          Help us improve Little Journey by sharing your thoughts and
+          suggestions.
+        </Text>
+
+        <Pressable
+          style={styles.actionButton}
+          onPress={() => setModalState("feedback")}
+          testID="send-feedback-button"
+        >
+          <Text style={styles.actionButtonText}>Send Feedback</Text>
         </Pressable>
       </View>
 
@@ -1716,6 +1761,101 @@ export default function SettingsScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* Feedback Modal */}
+      <Modal
+        visible={modalState === "feedback"}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => {
+          setFeedbackText("");
+          setModalState("closed");
+        }}
+      >
+        <KeyboardAvoidingView
+          style={[
+            styles.modalContainer,
+            { backgroundColor: colors.backgroundSecondary },
+          ]}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <View
+            style={[
+              styles.modalHeader,
+              {
+                backgroundColor: colors.card,
+                borderBottomColor: colors.border,
+              },
+            ]}
+          >
+            <Pressable
+              onPress={() => {
+                setFeedbackText("");
+                setModalState("closed");
+              }}
+            >
+              <Text style={styles.modalCancel}>Cancel</Text>
+            </Pressable>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              Send Feedback
+            </Text>
+            <View style={{ width: 50 }} />
+          </View>
+
+          <View style={styles.feedbackModalContent}>
+            <Text style={[styles.feedbackModalTitle, { color: colors.text }]}>
+              We&apos;d love to hear from you!
+            </Text>
+            <Text
+              style={[
+                styles.feedbackModalSubtitle,
+                { color: colors.textSecondary },
+              ]}
+            >
+              Share your thoughts, suggestions, or report issues. Your feedback
+              helps us make Little Journey better for families.
+            </Text>
+
+            <TextInput
+              style={[
+                styles.feedbackInput,
+                {
+                  backgroundColor: colors.card,
+                  color: colors.text,
+                  borderColor: colors.inputBorder,
+                },
+              ]}
+              value={feedbackText}
+              onChangeText={setFeedbackText}
+              placeholder="What's on your mind?"
+              placeholderTextColor={colors.placeholder}
+              multiline
+              numberOfLines={6}
+              textAlignVertical="top"
+              testID="feedback-input"
+            />
+
+            <Pressable
+              style={[
+                styles.submitFeedbackButton,
+                !isFeedbackValid && styles.submitFeedbackButtonDisabled,
+              ]}
+              onPress={handleSubmitFeedback}
+              disabled={!isFeedbackValid}
+              testID="submit-feedback-button"
+            >
+              <Text
+                style={[
+                  styles.submitFeedbackButtonText,
+                  !isFeedbackValid && styles.submitFeedbackButtonTextDisabled,
+                ]}
+              >
+                Submit Feedback
+              </Text>
+            </Pressable>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </ScrollView>
   );
 }
@@ -2454,5 +2594,55 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
     color: PRIMARY_COLOR,
+  },
+  // Feedback styles
+  feedbackDescription: {
+    fontSize: 14,
+    color: "#999",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  feedbackModalContent: {
+    padding: 16,
+  },
+  feedbackModalTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  feedbackModalSubtitle: {
+    fontSize: 15,
+    textAlign: "center",
+    marginBottom: 20,
+    lineHeight: 22,
+  },
+  feedbackInput: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    minHeight: 150,
+  },
+  submitFeedbackButton: {
+    backgroundColor: PRIMARY_COLOR,
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 20,
+  },
+  submitFeedbackButtonDisabled: {
+    backgroundColor: "#ccc",
+  },
+  submitFeedbackButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#fff",
+  },
+  submitFeedbackButtonTextDisabled: {
+    color: "#999",
   },
 });

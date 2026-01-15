@@ -518,3 +518,81 @@ describe("SettingsScreen - CHILD-004 Single Child Limit", () => {
     expect(addChildButton.props.accessibilityState?.disabled).toBe(true);
   });
 });
+
+describe("SettingsScreen - FEEDBACK-001 In-app Feedback", () => {
+  beforeEach(() => {
+    clearAllMockData();
+    jest.clearAllMocks();
+  });
+
+  it("renders Feedback section header", async () => {
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Feedback")).toBeTruthy();
+    });
+  });
+
+  it("renders Send Feedback button", async () => {
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("send-feedback-button")).toBeTruthy();
+    });
+    expect(screen.getByText("Send Feedback")).toBeTruthy();
+  });
+
+  it("opens feedback modal when button is pressed", async () => {
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("send-feedback-button")).toBeTruthy();
+    });
+
+    fireEvent.press(screen.getByTestId("send-feedback-button"));
+
+    // Modal should show with text input and submit button
+    expect(screen.getByText(/We'd love to hear from you/)).toBeTruthy();
+    expect(screen.getByTestId("feedback-input")).toBeTruthy();
+    expect(screen.getByTestId("submit-feedback-button")).toBeTruthy();
+  });
+
+  it("disables submit button when feedback is empty", async () => {
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("send-feedback-button")).toBeTruthy();
+    });
+
+    fireEvent.press(screen.getByTestId("send-feedback-button"));
+
+    // Submit button should be disabled when input is empty
+    const submitButton = screen.getByTestId("submit-feedback-button");
+    fireEvent.press(submitButton);
+
+    // Modal should still be visible (not submitted)
+    expect(screen.getByTestId("feedback-input")).toBeTruthy();
+  });
+
+  it("closes modal and shows confirmation after submitting feedback", async () => {
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("send-feedback-button")).toBeTruthy();
+    });
+
+    fireEvent.press(screen.getByTestId("send-feedback-button"));
+
+    // Type feedback
+    const input = screen.getByTestId("feedback-input");
+    fireEvent.changeText(input, "Great app, love the milestone tracking!");
+
+    // Submit feedback
+    fireEvent.press(screen.getByTestId("submit-feedback-button"));
+
+    // Modal should close - input should no longer be visible
+    await waitFor(() => {
+      expect(screen.queryByTestId("feedback-input")).toBeNull();
+    });
+  });
+});

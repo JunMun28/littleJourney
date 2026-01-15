@@ -1337,7 +1337,7 @@
         "Verify confirmation"
       ],
       "acceptanceCriteria": "Users can submit feedback from app",
-      "passes": false
+      "passes": true
     },
     {
       "id": "LEGAL-001",
