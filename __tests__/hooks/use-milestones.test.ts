@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { clearAllMockData, milestoneApi } from "@/services/api-client";
 import {
   useMilestones,
+  useMilestonesFlat,
   useCreateMilestone,
   useCompleteMilestone,
   useDeleteMilestone,
@@ -170,6 +171,71 @@ describe("useMilestones hooks", () => {
       const getResult = await milestoneApi.getMilestones();
       if ("error" in getResult) throw new Error("Failed to get milestones");
       expect(getResult.data.length).toBe(0);
+    });
+  });
+
+  describe("useMilestonesFlat", () => {
+    it("should return flat array with computed upcoming/completed milestones", async () => {
+      // Create one upcoming and one completed milestone
+      await milestoneApi.createMilestone({
+        childId: "child_test",
+        templateId: "first_smile",
+        milestoneDate: "2024-06-01",
+      });
+      const completed = await milestoneApi.createMilestone({
+        childId: "child_test",
+        templateId: "full_month",
+        milestoneDate: "2024-02-15",
+      });
+      if ("error" in completed) throw new Error("Failed to create milestone");
+      await milestoneApi.completeMilestone({
+        id: completed.data.id,
+        celebrationDate: "2024-02-16",
+      });
+
+      const { result } = renderHook(() => useMilestonesFlat(), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      expect(result.current.milestones.length).toBe(2);
+      expect(result.current.upcomingMilestones.length).toBe(1);
+      expect(result.current.completedMilestones.length).toBe(1);
+      expect(result.current.upcomingMilestones[0].templateId).toBe(
+        "first_smile",
+      );
+      expect(result.current.completedMilestones[0].templateId).toBe(
+        "full_month",
+      );
+    });
+
+    it("should provide refetch function", async () => {
+      const { result } = renderHook(() => useMilestonesFlat(), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      expect(typeof result.current.refetch).toBe("function");
+    });
+
+    it("should return empty arrays when no milestones", async () => {
+      const { result } = renderHook(() => useMilestonesFlat(), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      expect(result.current.milestones).toEqual([]);
+      expect(result.current.upcomingMilestones).toEqual([]);
+      expect(result.current.completedMilestones).toEqual([]);
     });
   });
 });

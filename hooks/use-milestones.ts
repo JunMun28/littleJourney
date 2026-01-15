@@ -108,3 +108,27 @@ export function useDeleteMilestone() {
     },
   });
 }
+
+/**
+ * Convenience hook that flattens milestone data for easier consumption
+ * Provides computed properties: milestones, upcomingMilestones, completedMilestones
+ */
+export function useMilestonesFlat() {
+  const query = useMilestones();
+
+  const milestones = query.data ?? [];
+  const upcomingMilestones = milestones.filter((m) => !m.isCompleted);
+  const completedMilestones = milestones.filter((m) => m.isCompleted);
+
+  return {
+    milestones,
+    upcomingMilestones,
+    completedMilestones,
+    isLoading: query.isLoading,
+    isSuccess: query.isSuccess,
+    isError: query.isError,
+    error: query.error,
+    isFetching: query.isFetching,
+    refetch: query.refetch,
+  };
+}

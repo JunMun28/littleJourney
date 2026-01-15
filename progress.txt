@@ -1382,3 +1382,28 @@
 **Verification:** tsc, lint, test (271 passed), build all pass.
 
 **Next:** Continue backend API integration, remaining screens migration, or Cloudflare Workers setup
+
+## 2026-01-15: Milestones Screen TanStack Query Migration
+
+**PRD ref:** Phase 1 Technical Architecture (TanStack Query for server state)
+
+**Task:** Migrate Milestones screen from MilestoneContext to TanStack Query hooks
+
+**Decisions:**
+- Created useMilestonesFlat hook similar to useEntriesFlat for easier consumption
+- useMilestonesFlat provides: milestones, upcomingMilestones, completedMilestones, refetch, loading states
+- Replaced useMilestones (context) with useMilestonesFlat + useCreateMilestone + useCompleteMilestone + useDeleteMilestone
+- Mutation handlers use onSuccess callbacks for notification scheduling/cancellation (PRD 7.1)
+- Updated test wrapper from MilestoneProvider to QueryClientProvider
+- Tests use milestoneApi.createMilestone() directly instead of WithMilestone helper component
+- MilestoneContext still exists for type exports (Milestone, MilestoneTemplate, MILESTONE_TEMPLATES)
+
+**Files changed:**
+- hooks/use-milestones.ts - Added useMilestonesFlat hook
+- app/(tabs)/milestones.tsx - Replaced context with TanStack Query hooks, updated handlers
+- __tests__/hooks/use-milestones.test.ts - Added 3 TDD tests for useMilestonesFlat
+- __tests__/app/tabs/milestones.test.tsx - Updated to use QueryClientProvider, use addTestMilestone helper
+
+**Verification:** tsc, lint, test (274 passed), build all pass.
+
+**Next:** Continue remaining screens migration (Search, Settings) or Cloudflare Workers backend setup

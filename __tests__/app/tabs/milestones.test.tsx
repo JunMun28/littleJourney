@@ -4,10 +4,11 @@ import {
   fireEvent,
   waitFor,
 } from "@testing-library/react-native";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import MilestonesScreen from "@/app/(tabs)/milestones";
-import { MilestoneProvider, useMilestones } from "@/contexts/milestone-context";
 import { ChildProvider, useChild } from "@/contexts/child-context";
 import { NotificationProvider } from "@/contexts/notification-context";
+import { milestoneApi, clearAllMockData } from "@/services/api-client";
 import { useEffect } from "react";
 import { View, Text } from "react-native";
 
@@ -89,6 +90,21 @@ jest.mock("expo-image-picker", () => ({
   },
 }));
 
+// Create a fresh QueryClient for each test
+function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        staleTime: 0,
+      },
+      mutations: {
+        retry: false,
+      },
+    },
+  });
+}
+
 // Wrapper with child set up
 function TestWrapper({
   children,
@@ -97,16 +113,17 @@ function TestWrapper({
   children: React.ReactNode;
   culturalTradition?: "chinese" | "malay" | "indian" | "none";
 }) {
+  const queryClient = createTestQueryClient();
   return (
-    <NotificationProvider>
-      <ChildProvider>
-        <MilestoneProvider>
+    <QueryClientProvider client={queryClient}>
+      <NotificationProvider>
+        <ChildProvider>
           <ChildSetup culturalTradition={culturalTradition}>
             {children}
           </ChildSetup>
-        </MilestoneProvider>
-      </ChildProvider>
-    </NotificationProvider>
+        </ChildProvider>
+      </NotificationProvider>
+    </QueryClientProvider>
   );
 }
 
@@ -144,41 +161,40 @@ function FutureChildSetup({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-// Helper to add a milestone for testing
-function WithMilestone({ children }: { children: React.ReactNode }) {
-  const { addMilestone } = useMilestones();
-  useEffect(() => {
-    addMilestone({
-      templateId: "first_smile",
-      childId: "child-1",
-      milestoneDate: "2024-07-15",
-    });
-  }, [addMilestone]);
-  return <>{children}</>;
+// Async helper to add a milestone before rendering
+async function addTestMilestone() {
+  await milestoneApi.createMilestone({
+    templateId: "first_smile",
+    childId: "child-1",
+    milestoneDate: "2024-07-15",
+  });
 }
 
 describe("MilestonesScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    clearAllMockData();
   });
 
-  it("renders empty state when no milestones", () => {
+  it("renders empty state when no milestones", async () => {
     render(
       <TestWrapper>
         <MilestonesScreen />
       </TestWrapper>,
     );
 
-    expect(screen.getByText("No Milestones Yet")).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText("No Milestones Yet")).toBeTruthy();
+    });
     expect(screen.getByText("Add First Milestone")).toBeTruthy();
   });
 
   it("renders milestone cards in upcoming section", async () => {
+    await addTestMilestone();
+
     render(
       <TestWrapper>
-        <WithMilestone>
-          <MilestonesScreen />
-        </WithMilestone>
+        <MilestonesScreen />
       </TestWrapper>,
     );
 
@@ -189,11 +205,11 @@ describe("MilestonesScreen", () => {
   });
 
   it("opens completion modal when tapping upcoming milestone card", async () => {
+    await addTestMilestone();
+
     render(
       <TestWrapper>
-        <WithMilestone>
-          <MilestonesScreen />
-        </WithMilestone>
+        <MilestonesScreen />
       </TestWrapper>,
     );
 
@@ -211,11 +227,11 @@ describe("MilestonesScreen", () => {
   });
 
   it("completes milestone with celebration date and notes", async () => {
+    await addTestMilestone();
+
     render(
       <TestWrapper>
-        <WithMilestone>
-          <MilestonesScreen />
-        </WithMilestone>
+        <MilestonesScreen />
       </TestWrapper>,
     );
 
@@ -247,11 +263,11 @@ describe("MilestonesScreen", () => {
   });
 
   it("shows delete option in completion modal", async () => {
+    await addTestMilestone();
+
     render(
       <TestWrapper>
-        <WithMilestone>
-          <MilestonesScreen />
-        </WithMilestone>
+        <MilestonesScreen />
       </TestWrapper>,
     );
 
@@ -280,18 +296,19 @@ describe("MilestonesScreen", () => {
 
     it("schedules reminder notification when adding milestone from template", async () => {
       // Use a future date for the child DOB so milestone will be in future
+      const queryClient = createTestQueryClient();
       const futureChildWrapper = ({
         children,
       }: {
         children: React.ReactNode;
       }) => (
-        <NotificationProvider>
-          <ChildProvider>
-            <MilestoneProvider>
+        <QueryClientProvider client={queryClient}>
+          <NotificationProvider>
+            <ChildProvider>
               <FutureChildSetup>{children}</FutureChildSetup>
-            </MilestoneProvider>
-          </ChildProvider>
-        </NotificationProvider>
+            </ChildProvider>
+          </NotificationProvider>
+        </QueryClientProvider>
       );
 
       render(<MilestonesScreen />, { wrapper: futureChildWrapper });
@@ -376,11 +393,11 @@ describe("MilestonesScreen", () => {
     });
 
     it("cancels reminder notification when completing milestone", async () => {
+      await addTestMilestone();
+
       render(
         <TestWrapper>
-          <WithMilestone>
-            <MilestonesScreen />
-          </WithMilestone>
+          <MilestonesScreen />
         </TestWrapper>,
       );
 
@@ -405,11 +422,11 @@ describe("MilestonesScreen", () => {
     });
 
     it("cancels reminder notification when deleting milestone", async () => {
+      await addTestMilestone();
+
       render(
         <TestWrapper>
-          <WithMilestone>
-            <MilestonesScreen />
-          </WithMilestone>
+          <MilestonesScreen />
         </TestWrapper>,
       );
 
