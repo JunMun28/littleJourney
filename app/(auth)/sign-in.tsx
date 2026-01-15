@@ -1,13 +1,14 @@
-import { StyleSheet, Pressable, Text } from "react-native";
+import { StyleSheet, Pressable, Text, useColorScheme } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useAuth } from "@/contexts/auth-context";
-
-const PRIMARY_COLOR = "#0a7ea4";
+import { Colors, PRIMARY_COLOR, Spacing } from "@/constants/theme";
 
 export default function SignInScreen() {
   const { signIn } = useAuth();
+  const colorScheme = useColorScheme() ?? "light";
+  const colors = Colors[colorScheme];
 
   const handleSignIn = async () => {
     // TODO: Replace with actual auth flow (magic link input, OAuth buttons)
@@ -20,18 +21,15 @@ export default function SignInScreen() {
       <ThemedText type="title" style={styles.title}>
         Little Journey
       </ThemedText>
-      <ThemedText style={styles.subtitle}>
+      <ThemedText style={[styles.subtitle, { color: colors.textSecondary }]}>
         Capture your baby&apos;s precious moments
       </ThemedText>
 
-      <Pressable
-        style={[styles.button, { backgroundColor: PRIMARY_COLOR }]}
-        onPress={handleSignIn}
-      >
+      <Pressable style={styles.button} onPress={handleSignIn}>
         <Text style={styles.buttonText}>Continue with Email</Text>
       </Pressable>
 
-      <ThemedText style={styles.hint}>
+      <ThemedText style={[styles.hint, { color: colors.textMuted }]}>
         Demo: Tap to sign in automatically
       </ThemedText>
     </ThemedView>
@@ -43,21 +41,21 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    padding: 24,
+    padding: Spacing.xl,
   },
   title: {
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   subtitle: {
-    marginBottom: 48,
+    marginBottom: Spacing.xxl + Spacing.lg,
     textAlign: "center",
-    opacity: 0.7,
   },
   button: {
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 12,
-    marginBottom: 16,
+    backgroundColor: PRIMARY_COLOR,
+    paddingHorizontal: Spacing.xxl,
+    paddingVertical: Spacing.lg,
+    borderRadius: Spacing.md,
+    marginBottom: Spacing.lg,
     minWidth: 200,
     alignItems: "center",
   },
@@ -67,7 +65,6 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   hint: {
-    opacity: 0.5,
     fontSize: 12,
   },
 });

@@ -922,3 +922,32 @@
 **Verification:** tsc, lint, test (157 passed), build all pass.
 
 **Next:** UI polish for photo book screen or sign-in screen
+
+## 2026-01-15: UI Polish - Sign-in and Photo Book Screen Theme Integration
+
+**PRD ref:** Phase 1 Weeks 12-13 (Polish)
+
+**Task:** Apply theme system to sign-in and photo-book screens
+
+**Decisions:**
+- sign-in.tsx: Removed local PRIMARY_COLOR, use imported constant from theme
+- sign-in.tsx: Added useColorScheme hook for dynamic colors
+- sign-in.tsx: Subtitle uses colors.textSecondary, hint uses colors.textMuted
+- sign-in.tsx: Replaced opacity hacks with semantic color tokens
+- sign-in.tsx: Used Spacing constants for padding/margins
+- photo-book.tsx: Added useColorScheme hook + Colors/SemanticColors/Shadows/Spacing imports
+- photo-book.tsx: PageCard component now accepts colors prop for dynamic theming
+- photo-book.tsx: All containers/modals use dynamic colors.background/backgroundSecondary
+- photo-book.tsx: PageCard uses Shadows.medium instead of inline shadow styles
+- photo-book.tsx: Milestone badge uses SemanticColors.gold, remove button uses SemanticColors.error
+- photo-book.tsx: Export button disabled state uses opacity:0.5 instead of hardcoded #ccc
+- photo-book.tsx: All inputs use colors.inputBorder/placeholder/text
+- photo-book.tsx: Replaced all hardcoded padding/margin with Spacing constants
+
+**Files changed:**
+- app/(auth)/sign-in.tsx - Full theme integration
+- app/photo-book.tsx - Full theme integration with dynamic colors and Spacing
+
+**Verification:** tsc, lint, test (157 passed), build all pass.
+
+**Next:** All UI screens themed. Remaining items: actual Stripe SDK integration, PDF generation, or backend API integration.

@@ -12,62 +12,98 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  useColorScheme,
 } from "react-native";
 import { router } from "expo-router";
 import {
   usePhotoBook,
   type PhotoBookPage,
 } from "@/contexts/photo-book-context";
-
-const PRIMARY_COLOR = "#0a7ea4";
+import {
+  Colors,
+  PRIMARY_COLOR,
+  SemanticColors,
+  Shadows,
+  Spacing,
+} from "@/constants/theme";
 
 type ModalState = "closed" | "editCaption";
+
+type ColorScheme = (typeof Colors)["light"];
 
 function PageCard({
   page,
   index,
   onEditCaption,
   onRemove,
+  colors,
 }: {
   page: PhotoBookPage;
   index: number;
   onEditCaption: (page: PhotoBookPage) => void;
   onRemove: (pageId: string) => void;
+  colors: ColorScheme;
 }) {
   const isTitle = page.type === "title";
   const isMilestone = page.type === "milestone";
 
   return (
-    <View style={styles.pageCard}>
+    <View
+      style={[
+        styles.pageCard,
+        { backgroundColor: colors.card, borderColor: colors.cardBorder },
+        Shadows.medium,
+      ]}
+    >
       <View style={styles.pageNumber}>
         <Text style={styles.pageNumberText}>{index + 1}</Text>
       </View>
 
       {isTitle ? (
-        <View style={styles.titlePage}>
+        <View
+          style={[styles.titlePage, { backgroundColor: `${PRIMARY_COLOR}10` }]}
+        >
           <Text style={styles.titlePageTitle}>{page.title}</Text>
           {page.caption && (
-            <Text style={styles.titlePageCaption}>{page.caption}</Text>
+            <Text
+              style={[styles.titlePageCaption, { color: colors.textSecondary }]}
+            >
+              {page.caption}
+            </Text>
           )}
         </View>
       ) : (
         <>
           {page.imageUri && (
-            <Image source={{ uri: page.imageUri }} style={styles.pageImage} />
+            <Image
+              source={{ uri: page.imageUri }}
+              style={[
+                styles.pageImage,
+                { backgroundColor: colors.backgroundTertiary },
+              ]}
+            />
           )}
           <View style={styles.pageContent}>
             {isMilestone && page.title && (
-              <View style={styles.milestoneBadge}>
+              <View
+                style={[
+                  styles.milestoneBadge,
+                  { backgroundColor: SemanticColors.gold },
+                ]}
+              >
                 <Text style={styles.milestoneBadgeText}>⭐ Milestone</Text>
               </View>
             )}
             {page.caption && (
-              <Text style={styles.pageCaption} numberOfLines={2}>
+              <Text
+                style={[styles.pageCaption, { color: colors.text }]}
+                numberOfLines={2}
+              >
                 {page.caption}
               </Text>
             )}
             {page.date && (
-              <Text style={styles.pageDate}>
+              <Text style={[styles.pageDate, { color: colors.textMuted }]}>
                 {new Date(page.date).toLocaleDateString("en-SG", {
                   day: "numeric",
                   month: "short",
@@ -79,10 +115,13 @@ function PageCard({
         </>
       )}
 
-      <View style={styles.pageActions}>
+      <View style={[styles.pageActions, { borderTopColor: colors.border }]}>
         {!isTitle && (
           <Pressable
-            style={styles.pageActionButton}
+            style={[
+              styles.pageActionButton,
+              { borderRightColor: colors.border },
+            ]}
             onPress={() => onEditCaption(page)}
           >
             <Text style={styles.pageActionText}>Edit</Text>
@@ -93,7 +132,11 @@ function PageCard({
             style={[styles.pageActionButton, styles.pageRemoveButton]}
             onPress={() => onRemove(page.id)}
           >
-            <Text style={styles.pageRemoveText}>Remove</Text>
+            <Text
+              style={[styles.pageRemoveText, { color: SemanticColors.error }]}
+            >
+              Remove
+            </Text>
           </Pressable>
         )}
       </View>
@@ -112,6 +155,9 @@ export default function PhotoBookScreen() {
     updatePageCaption,
     clearPhotoBook,
   } = usePhotoBook();
+
+  const colorScheme = useColorScheme() ?? "light";
+  const colors = Colors[colorScheme];
 
   const [modalState, setModalState] = useState<ModalState>("closed");
   const [editingPage, setEditingPage] = useState<PhotoBookPage | null>(null);
@@ -200,32 +246,55 @@ export default function PhotoBookScreen() {
       index={index}
       onEditCaption={handleEditCaption}
       onRemove={handleRemovePage}
+      colors={colors}
     />
   );
 
   if (isGenerating) {
     return (
-      <View style={styles.loadingContainer}>
+      <View
+        style={[
+          styles.loadingContainer,
+          { backgroundColor: colors.backgroundSecondary },
+        ]}
+      >
         <ActivityIndicator size="large" color={PRIMARY_COLOR} />
-        <Text style={styles.loadingText}>Generating your photo book...</Text>
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+          Generating your photo book...
+        </Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: colors.backgroundSecondary },
+      ]}
+    >
       {/* Header */}
-      <View style={styles.header}>
+      <View
+        style={[
+          styles.header,
+          {
+            backgroundColor: colors.background,
+            borderBottomColor: colors.border,
+          },
+        ]}
+      >
         <Pressable style={styles.backButton} onPress={() => router.back()}>
           <Text style={styles.backButtonText}>← Back</Text>
         </Pressable>
-        <Text style={styles.headerTitle}>Photo Book</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>
+          Photo Book
+        </Text>
         <View style={{ width: 60 }} />
       </View>
 
       {/* Stats Bar */}
-      <View style={styles.statsBar}>
-        <Text style={styles.statsText}>
+      <View style={[styles.statsBar, { backgroundColor: colors.background }]}>
+        <Text style={[styles.statsText, { color: colors.textSecondary }]}>
           {pages.length} page{pages.length !== 1 ? "s" : ""}
         </Text>
         <Pressable onPress={handleRegenerate}>
@@ -237,8 +306,10 @@ export default function PhotoBookScreen() {
       {pages.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyIcon}>📖</Text>
-          <Text style={styles.emptyTitle}>No Photos Yet</Text>
-          <Text style={styles.emptySubtitle}>
+          <Text style={[styles.emptyTitle, { color: colors.text }]}>
+            No Photos Yet
+          </Text>
+          <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
             Add some photo entries to create your photo book
           </Text>
         </View>
@@ -254,7 +325,15 @@ export default function PhotoBookScreen() {
 
       {/* Export Button */}
       {pages.length > 0 && (
-        <View style={styles.exportContainer}>
+        <View
+          style={[
+            styles.exportContainer,
+            {
+              backgroundColor: colors.background,
+              borderTopColor: colors.border,
+            },
+          ]}
+        >
           <Pressable
             style={[
               styles.exportButton,
@@ -266,7 +345,13 @@ export default function PhotoBookScreen() {
             <Text style={styles.exportButtonText}>
               {isExporting ? "Exporting..." : "Export as PDF"}
             </Text>
-            {!canExportPdf && <Text style={styles.premiumBadge}>Premium</Text>}
+            {!canExportPdf && (
+              <Text
+                style={[styles.premiumBadge, { color: SemanticColors.gold }]}
+              >
+                Premium
+              </Text>
+            )}
           </Pressable>
         </View>
       )}
@@ -279,14 +364,27 @@ export default function PhotoBookScreen() {
         onRequestClose={() => setModalState("closed")}
       >
         <KeyboardAvoidingView
-          style={styles.modalContainer}
+          style={[
+            styles.modalContainer,
+            { backgroundColor: colors.backgroundSecondary },
+          ]}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          <View style={styles.modalHeader}>
+          <View
+            style={[
+              styles.modalHeader,
+              {
+                backgroundColor: colors.background,
+                borderBottomColor: colors.border,
+              },
+            ]}
+          >
             <Pressable onPress={() => setModalState("closed")}>
               <Text style={styles.modalCancel}>Cancel</Text>
             </Pressable>
-            <Text style={styles.modalTitle}>Edit Caption</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              Edit Caption
+            </Text>
             <Pressable onPress={handleSaveCaption}>
               <Text style={styles.modalSave}>Save</Text>
             </Pressable>
@@ -294,15 +392,25 @@ export default function PhotoBookScreen() {
 
           <View style={styles.modalContent}>
             <TextInput
-              style={styles.captionInput}
+              style={[
+                styles.captionInput,
+                {
+                  backgroundColor: colors.background,
+                  borderColor: colors.inputBorder,
+                  color: colors.text,
+                },
+              ]}
               value={editCaption}
               onChangeText={setEditCaption}
               placeholder="Add a caption..."
+              placeholderTextColor={colors.placeholder}
               multiline
               maxLength={200}
               autoFocus
             />
-            <Text style={styles.charCount}>{editCaption.length}/200</Text>
+            <Text style={[styles.charCount, { color: colors.textMuted }]}>
+              {editCaption.length}/200
+            </Text>
           </View>
         </KeyboardAvoidingView>
       </Modal>
@@ -313,22 +421,19 @@ export default function PhotoBookScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
+    paddingHorizontal: Spacing.lg,
     paddingTop: 60,
-    paddingBottom: 16,
-    backgroundColor: "#fff",
+    paddingBottom: Spacing.lg,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#e0e0e0",
   },
   backButton: {
-    paddingVertical: 8,
-    paddingRight: 16,
+    paddingVertical: Spacing.sm,
+    paddingRight: Spacing.lg,
   },
   backButtonText: {
     fontSize: 16,
@@ -342,13 +447,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#fff",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
   },
   statsText: {
     fontSize: 14,
-    color: "#666",
   },
   regenerateText: {
     fontSize: 14,
@@ -359,32 +462,24 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f5f5f5",
   },
   loadingText: {
     fontSize: 16,
-    color: "#666",
-    marginTop: 16,
+    marginTop: Spacing.lg,
   },
   listContent: {
-    padding: 16,
+    padding: Spacing.lg,
     paddingBottom: 100,
   },
   pageCard: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    marginBottom: 16,
+    borderRadius: Spacing.md,
+    marginBottom: Spacing.lg,
     overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   pageNumber: {
     position: "absolute",
-    top: 8,
-    left: 8,
+    top: Spacing.sm,
+    left: Spacing.sm,
     backgroundColor: "rgba(0,0,0,0.6)",
     width: 24,
     height: 24,
@@ -399,39 +494,35 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   titlePage: {
-    padding: 32,
+    padding: Spacing.xxl,
     alignItems: "center",
     justifyContent: "center",
     minHeight: 200,
-    backgroundColor: `${PRIMARY_COLOR}10`,
   },
   titlePageTitle: {
     fontSize: 24,
     fontWeight: "700",
     color: PRIMARY_COLOR,
     textAlign: "center",
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   titlePageCaption: {
     fontSize: 16,
-    color: "#666",
     textAlign: "center",
   },
   pageImage: {
     width: "100%",
     aspectRatio: 1,
-    backgroundColor: "#e0e0e0",
   },
   pageContent: {
-    padding: 12,
+    padding: Spacing.md,
   },
   milestoneBadge: {
-    backgroundColor: "#ffd700",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: Spacing.xs,
     alignSelf: "flex-start",
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   milestoneBadgeText: {
     fontSize: 12,
@@ -440,24 +531,20 @@ const styles = StyleSheet.create({
   },
   pageCaption: {
     fontSize: 14,
-    color: "#333",
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
   },
   pageDate: {
     fontSize: 12,
-    color: "#999",
   },
   pageActions: {
     flexDirection: "row",
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#e0e0e0",
   },
   pageActionButton: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: Spacing.md,
     alignItems: "center",
     borderRightWidth: StyleSheet.hairlineWidth,
-    borderRightColor: "#e0e0e0",
   },
   pageActionText: {
     fontSize: 14,
@@ -469,28 +556,25 @@ const styles = StyleSheet.create({
   },
   pageRemoveText: {
     fontSize: 14,
-    color: "#ff3b30",
     fontWeight: "500",
   },
   emptyContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 32,
+    padding: Spacing.xxl,
   },
   emptyIcon: {
     fontSize: 64,
-    marginBottom: 16,
+    marginBottom: Spacing.lg,
   },
   emptyTitle: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#333",
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   emptySubtitle: {
     fontSize: 16,
-    color: "#666",
     textAlign: "center",
   },
   exportContainer: {
@@ -498,21 +582,19 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    padding: 16,
-    backgroundColor: "#fff",
+    padding: Spacing.lg,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#e0e0e0",
   },
   exportButton: {
     backgroundColor: PRIMARY_COLOR,
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: Spacing.lg,
+    borderRadius: Spacing.md,
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "center",
   },
   exportButtonDisabled: {
-    backgroundColor: "#ccc",
+    opacity: 0.5,
   },
   exportButtonText: {
     color: "#fff",
@@ -520,25 +602,21 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   premiumBadge: {
-    marginLeft: 8,
+    marginLeft: Spacing.sm,
     fontSize: 12,
-    color: "#ffd700",
     fontWeight: "600",
   },
   // Modal styles
   modalContainer: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
   },
   modalHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#fff",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#e0e0e0",
   },
   modalCancel: {
     fontSize: 16,
@@ -554,22 +632,19 @@ const styles = StyleSheet.create({
     color: PRIMARY_COLOR,
   },
   modalContent: {
-    padding: 16,
+    padding: Spacing.lg,
   },
   captionInput: {
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: Spacing.sm,
+    padding: Spacing.md,
     fontSize: 16,
     minHeight: 100,
     textAlignVertical: "top",
     borderWidth: 1,
-    borderColor: "#e0e0e0",
   },
   charCount: {
     fontSize: 12,
-    color: "#999",
     textAlign: "right",
-    marginTop: 8,
+    marginTop: Spacing.sm,
   },
 });
