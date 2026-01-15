@@ -1283,3 +1283,31 @@
 **Verification:** tsc, lint, test (248 passed), build all pass.
 
 **Next:** Create similar hooks for child/family/milestone APIs, or integrate hooks with Feed screen to replace EntryContext usage
+
+## 2026-01-15: TanStack Query Hooks for Child, Family, Milestone APIs
+
+**PRD ref:** Phase 1 Technical Architecture (TanStack Query for server state)
+
+**Task:** Complete TanStack Query hook layer for remaining domain entities
+
+**Decisions:**
+- Created use-children.ts with 3 hooks: useChildren, useCreateChild, useUpdateChild
+- Created use-family.ts with 3 hooks: useFamilyMembers, useInviteFamilyMember, useRemoveFamilyMember
+- Created use-milestones.ts with 4 hooks: useMilestones, useCreateMilestone, useCompleteMilestone, useDeleteMilestone
+- Same pattern as use-entries.ts: queryKeys factory, cache invalidation on mutations
+- useMilestones doesn't need pagination (milestones per child are limited)
+- useUpdateChild handles optional ID field from API (id?: string)
+- useCompleteMilestone updates detail cache + invalidates list for instant UI
+- TDD approach: 14 tests total (3 child + 3 family + 8 milestone)
+
+**Files changed:**
+- hooks/use-children.ts - New: TanStack Query hooks for child CRUD
+- hooks/use-family.ts - New: TanStack Query hooks for family invites/removal
+- hooks/use-milestones.ts - New: TanStack Query hooks for milestone CRUD
+- __tests__/hooks/use-children.test.ts - New: 3 TDD tests
+- __tests__/hooks/use-family.test.ts - New: 3 TDD tests
+- __tests__/hooks/use-milestones.test.ts - New: 8 TDD tests
+
+**Verification:** tsc, lint, test (262 passed), build all pass.
+
+**Next:** Integrate hooks with screens to replace context usage, or Cloudflare Workers backend setup
