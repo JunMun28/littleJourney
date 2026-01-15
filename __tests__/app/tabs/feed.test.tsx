@@ -197,6 +197,73 @@ describe("Feed storage integration", () => {
   });
 });
 
+// Test entry tags feature (PRD Section 3.1, 3.2 step 6)
+describe("Entry tags", () => {
+  const entryWrapper = ({ children }: { children: ReactNode }) => (
+    <EntryProvider>{children}</EntryProvider>
+  );
+
+  it("should add entry with tags", () => {
+    const { result } = renderHook(() => useEntries(), {
+      wrapper: entryWrapper,
+    });
+
+    act(() => {
+      result.current.addEntry({
+        type: "photo",
+        caption: "Beach day",
+        date: "2026-01-15",
+        tags: ["beach", "summer", "family"],
+      });
+    });
+
+    expect(result.current.entries[0].tags).toEqual([
+      "beach",
+      "summer",
+      "family",
+    ]);
+  });
+
+  it("should add entry without tags", () => {
+    const { result } = renderHook(() => useEntries(), {
+      wrapper: entryWrapper,
+    });
+
+    act(() => {
+      result.current.addEntry({
+        type: "photo",
+        caption: "No tags entry",
+        date: "2026-01-15",
+      });
+    });
+
+    expect(result.current.entries[0].tags).toBeUndefined();
+  });
+
+  it("should update entry tags", () => {
+    const { result } = renderHook(() => useEntries(), {
+      wrapper: entryWrapper,
+    });
+
+    act(() => {
+      result.current.addEntry({
+        type: "photo",
+        caption: "Entry to update",
+        date: "2026-01-15",
+        tags: ["original"],
+      });
+    });
+
+    const entryId = result.current.entries[0].id;
+
+    act(() => {
+      result.current.updateEntry(entryId, { tags: ["updated", "new"] });
+    });
+
+    expect(result.current.entries[0].tags).toEqual(["updated", "new"]);
+  });
+});
+
 // Test draft auto-save feature (PRD Section 3.5)
 describe("Feed draft auto-save", () => {
   beforeEach(() => {

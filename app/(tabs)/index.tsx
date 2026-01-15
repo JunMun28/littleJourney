@@ -186,6 +186,8 @@ export default function FeedScreen() {
   const [caption, setCaption] = useState("");
   const [entryDate, setEntryDate] = useState<Date>(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState("");
   const hasShownDraftPrompt = useRef(false);
 
   // Show draft resume prompt when draft exists (PRD Section 3.5)
@@ -210,6 +212,7 @@ export default function FeedScreen() {
                 setSelectedMediaSizes(draft.mediaSizes ?? []);
                 setCaption(draft.caption);
                 setEntryDate(new Date(draft.date));
+                setTags(draft.tags ?? []);
                 setCreateStep(draft.type ? "caption" : "type");
                 setIsCreating(true);
               }
@@ -231,6 +234,7 @@ export default function FeedScreen() {
           selectedMediaSizes.length > 0 ? selectedMediaSizes : undefined,
         caption,
         date: entryDate.toISOString().split("T")[0],
+        tags: tags.length > 0 ? tags : undefined,
       });
     }
   }, [
@@ -240,6 +244,7 @@ export default function FeedScreen() {
     selectedMediaSizes,
     caption,
     entryDate,
+    tags,
     saveDraft,
   ]);
 
@@ -252,6 +257,8 @@ export default function FeedScreen() {
     setCaption("");
     setEntryDate(new Date());
     setShowDatePicker(false);
+    setTags([]);
+    setTagInput("");
   };
 
   const onRefresh = useCallback(() => {
@@ -384,6 +391,7 @@ export default function FeedScreen() {
       mediaUris: selectedMedia.length > 0 ? selectedMedia : undefined,
       caption: caption.trim() || undefined,
       date: dateString,
+      tags: tags.length > 0 ? tags : undefined,
     });
 
     // Track storage usage for uploaded media
@@ -562,6 +570,62 @@ export default function FeedScreen() {
                 />
               )}
 
+              {/* Tags input (PRD Section 3.1, 3.2 step 6) */}
+              <View style={styles.tagsSection}>
+                <ThemedText style={{ color: colors.textSecondary }}>
+                  Tags (optional)
+                </ThemedText>
+                <View style={styles.tagsContainer}>
+                  {tags.map((tag, index) => (
+                    <View
+                      key={`${tag}-${index}`}
+                      style={[
+                        styles.tag,
+                        { backgroundColor: colors.backgroundSecondary },
+                      ]}
+                    >
+                      <ThemedText style={styles.tagText}>{tag}</ThemedText>
+                      <Pressable
+                        onPress={() =>
+                          setTags(tags.filter((_, i) => i !== index))
+                        }
+                        hitSlop={8}
+                      >
+                        <ThemedText
+                          style={[
+                            styles.tagRemove,
+                            { color: colors.textSecondary },
+                          ]}
+                        >
+                          ×
+                        </ThemedText>
+                      </Pressable>
+                    </View>
+                  ))}
+                </View>
+                <TextInput
+                  style={[
+                    styles.tagInput,
+                    {
+                      borderColor: colors.inputBorder,
+                      color: colors.text,
+                    },
+                  ]}
+                  placeholder="Type a tag and press enter"
+                  placeholderTextColor={colors.placeholder}
+                  value={tagInput}
+                  onChangeText={setTagInput}
+                  onSubmitEditing={() => {
+                    const trimmed = tagInput.trim().toLowerCase();
+                    if (trimmed && !tags.includes(trimmed)) {
+                      setTags([...tags, trimmed]);
+                    }
+                    setTagInput("");
+                  }}
+                  returnKeyType="done"
+                />
+              </View>
+
               <TouchableOpacity
                 style={styles.submitButton}
                 onPress={handleSubmit}
@@ -699,6 +763,37 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     marginBottom: 16,
+  },
+  tagsSection: {
+    marginBottom: 16,
+  },
+  tagsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginTop: 8,
+    marginBottom: 8,
+    gap: 8,
+  },
+  tag: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  tagText: {
+    fontSize: 14,
+    marginRight: 4,
+  },
+  tagRemove: {
+    fontSize: 18,
+    lineHeight: 18,
+  },
+  tagInput: {
+    fontSize: 16,
+    padding: 12,
+    borderWidth: 1,
+    borderRadius: 8,
   },
   submitButton: {
     backgroundColor: PRIMARY_COLOR,

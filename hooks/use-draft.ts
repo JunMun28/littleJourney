@@ -11,6 +11,7 @@ export interface Draft {
   mediaSizes?: number[];
   caption: string;
   date: string;
+  tags?: string[];
   savedAt: number;
 }
 

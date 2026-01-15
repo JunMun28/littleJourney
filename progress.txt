@@ -1005,3 +1005,28 @@
 **Verification:** tsc, lint, test (178 passed), build all pass.
 
 **Next:** Backend API integration, Stripe SDK, or PDF generation
+
+## 2026-01-15: Entry Tags Feature
+
+**PRD ref:** Phase 1 Weeks 5-7, Section 3.1 (Custom tags optional), Section 3.2 step 6 (Add tags)
+
+**Task:** Implement tag input UI for entry creation per PRD
+
+**Decisions:**
+- Tags stored as string[] in Entry (already supported by context)
+- Tag input appears between date picker and Post button in caption step
+- Tags displayed as removable chips with × button
+- Tag input field: type tag and press Enter to add
+- Tags auto-lowercase, duplicates prevented
+- Tags included in draft auto-save (added tags field to Draft interface)
+- Tags restored when resuming draft
+- TDD approach: 3 tests for tag CRUD in entry context
+
+**Files changed:**
+- hooks/use-draft.ts - Added tags?: string[] field to Draft interface
+- app/(tabs)/index.tsx - Added tags/tagInput state, tag input UI, updated draft save/resume, updated handleSubmit
+- __tests__/app/tabs/feed.test.tsx - Added 3 TDD tests for entry tags
+
+**Verification:** tsc, lint, test (181 passed), build all pass.
+
+**Next:** Backend API integration, Stripe SDK, or PDF generation
