@@ -1606,3 +1606,30 @@
 **Verification:** tsc, lint, test (304 passed), build all pass.
 
 **Next:** Cloudflare Workers backend setup, Stripe SDK integration, or Web Viewer (Phase 2)
+
+## 2026-01-15: Magic Link Sign-in UI
+
+**PRD ref:** Phase 1 Weeks 3-4, Section 1.1 (Authentication Methods)
+
+**Task:** Implement proper sign-in screen with magic link email input and OAuth buttons
+
+**Decisions:**
+- Replaced demo button with full sign-in UI per PRD Section 1.1
+- Magic link flow: email input → "Send Magic Link" button → success screen with "Check your email"
+- Email validation with regex, shows error for invalid format
+- Button disabled when email empty (visual opacity 0.5)
+- OAuth buttons: "Continue with Google", "Continue with Apple" (mock implementations)
+- 2-step flow: input step shows form, sent step shows confirmation message
+- Auto-sign-in after magic link sent (demo behavior until backend ready)
+- KeyboardAvoidingView + ScrollView for proper keyboard handling
+- Terms text at bottom per legal requirements
+- Theme system integration: dynamic colors for light/dark mode
+- TDD approach: 8 tests written first
+
+**Files changed:**
+- app/(auth)/sign-in.tsx - Full sign-in UI with email input, validation, OAuth buttons
+- __tests__/app/auth/sign-in.test.tsx - New: 8 TDD tests for sign-in screen
+
+**Verification:** tsc, lint, test (312 passed), build all pass. UI verified via Chrome MCP.
+
+**Next:** Cloudflare Workers backend setup, Stripe SDK integration, or Web Viewer (Phase 2)
