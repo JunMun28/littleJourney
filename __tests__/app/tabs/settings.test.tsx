@@ -631,4 +631,48 @@ describe("SettingsScreen - FEEDBACK-001 In-app Feedback", () => {
       expect(screen.queryByTestId("feedback-input")).toBeNull();
     });
   });
+
+  // PAY-006: Upgrade tier with proration tests
+  describe("subscription upgrade", () => {
+    it("shows upgrade button in settings when on free tier", async () => {
+      renderWithProviders(<SettingsScreen />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("upgrade-button")).toBeTruthy();
+      });
+      expect(screen.getByText("Upgrade Plan")).toBeTruthy();
+    });
+
+    it("opens subscription modal when upgrade button pressed", async () => {
+      renderWithProviders(<SettingsScreen />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("upgrade-button")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByTestId("upgrade-button"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Choose Plan")).toBeTruthy();
+      });
+
+      // Should show both Standard and Premium plan options
+      expect(screen.getByTestId("plan-standard")).toBeTruthy();
+      expect(screen.getByTestId("plan-premium")).toBeTruthy();
+    });
+
+    it("shows subscribe button for new subscription", async () => {
+      renderWithProviders(<SettingsScreen />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("upgrade-button")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByTestId("upgrade-button"));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("subscribe-button")).toBeTruthy();
+      });
+    });
+  });
 });

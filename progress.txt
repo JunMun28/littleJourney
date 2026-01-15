@@ -2376,3 +2376,32 @@
 
 **Next:** Continue remaining PRD items: SHARE-002-004 (Web Viewer), SEARCH-002 (AI semantic search), VIDEO-001-002 (Cloudflare Stream), PAY-003/004/006/008
 
+## 2026-01-16: Subscription Upgrade with Proration (PAY-006)
+
+**PRD ref:** Phase 1 Weeks 12-13, Section 12 (Monetization), PAY-006
+
+**Task:** Implement tier upgrade with proration calculation for mid-cycle upgrades
+
+**Decisions:**
+- Added TIER_HIERARCHY constant for upgrade/downgrade validation (free:0, standard:1, premium:2)
+- Added upgradePlan(newPlan) method to SubscriptionContext - upgrades immediately, limits increase right away
+- Added calculateProratedAmount(newPlan) method - calculates prorated price based on remaining days in billing period
+- Proration formula: (newDailyRate - currentDailyRate) * remainingDays
+- upgradePlan validates: must be subscribed, cannot downgrade (use separate flow for downgrades)
+- Settings subscription modal now shows:
+  - Prorated charge display when upgrading from Standard to Premium
+  - "Already on this plan" message when selecting current plan
+  - Normal subscribe button for new subscriptions
+- handleUpgrade confirms with Alert showing prorated amount and future billing before processing
+- TDD approach: 6 context tests + 3 Settings UI tests
+
+**Files changed:**
+- contexts/subscription-context.tsx - Added TIER_HIERARCHY, upgradePlan, calculateProratedAmount methods
+- app/(tabs)/settings.tsx - Added handleUpgrade, prorated info display, current plan badge, new styles
+- __tests__/contexts/subscription-context.test.tsx - Added 6 TDD tests for proration
+- __tests__/app/tabs/settings.test.tsx - Added 3 TDD tests for upgrade UI
+
+**Verification:** tsc, lint, test (574 passed), build all pass.
+
+**Next:** Continue remaining PRD items: SHARE-002-004 (Web Viewer), SEARCH-002 (AI semantic search), VIDEO-001-002 (Cloudflare Stream), PAY-003/004/008
+

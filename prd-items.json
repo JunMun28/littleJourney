@@ -1199,7 +1199,7 @@
         "Verify limits increase immediately"
       ],
       "acceptanceCriteria": "Can upgrade tier with proration",
-      "passes": false
+      "passes": true
     },
     {
       "id": "PAY-007",

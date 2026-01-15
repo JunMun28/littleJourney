@@ -128,6 +128,8 @@ export default function SettingsScreen() {
     cancelledAt,
     currentPeriodEnd,
     subscribe,
+    upgradePlan,
+    calculateProratedAmount,
     cancelSubscription,
     restoreSubscription,
     isLoading: isSubscriptionLoading,
@@ -300,6 +302,50 @@ export default function SettingsScreen() {
 
   const handleRestoreSubscription = async () => {
     await restoreSubscription();
+  };
+
+  // PAY-006: Handle tier upgrade with proration
+  const handleUpgrade = async () => {
+    clearPaymentError();
+
+    // Calculate prorated amount
+    const proratedAmount = calculateProratedAmount(selectedPlan);
+
+    // Confirm upgrade with user
+    Alert.alert(
+      "Upgrade to Premium",
+      `You'll be charged $${proratedAmount.toFixed(2)} SGD now for the remainder of your billing period, then $${billingCycle === "monthly" ? PLAN_DETAILS.premium.monthlyPrice.toFixed(2) : PLAN_DETAILS.premium.yearlyPrice.toFixed(2)} SGD per ${billingCycle === "monthly" ? "month" : "year"} going forward.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Upgrade Now",
+          onPress: async () => {
+            // Process prorated payment
+            const success = await processPayment(
+              selectedPlan,
+              billingCycle || "monthly",
+            );
+
+            if (!success) {
+              if (paymentError) {
+                Alert.alert("Payment Error", paymentError);
+              }
+              return;
+            }
+
+            // Complete upgrade
+            await upgradePlan(selectedPlan);
+            setTier(selectedPlan);
+            setModalState("closed");
+
+            Alert.alert(
+              "Upgrade Successful!",
+              `You're now on the ${PLAN_DETAILS[selectedPlan].name} plan. Your increased storage and video limits are active immediately.`,
+            );
+          },
+        },
+      ],
+    );
   };
 
   const getPrice = (plan: SubscriptionTier, cycle: BillingCycle): string => {
@@ -1566,23 +1612,82 @@ export default function SettingsScreen() {
               </Pressable>
             ))}
 
-            {/* Subscribe Button */}
-            <Pressable
-              style={[
-                styles.subscribeButton,
-                (isSubscriptionLoading || isPaymentLoading) &&
-                  styles.subscribeButtonDisabled,
-              ]}
-              onPress={handleSubscribe}
-              disabled={isSubscriptionLoading || isPaymentLoading}
-              testID="subscribe-button"
-            >
-              <Text style={styles.subscribeButtonText}>
-                {isSubscriptionLoading || isPaymentLoading
-                  ? "Processing payment..."
-                  : `Subscribe to ${PLAN_DETAILS[selectedPlan].name}`}
-              </Text>
-            </Pressable>
+            {/* Subscribe/Upgrade Button */}
+            {currentPlan === "standard" && selectedPlan === "premium" ? (
+              // PAY-006: Show upgrade UI for existing Standard subscribers
+              <>
+                <View style={styles.proratedInfo}>
+                  <Text
+                    style={[
+                      styles.proratedLabel,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    Prorated charge today:
+                  </Text>
+                  <Text style={[styles.proratedAmount, { color: colors.text }]}>
+                    ${calculateProratedAmount("premium").toFixed(2)} SGD
+                  </Text>
+                  <Text
+                    style={[styles.proratedNote, { color: colors.textMuted }]}
+                  >
+                    Then $
+                    {billingCycle === "monthly"
+                      ? PLAN_DETAILS.premium.monthlyPrice.toFixed(2)
+                      : PLAN_DETAILS.premium.yearlyPrice.toFixed(2)}{" "}
+                    SGD/{billingCycle === "monthly" ? "mo" : "yr"} at next
+                    billing
+                  </Text>
+                </View>
+                <Pressable
+                  style={[
+                    styles.subscribeButton,
+                    (isSubscriptionLoading || isPaymentLoading) &&
+                      styles.subscribeButtonDisabled,
+                  ]}
+                  onPress={handleUpgrade}
+                  disabled={isSubscriptionLoading || isPaymentLoading}
+                  testID="upgrade-button-modal"
+                >
+                  <Text style={styles.subscribeButtonText}>
+                    {isSubscriptionLoading || isPaymentLoading
+                      ? "Processing upgrade..."
+                      : "Upgrade to Premium"}
+                  </Text>
+                </Pressable>
+              </>
+            ) : selectedPlan === currentPlan ? (
+              // Already on this plan
+              <View style={styles.currentPlanBadge}>
+                <Text
+                  style={[
+                    styles.currentPlanText,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  You&apos;re already on the {PLAN_DETAILS[selectedPlan].name}{" "}
+                  plan
+                </Text>
+              </View>
+            ) : (
+              // New subscription
+              <Pressable
+                style={[
+                  styles.subscribeButton,
+                  (isSubscriptionLoading || isPaymentLoading) &&
+                    styles.subscribeButtonDisabled,
+                ]}
+                onPress={handleSubscribe}
+                disabled={isSubscriptionLoading || isPaymentLoading}
+                testID="subscribe-button"
+              >
+                <Text style={styles.subscribeButtonText}>
+                  {isSubscriptionLoading || isPaymentLoading
+                    ? "Processing payment..."
+                    : `Subscribe to ${PLAN_DETAILS[selectedPlan].name}`}
+                </Text>
+              </Pressable>
+            )}
 
             <Text
               style={[
@@ -2475,6 +2580,36 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 16,
     marginBottom: 32,
+  },
+  // PAY-006: Proration styles
+  proratedInfo: {
+    alignItems: "center",
+    marginVertical: 16,
+    padding: 16,
+    backgroundColor: `${PRIMARY_COLOR}10`,
+    borderRadius: 12,
+  },
+  proratedLabel: {
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  proratedAmount: {
+    fontSize: 24,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  proratedNote: {
+    fontSize: 12,
+    textAlign: "center",
+  },
+  currentPlanBadge: {
+    alignItems: "center",
+    marginVertical: 16,
+    padding: 16,
+  },
+  currentPlanText: {
+    fontSize: 14,
+    fontStyle: "italic",
   },
   // Child profile styles
   childProfileContainer: {

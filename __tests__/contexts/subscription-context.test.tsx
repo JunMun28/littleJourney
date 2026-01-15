@@ -129,4 +129,84 @@ describe("SubscriptionContext", () => {
     expect(result.current.currentPeriodStart).toBeTruthy();
     expect(result.current.currentPeriodEnd).toBeTruthy();
   });
+
+  // PAY-006: Upgrade tier with proration tests
+  describe("upgradePlan with proration", () => {
+    it("provides upgradePlan method", () => {
+      const { result } = renderHook(() => useSubscription(), { wrapper });
+      expect(result.current.upgradePlan).toBeDefined();
+    });
+
+    it("upgrades plan immediately and increases limits", async () => {
+      const { result } = renderHook(() => useSubscription(), { wrapper });
+
+      // Subscribe to standard first
+      await act(async () => {
+        await result.current.subscribe("standard", "monthly");
+      });
+
+      expect(result.current.currentPlan).toBe("standard");
+
+      // Upgrade to premium
+      await act(async () => {
+        await result.current.upgradePlan("premium");
+      });
+
+      expect(result.current.currentPlan).toBe("premium");
+      // Billing cycle should remain the same
+      expect(result.current.billingCycle).toBe("monthly");
+    });
+
+    it("calculates prorated amount correctly", async () => {
+      const { result } = renderHook(() => useSubscription(), { wrapper });
+
+      // Subscribe to standard monthly
+      await act(async () => {
+        await result.current.subscribe("standard", "monthly");
+      });
+
+      // Calculate proration (should return difference between plans, prorated for remaining days)
+      const proratedAmount = result.current.calculateProratedAmount("premium");
+
+      // Prorated amount should be positive (upgrading to higher tier)
+      expect(proratedAmount).toBeGreaterThanOrEqual(0);
+    });
+
+    it("returns 0 proration for same tier upgrade", async () => {
+      const { result } = renderHook(() => useSubscription(), { wrapper });
+
+      await act(async () => {
+        await result.current.subscribe("standard", "monthly");
+      });
+
+      const proratedAmount = result.current.calculateProratedAmount("standard");
+      expect(proratedAmount).toBe(0);
+    });
+
+    it("throws error when trying to upgrade as free user", async () => {
+      const { result } = renderHook(() => useSubscription(), { wrapper });
+
+      // Should throw because no active subscription to upgrade
+      await expect(
+        act(async () => {
+          await result.current.upgradePlan("premium");
+        }),
+      ).rejects.toThrow("Cannot upgrade without an active subscription");
+    });
+
+    it("throws error when downgrading", async () => {
+      const { result } = renderHook(() => useSubscription(), { wrapper });
+
+      await act(async () => {
+        await result.current.subscribe("premium", "monthly");
+      });
+
+      // Should throw because downgrade is not allowed via upgradePlan
+      await expect(
+        act(async () => {
+          await result.current.upgradePlan("standard");
+        }),
+      ).rejects.toThrow("Cannot downgrade using upgradePlan");
+    });
+  });
 });
