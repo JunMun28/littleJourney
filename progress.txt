@@ -1206,3 +1206,24 @@
 **Verification:** tsc, lint, test (216 passed), build all pass.
 
 **Next:** Backend API integration, Stripe SDK, or Web Viewer (Phase 2)
+
+## 2026-01-15: Photo Book PDF Export Integration
+
+**PRD ref:** Phase 1 Weeks 12-13, Section 10.3 (Export - PDF download)
+
+**Task:** Connect photo-book.tsx export button to context's exportPdf method (was TODO placeholder)
+
+**Decisions:**
+- Photo-book context already had full exportPdf implementation (expo-print + expo-sharing)
+- photo-book.tsx screen was not using context's exportPdf - had TODO placeholder showing "Coming Soon"
+- Added exportPdf to usePhotoBook destructure
+- Updated handleExport to call context's exportPdf() instead of showing placeholder alert
+- TDD approach: wrote screen tests first to verify integration
+
+**Files changed:**
+- app/photo-book.tsx - Added exportPdf to destructure, updated handleExport to call it
+- __tests__/app/photo-book.test.tsx - New: 4 TDD tests for photo-book screen
+
+**Verification:** tsc, lint, test (220 passed), build all pass.
+
+**Next:** Backend API integration, Stripe SDK, or Web Viewer (Phase 2)

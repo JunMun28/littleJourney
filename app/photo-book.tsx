@@ -154,6 +154,7 @@ export default function PhotoBookScreen() {
     removePage,
     updatePageCaption,
     clearPhotoBook,
+    exportPdf,
   } = usePhotoBook();
 
   const colorScheme = useColorScheme() ?? "light";
@@ -210,11 +211,7 @@ export default function PhotoBookScreen() {
       );
       return;
     }
-    // TODO: Implement actual PDF export
-    Alert.alert(
-      "Coming Soon",
-      "PDF export will be available in a future update.",
-    );
+    exportPdf();
   };
 
   const handleRegenerate = () => {
