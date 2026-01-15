@@ -1505,3 +1505,27 @@
 **Verification:** tsc, lint, test (288 passed), build all pass.
 
 **Next:** Cloudflare Workers backend setup or Stripe SDK integration
+
+## 2026-01-15: Entry Detail Screen TanStack Query Migration
+
+**PRD ref:** Phase 1 Technical Architecture (TanStack Query for server state)
+
+**Task:** Migrate entry detail screen from EntryContext to TanStack Query hooks
+
+**Decisions:**
+- Replaced useEntries (context) with useEntry, useUpdateEntry, useDeleteEntry (TanStack Query hooks)
+- useEntry provides: data (entry), isLoading, isError states
+- Added loading state with ActivityIndicator while fetching
+- Mutations use onSuccess callbacks for navigation/modal state changes
+- useEffect syncs editCaption state with entry when entry loads
+- EntryContext no longer imported - types still available from contexts
+- Tests updated to use QueryClientProvider wrapper and entryApi for setup
+- Added 2 new TanStack Query integration tests
+
+**Files changed:**
+- app/entry/[id].tsx - Replaced context with TanStack Query hooks, added loading state
+- __tests__/app/entry/entry-detail.test.tsx - Updated to QueryClientProvider, createTestEntry helper
+
+**Verification:** tsc, lint, test (290 passed), build all pass.
+
+**Next:** Cloudflare Workers backend setup or Stripe SDK integration

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -13,12 +13,13 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 
 import { ThemedText } from "@/components/themed-text";
 import { VideoPlayer } from "@/components/video-player";
-import { useEntries } from "@/contexts/entry-context";
+import { useEntry, useUpdateEntry, useDeleteEntry } from "@/hooks/use-entries";
 import {
   PRIMARY_COLOR,
   SemanticColors,
@@ -32,12 +33,22 @@ type MenuState = "closed" | "options" | "confirmDelete" | "edit";
 
 export default function EntryDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getEntry, deleteEntry, updateEntry } = useEntries();
-  const entry = getEntry(id);
+
+  // TanStack Query hooks
+  const { data: entry, isLoading, isError } = useEntry(id);
+  const updateEntryMutation = useUpdateEntry();
+  const deleteEntryMutation = useDeleteEntry();
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [menuState, setMenuState] = useState<MenuState>("closed");
-  const [editCaption, setEditCaption] = useState(entry?.caption ?? "");
+  const [editCaption, setEditCaption] = useState("");
+
+  // Sync editCaption with entry when entry loads or changes
+  useEffect(() => {
+    if (entry?.caption) {
+      setEditCaption(entry.caption);
+    }
+  }, [entry?.caption]);
 
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -68,10 +79,13 @@ export default function EntryDetailScreen() {
 
   const handleConfirmDelete = useCallback(() => {
     if (entry) {
-      deleteEntry(entry.id);
-      router.back();
+      deleteEntryMutation.mutate(entry.id, {
+        onSuccess: () => {
+          router.back();
+        },
+      });
     }
-  }, [entry, deleteEntry]);
+  }, [entry, deleteEntryMutation]);
 
   const handleEdit = useCallback(() => {
     setEditCaption(entry?.caption ?? "");
@@ -80,16 +94,32 @@ export default function EntryDetailScreen() {
 
   const handleSaveEdit = useCallback(() => {
     if (entry) {
-      updateEntry(entry.id, { caption: editCaption });
+      updateEntryMutation.mutate(
+        { id: entry.id, updates: { caption: editCaption } },
+        {
+          onSuccess: () => {
+            setMenuState("closed");
+          },
+        },
+      );
     }
-    setMenuState("closed");
-  }, [entry, editCaption, updateEntry]);
+  }, [entry, editCaption, updateEntryMutation]);
 
   const handleCancelEdit = useCallback(() => {
     setMenuState("closed");
   }, []);
 
-  if (!entry) {
+  // Loading state
+  if (isLoading) {
+    return (
+      <View style={styles.notFoundContainer}>
+        <ActivityIndicator size="large" color={PRIMARY_COLOR} />
+      </View>
+    );
+  }
+
+  // Not found state (error or missing entry)
+  if (isError || !entry) {
     return (
       <View style={styles.notFoundContainer}>
         <ThemedText style={styles.notFoundText}>Entry not found</ThemedText>

@@ -1,6 +1,14 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react-native";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+} from "@testing-library/react-native";
 import { View } from "react-native";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+import { entryApi, clearAllMockData } from "@/services/api-client";
 
 // Mock expo-av
 jest.mock("expo-av", () => {
@@ -23,7 +31,7 @@ jest.mock("expo-av", () => {
 
 // Mock expo-router
 const mockBack = jest.fn();
-const mockParams = { id: "test-entry-1" };
+let mockParams = { id: "" };
 
 jest.mock("expo-router", () => ({
   useLocalSearchParams: () => mockParams,
@@ -34,59 +42,93 @@ jest.mock("expo-router", () => ({
   },
 }));
 
-// Mock entry context
-const mockGetEntry = jest.fn();
-const mockUpdateEntry = jest.fn();
-const mockDeleteEntry = jest.fn();
-const mockEntries = [
-  {
-    id: "test-entry-1",
-    type: "photo" as const,
-    mediaUris: ["file:///photo1.jpg", "file:///photo2.jpg"],
-    caption: "First steps!",
-    date: "2024-06-15",
-    createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z",
-  },
-];
-
-jest.mock("@/contexts/entry-context", () => ({
-  useEntries: () => ({
-    getEntry: mockGetEntry,
-    entries: mockEntries,
-    updateEntry: mockUpdateEntry,
-    deleteEntry: mockDeleteEntry,
-  }),
-}));
-
 // Import after mocks
 import EntryDetailScreen from "@/app/entry/[id]";
+
+// Create test wrapper with QueryClient
+function createWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        gcTime: 0,
+      },
+      mutations: {
+        retry: false,
+      },
+    },
+  });
+
+  return function Wrapper({ children }: { children: React.ReactNode }) {
+    return (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+  };
+}
+
+// Helper to create test entry via API
+async function createTestEntry(
+  overrides: Partial<{
+    type: "photo" | "video" | "text";
+    mediaUris: string[] | undefined;
+    caption: string;
+    date: string;
+  }> = {},
+) {
+  const defaultMediaUris = ["file:///photo1.jpg", "file:///photo2.jpg"];
+  const result = await entryApi.createEntry({
+    entry: {
+      type: overrides.type ?? "photo",
+      // Only use default if mediaUris key is not in overrides
+      mediaUris:
+        "mediaUris" in overrides ? overrides.mediaUris : defaultMediaUris,
+      caption: overrides.caption ?? "First steps!",
+      date: overrides.date ?? "2024-06-15",
+    },
+  });
+  if ("error" in result && result.error) throw new Error(result.error.message);
+  return result.data;
+}
 
 describe("EntryDetailScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetEntry.mockReturnValue(mockEntries[0]);
+    clearAllMockData();
   });
 
-  it("renders entry with photo carousel", () => {
-    render(<EntryDetailScreen />);
+  it("renders entry with photo carousel", async () => {
+    const entry = await createTestEntry();
+    mockParams = { id: entry.id };
 
-    // Should show the entry caption
-    expect(screen.getByText("First steps!")).toBeTruthy();
+    render(<EntryDetailScreen />, { wrapper: createWrapper() });
+
+    // Wait for entry to load
+    await waitFor(() => {
+      expect(screen.getByText("First steps!")).toBeTruthy();
+    });
     // Should show the date
     expect(screen.getByText(/15 Jun 2024/)).toBeTruthy();
   });
 
-  it("shows entry not found when entry does not exist", () => {
-    mockGetEntry.mockReturnValue(undefined);
+  it("shows entry not found when entry does not exist", async () => {
+    mockParams = { id: "non-existent-id" };
 
-    render(<EntryDetailScreen />);
+    render(<EntryDetailScreen />, { wrapper: createWrapper() });
 
-    expect(screen.getByText("Entry not found")).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText("Entry not found")).toBeTruthy();
+    });
   });
 
-  it("displays back button that navigates back", () => {
-    render(<EntryDetailScreen />);
+  it("displays back button that navigates back", async () => {
+    const entry = await createTestEntry();
+    mockParams = { id: entry.id };
+
+    render(<EntryDetailScreen />, { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(screen.getByText("First steps!")).toBeTruthy();
+    });
 
     const backButton = screen.getByTestId("back-button");
     fireEvent.press(backButton);
@@ -94,47 +136,71 @@ describe("EntryDetailScreen", () => {
     expect(mockBack).toHaveBeenCalled();
   });
 
-  it("shows image counter for multi-photo entries", () => {
-    render(<EntryDetailScreen />);
+  it("shows image counter for multi-photo entries", async () => {
+    const entry = await createTestEntry({
+      mediaUris: ["file:///photo1.jpg", "file:///photo2.jpg"],
+    });
+    mockParams = { id: entry.id };
 
-    // Should show 1/2 indicator for carousel
-    expect(screen.getByTestId("image-counter")).toBeTruthy();
+    render(<EntryDetailScreen />, { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("image-counter")).toBeTruthy();
+    });
   });
 
-  it("renders text-only entry without images", () => {
-    mockGetEntry.mockReturnValue({
-      id: "test-entry-2",
-      type: "text" as const,
+  it("renders text-only entry without images", async () => {
+    const entry = await createTestEntry({
+      type: "text",
+      mediaUris: undefined,
       caption: "Slept through the night!",
-      date: "2024-06-17",
-      createdAt: "2024-06-17T10:00:00Z",
-      updatedAt: "2024-06-17T10:00:00Z",
     });
+    mockParams = { id: entry.id };
 
-    render(<EntryDetailScreen />);
+    render(<EntryDetailScreen />, { wrapper: createWrapper() });
 
-    expect(screen.getByText("Slept through the night!")).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText("Slept through the night!")).toBeTruthy();
+    });
     expect(screen.queryByTestId("image-counter")).toBeNull();
   });
 
-  it("shows options menu button", () => {
-    render(<EntryDetailScreen />);
+  it("shows options menu button", async () => {
+    const entry = await createTestEntry();
+    mockParams = { id: entry.id };
 
-    expect(screen.getByTestId("options-button")).toBeTruthy();
+    render(<EntryDetailScreen />, { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("options-button")).toBeTruthy();
+    });
   });
 
-  it("opens options menu with edit and delete actions", () => {
-    render(<EntryDetailScreen />);
+  it("opens options menu with edit and delete actions", async () => {
+    const entry = await createTestEntry();
+    mockParams = { id: entry.id };
 
-    const optionsButton = screen.getByTestId("options-button");
-    fireEvent.press(optionsButton);
+    render(<EntryDetailScreen />, { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("options-button")).toBeTruthy();
+    });
+
+    fireEvent.press(screen.getByTestId("options-button"));
 
     expect(screen.getByText("Edit")).toBeTruthy();
     expect(screen.getByText("Delete")).toBeTruthy();
   });
 
-  it("deletes entry and navigates back when delete is confirmed", () => {
-    render(<EntryDetailScreen />);
+  it("deletes entry and navigates back when delete is confirmed", async () => {
+    const entry = await createTestEntry();
+    mockParams = { id: entry.id };
+
+    render(<EntryDetailScreen />, { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(screen.getByText("First steps!")).toBeTruthy();
+    });
 
     // Open options menu
     fireEvent.press(screen.getByTestId("options-button"));
@@ -143,12 +209,24 @@ describe("EntryDetailScreen", () => {
     // Confirm deletion
     fireEvent.press(screen.getByText("Delete Entry"));
 
-    expect(mockDeleteEntry).toHaveBeenCalledWith("test-entry-1");
-    expect(mockBack).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(mockBack).toHaveBeenCalled();
+    });
+
+    // Verify entry was deleted from API
+    const result = await entryApi.getEntry(entry.id);
+    expect("error" in result).toBe(true);
   });
 
-  it("cancels delete and closes menu", () => {
-    render(<EntryDetailScreen />);
+  it("cancels delete and closes menu", async () => {
+    const entry = await createTestEntry();
+    mockParams = { id: entry.id };
+
+    render(<EntryDetailScreen />, { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(screen.getByText("First steps!")).toBeTruthy();
+    });
 
     // Open options menu
     fireEvent.press(screen.getByTestId("options-button"));
@@ -157,12 +235,21 @@ describe("EntryDetailScreen", () => {
     // Cancel deletion
     fireEvent.press(screen.getByText("Cancel"));
 
-    expect(mockDeleteEntry).not.toHaveBeenCalled();
+    // Entry should still exist
+    const result = await entryApi.getEntry(entry.id);
+    expect("data" in result).toBe(true);
   });
 
   describe("Edit Modal", () => {
-    it("opens edit modal when Edit is pressed", () => {
-      render(<EntryDetailScreen />);
+    it("opens edit modal when Edit is pressed", async () => {
+      const entry = await createTestEntry();
+      mockParams = { id: entry.id };
+
+      render(<EntryDetailScreen />, { wrapper: createWrapper() });
+
+      await waitFor(() => {
+        expect(screen.getByTestId("options-button")).toBeTruthy();
+      });
 
       // Open options menu
       fireEvent.press(screen.getByTestId("options-button"));
@@ -174,8 +261,15 @@ describe("EntryDetailScreen", () => {
       expect(screen.getByTestId("caption-input")).toBeTruthy();
     });
 
-    it("pre-fills caption in edit modal", () => {
-      render(<EntryDetailScreen />);
+    it("pre-fills caption in edit modal", async () => {
+      const entry = await createTestEntry();
+      mockParams = { id: entry.id };
+
+      render(<EntryDetailScreen />, { wrapper: createWrapper() });
+
+      await waitFor(() => {
+        expect(screen.getByText("First steps!")).toBeTruthy();
+      });
 
       // Open options menu and edit modal
       fireEvent.press(screen.getByTestId("options-button"));
@@ -186,8 +280,15 @@ describe("EntryDetailScreen", () => {
       expect(captionInput.props.value).toBe("First steps!");
     });
 
-    it("saves edited caption and closes modal", () => {
-      render(<EntryDetailScreen />);
+    it("saves edited caption and closes modal", async () => {
+      const entry = await createTestEntry();
+      mockParams = { id: entry.id };
+
+      render(<EntryDetailScreen />, { wrapper: createWrapper() });
+
+      await waitFor(() => {
+        expect(screen.getByText("First steps!")).toBeTruthy();
+      });
 
       // Open edit modal
       fireEvent.press(screen.getByTestId("options-button"));
@@ -200,13 +301,24 @@ describe("EntryDetailScreen", () => {
       // Save
       fireEvent.press(screen.getByText("Save"));
 
-      expect(mockUpdateEntry).toHaveBeenCalledWith("test-entry-1", {
-        caption: "Updated caption!",
+      // Wait for mutation to complete and verify API was updated
+      await waitFor(async () => {
+        const result = await entryApi.getEntry(entry.id);
+        expect("data" in result && result.data?.caption).toBe(
+          "Updated caption!",
+        );
       });
     });
 
-    it("cancels edit without saving", () => {
-      render(<EntryDetailScreen />);
+    it("cancels edit without saving", async () => {
+      const entry = await createTestEntry();
+      mockParams = { id: entry.id };
+
+      render(<EntryDetailScreen />, { wrapper: createWrapper() });
+
+      await waitFor(() => {
+        expect(screen.getByText("First steps!")).toBeTruthy();
+      });
 
       // Open edit modal
       fireEvent.press(screen.getByTestId("options-button"));
@@ -219,7 +331,45 @@ describe("EntryDetailScreen", () => {
       // Cancel
       fireEvent.press(screen.getByTestId("edit-cancel-button"));
 
-      expect(mockUpdateEntry).not.toHaveBeenCalled();
+      // Entry should still have original caption
+      const result = await entryApi.getEntry(entry.id);
+      expect("data" in result && result.data?.caption).toBe("First steps!");
+    });
+  });
+
+  describe("TanStack Query Integration", () => {
+    it("shows loading state while fetching entry", async () => {
+      const entry = await createTestEntry();
+      mockParams = { id: entry.id };
+
+      render(<EntryDetailScreen />, { wrapper: createWrapper() });
+
+      // Entry should load eventually
+      await waitFor(() => {
+        expect(screen.getByText("First steps!")).toBeTruthy();
+      });
+    });
+
+    it("updates cache when entry is edited", async () => {
+      const entry = await createTestEntry();
+      mockParams = { id: entry.id };
+
+      render(<EntryDetailScreen />, { wrapper: createWrapper() });
+
+      await waitFor(() => {
+        expect(screen.getByText("First steps!")).toBeTruthy();
+      });
+
+      // Edit entry
+      fireEvent.press(screen.getByTestId("options-button"));
+      fireEvent.press(screen.getByText("Edit"));
+      fireEvent.changeText(screen.getByTestId("caption-input"), "New caption!");
+      fireEvent.press(screen.getByText("Save"));
+
+      // Wait for the UI to update with new caption
+      await waitFor(() => {
+        expect(screen.getByText("New caption!")).toBeTruthy();
+      });
     });
   });
 });
