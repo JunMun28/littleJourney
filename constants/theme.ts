@@ -69,6 +69,22 @@ export const SemanticColors = {
   goldLight: "rgba(255, 215, 0, 0.15)",
 };
 
+// Full-screen viewer colors (dark by design for media viewing)
+export const ViewerColors = {
+  background: "#000000",
+  overlay: "rgba(0, 0, 0, 0.5)",
+  overlayStrong: "rgba(0, 0, 0, 0.6)",
+  text: "#ffffff",
+  textMuted: "rgba(255, 255, 255, 0.7)",
+  textSubtle: "rgba(255, 255, 255, 0.6)",
+  textPlaceholder: "rgba(255, 255, 255, 0.4)",
+  // Modal styling for dark context
+  modalBackground: "#1c1c1e",
+  modalBorder: "rgba(255, 255, 255, 0.1)",
+  inputBackground: "rgba(255, 255, 255, 0.1)",
+  buttonBackground: "rgba(255, 255, 255, 0.2)",
+};
+
 // Spacing scale for consistency
 export const Spacing = {
   xs: 4,

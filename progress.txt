@@ -868,3 +868,28 @@
 **Verification:** tsc, lint, test (157 passed), build all pass.
 
 **Next:** Continue UI polish for entry detail screens
+
+## 2026-01-15: UI Polish - Entry Detail Screen Theme Integration
+
+**PRD ref:** Phase 1 Weeks 12-13 (Polish)
+
+**Task:** Apply theme system to entry detail screen (entry/[id].tsx)
+
+**Decisions:**
+- Added ViewerColors to theme.ts for full-screen media viewer context
+- ViewerColors intentionally dark (black bg for media viewing) - not light/dark mode dependent
+- ViewerColors includes: background, overlay, overlayStrong, text, textMuted, textSubtle, textPlaceholder, modalBackground, modalBorder, inputBackground, buttonBackground
+- Entry detail uses ViewerColors, PRIMARY_COLOR, SemanticColors, Spacing from theme
+- All hardcoded colors replaced: #000, #fff, rgba values, #1c1c1e, #ff453a
+- Modals (options, delete confirm, edit): ViewerColors.modalBackground/modalBorder
+- Delete button: SemanticColors.error
+- Edit modal: PRIMARY_COLOR for cancel/save buttons, ViewerColors for inputs
+- Spacing constants for padding/margins throughout
+
+**Files changed:**
+- constants/theme.ts - Added ViewerColors export for full-screen viewer context
+- app/entry/[id].tsx - Full theme integration with ViewerColors and Spacing
+
+**Verification:** tsc, lint, test (157 passed), build all pass.
+
+**Next:** UI polish for onboarding screens or photo book screen

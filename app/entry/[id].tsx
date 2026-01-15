@@ -19,6 +19,12 @@ import { useLocalSearchParams, router } from "expo-router";
 import { ThemedText } from "@/components/themed-text";
 import { VideoPlayer } from "@/components/video-player";
 import { useEntries } from "@/contexts/entry-context";
+import {
+  PRIMARY_COLOR,
+  SemanticColors,
+  ViewerColors,
+  Spacing,
+} from "@/constants/theme";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -269,7 +275,7 @@ export default function EntryDetailScreen() {
                 onChangeText={setEditCaption}
                 style={styles.editInput}
                 placeholder="Add a caption..."
-                placeholderTextColor="rgba(255,255,255,0.4)"
+                placeholderTextColor={ViewerColors.textPlaceholder}
                 multiline
                 maxLength={500}
               />
@@ -284,24 +290,24 @@ export default function EntryDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: ViewerColors.background,
   },
   notFoundContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#000",
+    backgroundColor: ViewerColors.background,
   },
   notFoundText: {
-    color: "#fff",
+    color: ViewerColors.text,
     fontSize: 18,
-    marginBottom: 16,
+    marginBottom: Spacing.lg,
   },
   notFoundBackButton: {
-    padding: 12,
-    paddingHorizontal: 24,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    borderRadius: 8,
+    padding: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    backgroundColor: ViewerColors.buttonBackground,
+    borderRadius: Spacing.sm,
   },
   header: {
     position: "absolute",
@@ -313,37 +319,37 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingTop: 60,
-    paddingHorizontal: 16,
+    paddingHorizontal: Spacing.lg,
   },
   headerRight: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: Spacing.md,
   },
   backButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: ViewerColors.overlay,
     justifyContent: "center",
     alignItems: "center",
   },
   backButtonIcon: {
-    color: "#fff",
+    color: ViewerColors.text,
     fontSize: 24,
   },
   backButtonText: {
-    color: "#fff",
+    color: ViewerColors.text,
     fontSize: 16,
   },
   imageCounter: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    borderRadius: 16,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm - 2,
+    backgroundColor: ViewerColors.overlay,
+    borderRadius: Spacing.lg,
   },
   imageCounterText: {
-    color: "#fff",
+    color: ViewerColors.text,
     fontSize: 14,
   },
   videoContainer: {
@@ -369,128 +375,128 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   detailsContent: {
-    padding: 16,
-    backgroundColor: "rgba(0,0,0,0.6)",
+    padding: Spacing.lg,
+    backgroundColor: ViewerColors.overlayStrong,
   },
   caption: {
-    color: "#fff",
+    color: ViewerColors.text,
     fontSize: 16,
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   date: {
-    color: "rgba(255,255,255,0.7)",
+    color: ViewerColors.textMuted,
     fontSize: 14,
   },
   optionsButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: ViewerColors.overlay,
     justifyContent: "center",
     alignItems: "center",
   },
   optionsButtonIcon: {
-    color: "#fff",
+    color: ViewerColors.text,
     fontSize: 24,
     fontWeight: "bold",
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.6)",
+    backgroundColor: ViewerColors.overlayStrong,
     justifyContent: "center",
     alignItems: "center",
   },
   menuContainer: {
-    backgroundColor: "#1c1c1e",
+    backgroundColor: ViewerColors.modalBackground,
     borderRadius: 14,
     width: 280,
     overflow: "hidden",
   },
   menuItem: {
-    paddingVertical: 16,
-    paddingHorizontal: 20,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.lg + 4,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "rgba(255,255,255,0.1)",
+    borderBottomColor: ViewerColors.modalBorder,
   },
   menuItemDanger: {
     // No additional styling, just marker for semantic meaning
   },
   menuItemText: {
-    color: "#fff",
+    color: ViewerColors.text,
     fontSize: 17,
     textAlign: "center",
   },
   menuItemTextDanger: {
-    color: "#ff453a",
+    color: SemanticColors.error,
     fontSize: 17,
     textAlign: "center",
   },
   confirmTitle: {
-    color: "#fff",
+    color: ViewerColors.text,
     fontSize: 17,
     fontWeight: "600",
     textAlign: "center",
-    paddingTop: 20,
-    paddingHorizontal: 20,
+    paddingTop: Spacing.lg + 4,
+    paddingHorizontal: Spacing.lg + 4,
   },
   confirmMessage: {
-    color: "rgba(255,255,255,0.6)",
+    color: ViewerColors.textSubtle,
     fontSize: 13,
     textAlign: "center",
-    paddingHorizontal: 20,
-    paddingBottom: 16,
-    paddingTop: 8,
+    paddingHorizontal: Spacing.lg + 4,
+    paddingBottom: Spacing.lg,
+    paddingTop: Spacing.sm,
   },
   editModalContainer: {
     flex: 1,
     justifyContent: "flex-end",
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: ViewerColors.overlay,
   },
   editModalContent: {
-    backgroundColor: "#1c1c1e",
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    backgroundColor: ViewerColors.modalBackground,
+    borderTopLeftRadius: Spacing.lg,
+    borderTopRightRadius: Spacing.lg,
     paddingBottom: 40,
   },
   editModalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 16,
+    padding: Spacing.lg,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "rgba(255,255,255,0.1)",
+    borderBottomColor: ViewerColors.modalBorder,
   },
   editHeaderButton: {
     minWidth: 60,
   },
   editModalTitle: {
-    color: "#fff",
+    color: ViewerColors.text,
     fontSize: 17,
     fontWeight: "600",
   },
   editCancelText: {
-    color: "#0a7ea4",
+    color: PRIMARY_COLOR,
     fontSize: 17,
   },
   editSaveText: {
-    color: "#0a7ea4",
+    color: PRIMARY_COLOR,
     fontSize: 17,
     fontWeight: "600",
     textAlign: "right",
   },
   editFormContainer: {
-    padding: 16,
+    padding: Spacing.lg,
   },
   editLabel: {
-    color: "rgba(255,255,255,0.6)",
+    color: ViewerColors.textSubtle,
     fontSize: 13,
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   editInput: {
-    backgroundColor: "rgba(255,255,255,0.1)",
+    backgroundColor: ViewerColors.inputBackground,
     borderRadius: 10,
-    padding: 12,
-    color: "#fff",
+    padding: Spacing.md,
+    color: ViewerColors.text,
     fontSize: 16,
     minHeight: 100,
     textAlignVertical: "top",
