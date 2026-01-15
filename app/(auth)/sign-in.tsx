@@ -19,10 +19,10 @@ import { Colors, PRIMARY_COLOR, Spacing } from "@/constants/theme";
 import { trackEvent, AnalyticsEvent } from "@/services/analytics";
 import { useGoogleAuth, type GoogleAuthResult } from "@/hooks/use-google-auth";
 import { useAppleAuth, type AppleAuthResult } from "@/hooks/use-apple-auth";
+import { useMagicLinkAuth } from "@/hooks/use-magic-link-auth";
+import type { SignInResponse } from "@/services/auth-api";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-type SignInStep = "input" | "sent";
 
 // Fetch user info from Google using access token
 async function fetchGoogleUserInfo(
@@ -47,22 +47,41 @@ export default function SignInScreen() {
   const colors = Colors[colorScheme];
 
   const [email, setEmail] = useState("");
-  const [step, setStep] = useState<SignInStep>("input");
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isOAuthLoading, setIsOAuthLoading] = useState(false);
+
+  // Magic link auth hook
+  const handleMagicLinkSuccess = useCallback(
+    async (result: SignInResponse) => {
+      await signIn(result.user.email);
+      trackEvent(AnalyticsEvent.SIGNUP_COMPLETED, { method: "magic_link" });
+    },
+    [signIn],
+  );
+
+  const {
+    sendMagicLink,
+    isLoading: magicLinkLoading,
+    isSent: magicLinkSent,
+    error: magicLinkError,
+    reset: resetMagicLink,
+  } = useMagicLinkAuth({
+    onSuccess: handleMagicLinkSuccess,
+    onError: (err) => setError(err),
+  });
 
   // Google OAuth hook
   const handleGoogleSuccess = useCallback(
     async (result: GoogleAuthResult) => {
       try {
-        setIsLoading(true);
+        setIsOAuthLoading(true);
         const userInfo = await fetchGoogleUserInfo(result.accessToken);
         await signIn(userInfo.email);
         trackEvent(AnalyticsEvent.SIGNUP_COMPLETED, { method: "google" });
       } catch {
         setError("Failed to complete Google sign-in. Please try again.");
       } finally {
-        setIsLoading(false);
+        setIsOAuthLoading(false);
       }
     },
     [signIn],
@@ -81,16 +100,16 @@ export default function SignInScreen() {
   const handleAppleSuccess = useCallback(
     async (result: AppleAuthResult) => {
       try {
-        setIsLoading(true);
+        setIsOAuthLoading(true);
         // Apple provides email only on first sign-in, use user ID as fallback
-        const email =
+        const appleEmail =
           result.email || `apple-${result.user}@privaterelay.appleid.com`;
-        await signIn(email);
+        await signIn(appleEmail);
         trackEvent(AnalyticsEvent.SIGNUP_COMPLETED, { method: "apple" });
       } catch {
         setError("Failed to complete Apple sign-in. Please try again.");
       } finally {
-        setIsLoading(false);
+        setIsOAuthLoading(false);
       }
     },
     [signIn],
@@ -107,8 +126,9 @@ export default function SignInScreen() {
   });
 
   const isValidEmail = EMAIL_REGEX.test(email);
-  const canSubmit =
-    email.trim().length > 0 && !isLoading && !googleLoading && !appleLoading;
+  const anyLoading =
+    magicLinkLoading || googleLoading || appleLoading || isOAuthLoading;
+  const canSubmit = email.trim().length > 0 && !anyLoading;
 
   const handleSendMagicLink = async () => {
     setError(null);
@@ -118,31 +138,13 @@ export default function SignInScreen() {
       return;
     }
 
-    setIsLoading(true);
-    try {
-      // TODO: In production, call API to send magic link email
-      // For now, simulate sending and auto-sign-in for demo
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setStep("sent");
-
-      // Auto sign-in after short delay for demo purposes
-      setTimeout(async () => {
-        await signIn(email);
-        trackEvent(AnalyticsEvent.SIGNUP_COMPLETED, { method: "magic_link" });
-      }, 1500);
-    } catch {
-      setError("Failed to send magic link. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+    await sendMagicLink(email);
   };
 
-  // Combined loading state
-  const anyLoading = isLoading || googleLoading || appleLoading;
-  // Show OAuth error if present, otherwise show local error
-  const displayError = googleError || appleError || error;
+  // Show any error from the hooks or local state
+  const displayError = magicLinkError || googleError || appleError || error;
 
-  if (step === "sent") {
+  if (magicLinkSent) {
     return (
       <ThemedView style={styles.container}>
         <ThemedText type="title" style={styles.title}>
@@ -160,7 +162,7 @@ export default function SignInScreen() {
         <Pressable
           style={styles.backButton}
           onPress={() => {
-            setStep("input");
+            resetMagicLink();
             setEmail("");
           }}
         >
@@ -230,7 +232,7 @@ export default function SignInScreen() {
               accessibilityState={{ disabled: !canSubmit || anyLoading }}
             >
               <Text style={styles.primaryButtonText}>
-                {isLoading ? "Sending..." : "Send Magic Link"}
+                {magicLinkLoading ? "Sending..." : "Send Magic Link"}
               </Text>
             </Pressable>
           </View>

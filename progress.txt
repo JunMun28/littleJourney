@@ -2218,3 +2218,31 @@
 **Verification:** tsc, lint, test (462 passed), build all pass.
 
 **Next:** Continue remaining PRD items: AUTH-001 (magic link - requires backend), backend integration (SHARE, VIDEO, PAY), Web Viewer (Phase 2)
+
+
+## 2026-01-16: Email Magic Link Authentication (AUTH-001)
+
+**PRD ref:** Phase 1, Section 1 (Authentication), AUTH-001
+
+**Task:** Implement email magic link authentication with deep link handling
+
+**Decisions:**
+- Created hooks/use-magic-link-auth.ts - handles sending magic links and deep link verification
+- Hook uses expo-linking to listen for littlejourney://verify?token=xxx URLs
+- Integrates with authApi.requestMagicLink() and authApi.verifyMagicLink() from services/auth-api.ts
+- Updated sign-in.tsx to use the new hook instead of mock implementation
+- Hook provides: sendMagicLink(), isLoading, isSent, error, reset() states
+- onSuccess callback for auth completion, onError for failures
+- Deep link listener registered on mount, checks initial URL for cold start scenario
+- TDD approach: 16 tests for useMagicLinkAuth hook
+
+**Files changed:**
+- hooks/use-magic-link-auth.ts - New: magic link auth hook with deep link handling
+- app/(auth)/sign-in.tsx - Integrated useMagicLinkAuth hook, removed mock implementation
+- __tests__/hooks/use-magic-link-auth.test.ts - New: 16 TDD tests for hook
+- __tests__/app/auth/sign-in.test.tsx - Added expo-linking mock
+- prd-items.json - Updated AUTH-001 to passes: true
+
+**Verification:** tsc, lint, test (478 passed), build all pass.
+
+**Next:** Continue remaining PRD items: SHARE-002-010 (family sharing), SEARCH-002 (semantic search), VIDEO-001-002 (Cloudflare Stream), PAY items, Web Viewer (Phase 2)

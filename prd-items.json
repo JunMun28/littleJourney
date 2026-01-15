@@ -42,7 +42,7 @@
         "Verify magic link expires after 15 minutes if unused"
       ],
       "acceptanceCriteria": "User can sign up and log in using only their email address without creating a password",
-      "passes": false
+      "passes": true
     },
     {
       "id": "AUTH-002",

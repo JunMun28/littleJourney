@@ -49,6 +49,15 @@ jest.mock("expo-apple-authentication", () => ({
   },
 }));
 
+// Mock expo-linking for magic link deep linking
+jest.mock("expo-linking", () => ({
+  addEventListener: jest.fn(() => ({ remove: jest.fn() })),
+  getInitialURL: jest.fn().mockResolvedValue(null),
+  parse: jest.fn((url: string) => ({
+    queryParams: {},
+  })),
+}));
+
 const renderSignIn = () => {
   return render(
     <AuthProvider>
