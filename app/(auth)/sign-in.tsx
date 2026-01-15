@@ -18,6 +18,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { Colors, PRIMARY_COLOR, Spacing } from "@/constants/theme";
 import { trackEvent, AnalyticsEvent } from "@/services/analytics";
 import { useGoogleAuth, type GoogleAuthResult } from "@/hooks/use-google-auth";
+import { useAppleAuth, type AppleAuthResult } from "@/hooks/use-apple-auth";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -76,8 +77,38 @@ export default function SignInScreen() {
     onError: (err) => setError(err),
   });
 
+  // Apple OAuth hook
+  const handleAppleSuccess = useCallback(
+    async (result: AppleAuthResult) => {
+      try {
+        setIsLoading(true);
+        // Apple provides email only on first sign-in, use user ID as fallback
+        const email =
+          result.email || `apple-${result.user}@privaterelay.appleid.com`;
+        await signIn(email);
+        trackEvent(AnalyticsEvent.SIGNUP_COMPLETED, { method: "apple" });
+      } catch {
+        setError("Failed to complete Apple sign-in. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [signIn],
+  );
+
+  const {
+    signIn: appleSignIn,
+    isLoading: appleLoading,
+    error: appleError,
+    isAvailable: appleAvailable,
+  } = useAppleAuth({
+    onSuccess: handleAppleSuccess,
+    onError: (err) => setError(err),
+  });
+
   const isValidEmail = EMAIL_REGEX.test(email);
-  const canSubmit = email.trim().length > 0 && !isLoading && !googleLoading;
+  const canSubmit =
+    email.trim().length > 0 && !isLoading && !googleLoading && !appleLoading;
 
   const handleSendMagicLink = async () => {
     setError(null);
@@ -106,24 +137,10 @@ export default function SignInScreen() {
     }
   };
 
-  const handleAppleSignIn = async () => {
-    setError(null);
-    setIsLoading(true);
-    try {
-      // TODO: Implement Apple Sign-In with expo-apple-authentication
-      await signIn("apple@demo.littlejourney.sg");
-      trackEvent(AnalyticsEvent.SIGNUP_COMPLETED, { method: "apple" });
-    } catch {
-      setError("Failed to sign in with Apple. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   // Combined loading state
-  const anyLoading = isLoading || googleLoading;
-  // Show Google error if present, otherwise show local error
-  const displayError = googleError || error;
+  const anyLoading = isLoading || googleLoading || appleLoading;
+  // Show OAuth error if present, otherwise show local error
+  const displayError = googleError || appleError || error;
 
   if (step === "sent") {
     return (
@@ -255,23 +272,31 @@ export default function SignInScreen() {
               )}
             </Pressable>
 
-            <Pressable
-              testID="apple-signin-button"
-              style={[
-                styles.oauthButton,
-                {
-                  backgroundColor: colors.backgroundSecondary,
-                  borderColor: colors.border,
-                },
-                anyLoading && styles.buttonDisabled,
-              ]}
-              onPress={handleAppleSignIn}
-              disabled={anyLoading}
-            >
-              <Text style={[styles.oauthButtonText, { color: colors.text }]}>
-                Continue with Apple
-              </Text>
-            </Pressable>
+            {appleAvailable && (
+              <Pressable
+                testID="apple-signin-button"
+                style={[
+                  styles.oauthButton,
+                  {
+                    backgroundColor: colors.backgroundSecondary,
+                    borderColor: colors.border,
+                  },
+                  anyLoading && styles.buttonDisabled,
+                ]}
+                onPress={appleSignIn}
+                disabled={anyLoading}
+              >
+                {appleLoading ? (
+                  <ActivityIndicator size="small" color={colors.text} />
+                ) : (
+                  <Text
+                    style={[styles.oauthButtonText, { color: colors.text }]}
+                  >
+                    Continue with Apple
+                  </Text>
+                )}
+              </Pressable>
+            )}
           </View>
 
           <ThemedText style={[styles.terms, { color: colors.textMuted }]}>

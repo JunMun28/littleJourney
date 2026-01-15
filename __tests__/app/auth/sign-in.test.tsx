@@ -39,6 +39,16 @@ jest.mock("expo-web-browser", () => ({
   maybeCompleteAuthSession: jest.fn(),
 }));
 
+// Mock expo-apple-authentication
+jest.mock("expo-apple-authentication", () => ({
+  signInAsync: jest.fn(),
+  isAvailableAsync: jest.fn(() => Promise.resolve(true)),
+  AppleAuthenticationScope: {
+    FULL_NAME: 0,
+    EMAIL: 1,
+  },
+}));
+
 const renderSignIn = () => {
   return render(
     <AuthProvider>
@@ -106,8 +116,10 @@ describe("SignInScreen", () => {
     expect(screen.getByText("Continue with Google")).toBeTruthy();
   });
 
-  it("renders Apple Sign-In button", () => {
+  it("renders Apple Sign-In button when available", async () => {
     renderSignIn();
-    expect(screen.getByText("Continue with Apple")).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText("Continue with Apple")).toBeTruthy();
+    });
   });
 });

@@ -2187,3 +2187,34 @@
 **Verification:** tsc, lint, test (450 passed), build all pass.
 
 **Next:** Continue remaining PRD items: AUTH-003 (Apple Sign-In), AUTH-001 (magic link - requires backend), backend integration (SHARE, VIDEO, PAY), Web Viewer (Phase 2)
+
+
+## 2026-01-16: Apple Sign-In Authentication (AUTH-003)
+
+**PRD ref:** Phase 1, Section 1 (Authentication), AUTH-003
+
+**Task:** Implement Apple Sign-In authentication using expo-apple-authentication
+
+**Decisions:**
+- Installed expo-apple-authentication for native iOS Apple Sign-In
+- Created hooks/use-apple-auth.ts following same pattern as useGoogleAuth
+- Hook returns signIn function, isLoading, error, and isAvailable states
+- isAvailable check runs on mount - only true on iOS 13+ with Apple Sign-In support
+- Requests FULL_NAME and EMAIL scopes per Apple guidelines
+- Handles user cancellation gracefully (not treated as error)
+- Apple only provides email on first sign-in - uses privaterelay fallback email for Hide My Email
+- Button conditionally rendered when appleAvailable is true (iOS only)
+- ActivityIndicator shows loading state during sign-in flow
+- TDD approach: 12 tests for use-apple-auth hook
+
+**Files changed:**
+- package.json - Added expo-apple-authentication dependency
+- hooks/use-apple-auth.ts - New: Apple Sign-In hook using expo-apple-authentication
+- app/(auth)/sign-in.tsx - Integrated useAppleAuth hook, conditional button render
+- __tests__/hooks/use-apple-auth.test.ts - New: 12 TDD tests for Apple auth hook
+- __tests__/app/auth/sign-in.test.tsx - Added expo-apple-authentication mock, updated Apple test
+- prd-items.json - Updated AUTH-003 to passes: true
+
+**Verification:** tsc, lint, test (462 passed), build all pass.
+
+**Next:** Continue remaining PRD items: AUTH-001 (magic link - requires backend), backend integration (SHARE, VIDEO, PAY), Web Viewer (Phase 2)

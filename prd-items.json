@@ -74,7 +74,7 @@
         "Kill app and reopen - verify session persists"
       ],
       "acceptanceCriteria": "User can authenticate using Apple Sign-In",
-      "passes": false
+      "passes": true
     },
     {
       "id": "AUTH-004",
@@ -585,7 +585,7 @@
       "stepsToVerify": [
         "Create child with Chinese tradition",
         "View Milestones tab",
-        "Verify 满月, 百日, 抓周 appear with correct dates"
+        "Verify \u6ee1\u6708, \u767e\u65e5, \u6293\u5468 appear with correct dates"
       ],
       "acceptanceCriteria": "Chinese milestones pre-populated from DOB",
       "passes": true
