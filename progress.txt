@@ -1763,3 +1763,30 @@
 **Verification:** tsc, lint, test (328 passed), build all pass.
 
 **Next:** Cloudflare Workers backend setup, Stripe SDK integration, or Web Viewer (Phase 2)
+
+## 2026-01-15: Upload Rate Limiting
+
+**PRD ref:** Phase 1 Weeks 12-13, Section 13.2 (Rate Limiting)
+
+**Task:** Implement client-side upload rate limiting per PRD requirement (50/hour, 200/day)
+
+**Decisions:**
+- Created useRateLimit hook using AsyncStorage for persistence
+- UploadRecord type with timestamp for tracking upload history
+- HOURLY_LIMIT = 50, DAILY_LIMIT = 200 per PRD Section 13.2
+- canUpload boolean computed from current counts vs limits
+- rateLimitMessage returns user-friendly message when limit reached
+- recordUpload() adds timestamp and auto-cleans entries >24h old
+- Integrated into Feed screen: blocks photo/video at type selection step
+- Records upload on successful entry creation (media uploads only)
+- TDD approach: 9 hook tests + 3 integration tests
+
+**Files changed:**
+- hooks/use-rate-limit.ts - New: useRateLimit hook with canUpload, recordUpload, rateLimitMessage
+- app/(tabs)/index.tsx - Integrated rate limit check in handleTypeSelect, recordUpload in handleSubmit
+- __tests__/hooks/use-rate-limit.test.ts - New: 9 TDD tests for hook
+- __tests__/app/tabs/feed.test.tsx - Added 3 integration tests for rate limiting
+
+**Verification:** tsc, lint, test (340 passed), build all pass.
+
+**Next:** Cloudflare Workers backend setup, Stripe SDK integration, or Web Viewer (Phase 2)

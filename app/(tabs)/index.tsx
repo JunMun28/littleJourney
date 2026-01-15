@@ -19,6 +19,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { router } from "expo-router";
 
 import { extractDateFromExif, type ExifData } from "@/utils/exif-date";
+import { useRateLimit } from "@/hooks/use-rate-limit";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -209,6 +210,11 @@ export default function FeedScreen() {
     clearDraft,
     isLoading: draftLoading,
   } = useDraft();
+  const {
+    canUpload: canUploadWithinRateLimit,
+    rateLimitMessage,
+    recordUpload,
+  } = useRateLimit();
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
   const onThisDayMemories = getOnThisDayEntries();
@@ -338,6 +344,16 @@ export default function FeedScreen() {
   }, [refetch]);
 
   const handleTypeSelect = async (type: EntryType) => {
+    // Check rate limit for photo/video uploads (PRD Section 13.2)
+    if (type !== "text" && !canUploadWithinRateLimit) {
+      Alert.alert(
+        "Upload Limit Reached",
+        rateLimitMessage || "Please try again later.",
+        [{ text: "OK" }],
+      );
+      return;
+    }
+
     setSelectedType(type);
 
     if (type === "text") {
@@ -551,6 +567,9 @@ export default function FeedScreen() {
             );
 
             addUsage(totalSize);
+
+            // Record upload for rate limiting (PRD Section 13.2)
+            recordUpload();
 
             // Check if we crossed a storage threshold (80%, 90%, 100%)
             const thresholds = [80, 90, 100];

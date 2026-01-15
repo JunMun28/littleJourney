@@ -855,3 +855,58 @@ describe("Photo book birthday prompt", () => {
     );
   });
 });
+
+// Test upload rate limiting integration (PRD Section 13.2)
+describe("Upload rate limiting", () => {
+  const { useRateLimit } = require("@/hooks/use-rate-limit");
+
+  beforeEach(() => {
+    mockAsyncStorage.getItem.mockResolvedValue(null);
+    mockAsyncStorage.setItem.mockResolvedValue(undefined);
+  });
+
+  it("should allow upload when under hourly limit", async () => {
+    const { result } = renderHook(() => useRateLimit());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.canUpload).toBe(true);
+    expect(result.current.hourlyUploads).toBe(0);
+  });
+
+  it("should block upload when hourly limit reached", async () => {
+    const now = Date.now();
+    const recentUploads = Array.from({ length: 50 }, (_, i) => ({
+      timestamp: now - i * 1000,
+    }));
+    mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(recentUploads));
+
+    const { result } = renderHook(() => useRateLimit());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.canUpload).toBe(false);
+    expect(result.current.hourlyUploads).toBe(50);
+    expect(result.current.rateLimitMessage).toContain("50 uploads per hour");
+  });
+
+  it("should track upload count and record new uploads", async () => {
+    const { result } = renderHook(() => useRateLimit());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.recordUpload();
+    });
+
+    expect(mockAsyncStorage.setItem).toHaveBeenCalled();
+    expect(result.current.hourlyUploads).toBe(1);
+    expect(result.current.dailyUploads).toBe(1);
+  });
+});
