@@ -521,4 +521,92 @@ describe("SearchScreen", () => {
       });
     });
   });
+
+  // Relevance ordering tests (SEARCH-007)
+  describe("relevance ordering", () => {
+    it("orders results by relevance not date", async () => {
+      const TestWrapper = createTestWrapper();
+      // Entry with "beach" in middle of caption (older)
+      await entryApi.createEntry({
+        entry: {
+          type: "photo",
+          caption: "Fun at the beach today",
+          date: "2025-01-10",
+          mediaUris: ["beach1.jpg"],
+        },
+      });
+      // Entry with "beach" at start of caption (newer)
+      await entryApi.createEntry({
+        entry: {
+          type: "photo",
+          caption: "Beach day party",
+          date: "2025-01-20",
+          mediaUris: ["beach2.jpg"],
+        },
+      });
+      // Entry with "beach" only in tag (newest)
+      await entryApi.createEntry({
+        entry: {
+          type: "photo",
+          caption: "Summer photo",
+          date: "2025-01-25",
+          mediaUris: ["summer.jpg"],
+          tags: ["beach"],
+        },
+      });
+
+      const { getByPlaceholderText, getAllByText } = render(
+        <TestWrapper>
+          <SearchScreen />
+        </TestWrapper>,
+      );
+
+      const searchInput = getByPlaceholderText("Search memories...");
+      fireEvent.changeText(searchInput, "beach");
+
+      await waitFor(() => {
+        // Get all result captions in order
+        const results = getAllByText(/Beach|Fun|Summer/);
+        // Should be ordered by relevance: "Beach day party" (start) > "Fun at the beach" (middle) > "Summer photo" (tag only)
+        expect(results[0].props.children).toBe("Beach day party");
+        expect(results[1].props.children).toBe("Fun at the beach today");
+        expect(results[2].props.children).toBe("Summer photo");
+      });
+    });
+
+    it("ranks exact caption match highest", async () => {
+      const TestWrapper = createTestWrapper();
+      await entryApi.createEntry({
+        entry: {
+          type: "photo",
+          caption: "smile",
+          date: "2025-01-10",
+          mediaUris: ["exact.jpg"],
+        },
+      });
+      await entryApi.createEntry({
+        entry: {
+          type: "photo",
+          caption: "smile at camera",
+          date: "2025-01-15",
+          mediaUris: ["partial.jpg"],
+        },
+      });
+
+      const { getByPlaceholderText, getAllByText } = render(
+        <TestWrapper>
+          <SearchScreen />
+        </TestWrapper>,
+      );
+
+      const searchInput = getByPlaceholderText("Search memories...");
+      fireEvent.changeText(searchInput, "smile");
+
+      await waitFor(() => {
+        const results = getAllByText(/smile/i);
+        // Exact match "smile" should come before "smile at camera"
+        expect(results[0].props.children).toBe("smile");
+      });
+    });
+  });
 });

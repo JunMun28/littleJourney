@@ -986,7 +986,7 @@
         "Verify results ordered by relevance not date"
       ],
       "acceptanceCriteria": "Results ranked by relevance",
-      "passes": false
+      "passes": true
     },
     {
       "id": "VIDEO-001",

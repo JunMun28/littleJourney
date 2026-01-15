@@ -17,6 +17,7 @@ import { ThemedView } from "@/components/themed-view";
 import { useEntriesFlat } from "@/hooks/use-entries";
 import { type Entry, type EntryType } from "@/contexts/entry-context";
 import { PRIMARY_COLOR, Colors, Spacing, Shadows } from "@/constants/theme";
+import { sortByRelevance } from "@/utils/search-relevance";
 
 type FilterType = "all" | EntryType;
 type MilestoneFilter = "all" | "milestones";
@@ -197,36 +198,28 @@ export default function SearchScreen() {
   const filteredEntries = useMemo(() => {
     if (!query.trim()) return [];
 
-    const searchLower = query.toLowerCase().trim();
+    // Apply type, milestone, and date filters first
+    let filtered = entries;
 
-    return entries.filter((entry) => {
-      // Filter by type
-      if (filterType !== "all" && entry.type !== filterType) {
-        return false;
-      }
+    // Filter by type
+    if (filterType !== "all") {
+      filtered = filtered.filter((entry) => entry.type === filterType);
+    }
 
-      // Filter by milestone (SEARCH-005)
-      if (milestoneFilter === "milestones" && !entry.milestoneId) {
-        return false;
-      }
+    // Filter by milestone (SEARCH-005)
+    if (milestoneFilter === "milestones") {
+      filtered = filtered.filter((entry) => entry.milestoneId);
+    }
 
-      // Filter by date range
-      if (dateRange && !isInDateRange(entry.date, dateRange)) {
-        return false;
-      }
+    // Filter by date range
+    if (dateRange) {
+      filtered = filtered.filter((entry) =>
+        isInDateRange(entry.date, dateRange),
+      );
+    }
 
-      // Search in caption
-      if (entry.caption?.toLowerCase().includes(searchLower)) {
-        return true;
-      }
-
-      // Search in tags
-      if (entry.tags?.some((tag) => tag.toLowerCase().includes(searchLower))) {
-        return true;
-      }
-
-      return false;
-    });
+    // Sort by relevance (SEARCH-007) - this also filters entries without matches
+    return sortByRelevance(filtered, query);
   }, [entries, query, filterType, milestoneFilter, dateRange]);
 
   const handleEntryPress = useCallback(

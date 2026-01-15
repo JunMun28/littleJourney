@@ -2130,3 +2130,29 @@
 **Verification:** tsc, lint, test (419 passed), build all pass.
 
 **Next:** Continue remaining PRD items: backend integration (AUTH, SHARE, VIDEO, PAY), Web Viewer (Phase 2)
+
+
+## 2026-01-16: Search Relevance Ordering (SEARCH-007)
+
+**PRD ref:** Phase 1, Section 9 (Search & Discovery), SEARCH-007
+
+**Task:** Implement relevance-ordered search results per PRD requirement
+
+**Decisions:**
+- Created utils/search-relevance.ts with scoring algorithm
+- Scoring weights: exact caption match (100), caption start (50), word boundary (30), caption contains (15), tag exact (20), tag contains (10)
+- sortByRelevance() filters entries with zero relevance and sorts by score descending
+- Stable sort: maintains original order for equal scores
+- Integrated into search.tsx filteredEntries useMemo - replaces simple filter with relevance sort
+- TDD approach: 17 tests for search-relevance utility, 2 integration tests in search.test.tsx
+
+**Files changed:**
+- utils/search-relevance.ts - New: relevance scoring algorithm and sortByRelevance function
+- app/(tabs)/search.tsx - Integrated sortByRelevance into filteredEntries logic
+- __tests__/utils/search-relevance.test.ts - New: 17 TDD tests for relevance scoring
+- __tests__/app/tabs/search.test.tsx - Added 2 integration tests for relevance ordering
+- prd-items.json - Updated SEARCH-007 to passes: true
+
+**Verification:** tsc, lint, test (438 passed), build all pass.
+
+**Next:** Continue remaining PRD items: backend integration (AUTH, SHARE, VIDEO, PAY), SEARCH-002 (semantic search), Web Viewer (Phase 2)
