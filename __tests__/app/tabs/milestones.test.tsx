@@ -178,6 +178,72 @@ describe("MilestonesScreen", () => {
     expect(screen.getByText("First Smile")).toBeTruthy();
   });
 
+  // PRD Section 5.3 - Upcoming milestones with countdown
+  describe("milestone countdown", () => {
+    it("shows countdown days for upcoming milestones", async () => {
+      const child = await createTestChild();
+      // Create milestone 10 days from now
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 10);
+      await milestoneApi.createMilestone({
+        templateId: "first_smile",
+        childId: child.id,
+        milestoneDate: futureDate.toISOString().split("T")[0],
+      });
+
+      render(
+        <TestWrapper>
+          <MilestonesScreen />
+        </TestWrapper>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/in 10 days/i)).toBeTruthy();
+      });
+    });
+
+    it("shows 'Tomorrow' for milestone 1 day away", async () => {
+      const child = await createTestChild();
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      await milestoneApi.createMilestone({
+        templateId: "first_smile",
+        childId: child.id,
+        milestoneDate: tomorrow.toISOString().split("T")[0],
+      });
+
+      render(
+        <TestWrapper>
+          <MilestonesScreen />
+        </TestWrapper>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/Tomorrow/i)).toBeTruthy();
+      });
+    });
+
+    it("shows 'Today' for milestone on current day", async () => {
+      const child = await createTestChild();
+      const today = new Date().toISOString().split("T")[0];
+      await milestoneApi.createMilestone({
+        templateId: "first_smile",
+        childId: child.id,
+        milestoneDate: today,
+      });
+
+      render(
+        <TestWrapper>
+          <MilestonesScreen />
+        </TestWrapper>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/Today/i)).toBeTruthy();
+      });
+    });
+  });
+
   it("opens completion modal when tapping upcoming milestone card", async () => {
     const child = await createTestChild();
     await addTestMilestone(child.id!);

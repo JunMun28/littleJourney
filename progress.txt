@@ -1557,3 +1557,25 @@
 **Verification:** tsc, lint, test (297 passed), build all pass.
 
 **Next:** Cloudflare Workers backend setup, Stripe SDK integration, or Web Viewer (Phase 2)
+
+## 2026-01-15: Milestone Countdown Feature
+
+**PRD ref:** Phase 1 Weeks 8-9, Section 5.3 (Milestone UI - Upcoming milestones with countdown)
+
+**Task:** Add countdown display to upcoming milestone cards
+
+**Decisions:**
+- Created getCountdownText() helper function for human-readable countdown
+- Calculates days between today and milestone date
+- Output: "Today" (0 days), "Tomorrow" (1 day), "in N days" (N>1), "N days ago" (past)
+- Countdown appended after date: "15/01/2026 · in 10 days"
+- Completed milestones unchanged (show "Celebrated: date")
+- TDD approach: 3 tests written first
+
+**Files changed:**
+- app/(tabs)/milestones.tsx - Added getCountdownText() function, updated milestone date display
+- __tests__/app/tabs/milestones.test.tsx - Added 3 TDD tests for countdown feature
+
+**Verification:** tsc, lint, test (300 passed), build all pass.
+
+**Next:** Cloudflare Workers backend setup, Stripe SDK integration, or Web Viewer (Phase 2)

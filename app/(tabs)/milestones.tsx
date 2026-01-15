@@ -38,6 +38,27 @@ import {
 
 type ModalState = "closed" | "selectTemplate" | "addCustom" | "complete";
 
+// Calculate days until milestone and format countdown text (PRD Section 5.3)
+function getCountdownText(milestoneDate: string): string {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const milestone = new Date(milestoneDate);
+  milestone.setHours(0, 0, 0, 0);
+
+  const diffTime = milestone.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) {
+    return `${Math.abs(diffDays)} days ago`;
+  } else if (diffDays === 0) {
+    return "Today";
+  } else if (diffDays === 1) {
+    return "Tomorrow";
+  } else {
+    return `in ${diffDays} days`;
+  }
+}
+
 export default function MilestonesScreen() {
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
@@ -248,7 +269,7 @@ export default function MilestonesScreen() {
         <Text style={styles.milestoneDate}>
           {item.isCompleted && item.celebrationDate
             ? `Celebrated: ${new Date(item.celebrationDate).toLocaleDateString("en-SG")}`
-            : `Due: ${new Date(item.milestoneDate).toLocaleDateString("en-SG")}`}
+            : `${new Date(item.milestoneDate).toLocaleDateString("en-SG")} · ${getCountdownText(item.milestoneDate)}`}
         </Text>
         {item.notes && (
           <Text style={[styles.milestoneNotes, { color: colors.textMuted }]}>
