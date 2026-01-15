@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { QueryProvider } from "@/providers/query-provider";
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
 import { ChildProvider } from "@/contexts/child-context";
 import { EntryProvider } from "@/contexts/entry-context";
@@ -56,35 +57,39 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <AuthProvider>
-      <ChildProvider>
-        <EntryProvider>
-          <FamilyProvider>
-            <MilestoneProvider>
-              <UserPreferencesProvider>
-                <NotificationProvider>
-                  <StorageProvider>
-                    <SubscriptionProvider>
-                      <ExportProvider>
-                        <PhotoBookProvider>
-                          <ThemeProvider
-                            value={
-                              colorScheme === "dark" ? DarkTheme : DefaultTheme
-                            }
-                          >
-                            <RootLayoutNav />
-                            <StatusBar style="auto" />
-                          </ThemeProvider>
-                        </PhotoBookProvider>
-                      </ExportProvider>
-                    </SubscriptionProvider>
-                  </StorageProvider>
-                </NotificationProvider>
-              </UserPreferencesProvider>
-            </MilestoneProvider>
-          </FamilyProvider>
-        </EntryProvider>
-      </ChildProvider>
-    </AuthProvider>
+    <QueryProvider>
+      <AuthProvider>
+        <ChildProvider>
+          <EntryProvider>
+            <FamilyProvider>
+              <MilestoneProvider>
+                <UserPreferencesProvider>
+                  <NotificationProvider>
+                    <StorageProvider>
+                      <SubscriptionProvider>
+                        <ExportProvider>
+                          <PhotoBookProvider>
+                            <ThemeProvider
+                              value={
+                                colorScheme === "dark"
+                                  ? DarkTheme
+                                  : DefaultTheme
+                              }
+                            >
+                              <RootLayoutNav />
+                              <StatusBar style="auto" />
+                            </ThemeProvider>
+                          </PhotoBookProvider>
+                        </ExportProvider>
+                      </SubscriptionProvider>
+                    </StorageProvider>
+                  </NotificationProvider>
+                </UserPreferencesProvider>
+              </MilestoneProvider>
+            </FamilyProvider>
+          </EntryProvider>
+        </ChildProvider>
+      </AuthProvider>
+    </QueryProvider>
   );
 }

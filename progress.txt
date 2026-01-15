@@ -1227,3 +1227,35 @@
 **Verification:** tsc, lint, test (220 passed), build all pass.
 
 **Next:** Backend API integration, Stripe SDK, or Web Viewer (Phase 2)
+
+## 2026-01-15: TanStack Query Foundation + API Client Abstraction
+
+**PRD ref:** Phase 1 Technical Architecture (TanStack Query for server state), API Layer preparation
+
+**Task:** Set up TanStack Query infrastructure and API client abstraction layer
+
+**Decisions:**
+- Installed @tanstack/react-query for server state management per PRD tech stack
+- Created QueryProvider wrapping entire app with configured QueryClient
+- QueryClient defaults: 5min staleTime, 30min gcTime, 1 retry, refetchOnWindowFocus disabled (mobile)
+- Created services/api-client.ts with typed API abstractions for all domain entities
+- API client supports mock mode (default) and real backend mode via EXPO_PUBLIC_USE_MOCK_API env
+- Mock implementations use in-memory storage with simulated network delay
+- Four API modules: entryApi, childApi, familyApi, milestoneApi
+- Generic ApiResult<T> union type for typed success/error handling
+- PaginatedResponse<T> with cursor-based pagination support
+- isApiError() type guard for result discrimination
+- clearAllMockData() helper for test isolation
+- TDD approach: 4 provider tests + 17 API client tests
+
+**Files changed:**
+- package.json - Added @tanstack/react-query dependency
+- providers/query-provider.tsx - New: QueryProvider with configured QueryClient
+- services/api-client.ts - New: Typed API client with mock/real implementations
+- app/_layout.tsx - Added QueryProvider wrapper (outermost provider)
+- __tests__/providers/query-provider.test.tsx - New: 4 TDD tests
+- __tests__/services/api-client.test.ts - New: 17 TDD tests for all API operations
+
+**Verification:** tsc, lint, test (241 passed), build all pass.
+
+**Next:** Migrate contexts to use TanStack Query hooks, actual Stripe SDK integration, or Cloudflare Workers backend
