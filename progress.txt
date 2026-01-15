@@ -2106,3 +2106,27 @@
 **Verification:** tsc, lint, test (419 passed), build all pass.
 
 **Next:** Continue remaining PRD items: MOBILE-001 (app launch perf), backend integration (AUTH, SHARE, VIDEO, PAY), Web Viewer (Phase 2)
+
+## 2026-01-16: App Launch Performance Optimization (MOBILE-001)
+
+**PRD ref:** Phase 1, Section 14 (Mobile Experience), MOBILE-001
+
+**Task:** Optimize app launch to be usable within 3 seconds per PRD requirement
+
+**Decisions:**
+- Removed 4 migrated context providers no longer needed: ChildProvider, EntryProvider, FamilyProvider, MilestoneProvider
+- These contexts were migrated to TanStack Query hooks but providers were still being rendered
+- Reduced provider nesting from 14 levels to 10 levels
+- Deferred Sentry and PostHog initialization to after first render using requestAnimationFrame
+- Previous: initSentry/initAnalytics called at module load (blocking)
+- Now: called in useEffect after initial render (non-blocking)
+- Migrated Feed screen's useChild from context to useChildFlat TanStack Query hook
+
+**Files changed:**
+- app/_layout.tsx - Removed 4 unused context providers, deferred analytics init to useEffect
+- app/(tabs)/index.tsx - Replaced useChild context with useChildFlat hook
+- prd-items.json - Updated MOBILE-001 to passes: true
+
+**Verification:** tsc, lint, test (419 passed), build all pass.
+
+**Next:** Continue remaining PRD items: backend integration (AUTH, SHARE, VIDEO, PAY), Web Viewer (Phase 2)

@@ -1235,7 +1235,7 @@
         "Verify usable within 3 seconds"
       ],
       "acceptanceCriteria": "App launches in under 3 seconds",
-      "passes": false
+      "passes": true
     },
     {
       "id": "MOBILE-002",

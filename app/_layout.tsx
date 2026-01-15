@@ -26,12 +26,8 @@ import { OfflineBanner } from "@/components/offline-banner";
 import { QueryProvider } from "@/providers/query-provider";
 import { AppStateProvider } from "@/providers/app-state-provider";
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
-import { ChildProvider } from "@/contexts/child-context";
-import { EntryProvider } from "@/contexts/entry-context";
 import { ExportProvider } from "@/contexts/export-context";
-import { FamilyProvider } from "@/contexts/family-context";
 import { PhotoBookProvider } from "@/contexts/photo-book-context";
-import { MilestoneProvider } from "@/contexts/milestone-context";
 import { NotificationProvider } from "@/contexts/notification-context";
 import { StorageProvider } from "@/contexts/storage-context";
 import { SubscriptionProvider } from "@/contexts/subscription-context";
@@ -116,47 +112,44 @@ const styles = StyleSheet.create({
   },
 });
 
-// Initialize Sentry and PostHog as early as possible (outside component render)
-initSentry();
-initAnalytics();
-
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+
+  // Initialize Sentry and PostHog after first render to avoid blocking app launch
+  useEffect(() => {
+    // Use requestAnimationFrame to defer initialization to next frame
+    // This ensures the initial UI renders before analytics setup
+    const frame = requestAnimationFrame(() => {
+      initSentry();
+      initAnalytics();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   return (
     <QueryProvider>
       <AppStateProvider>
         <AuthProvider>
-          <ChildProvider>
-            <EntryProvider>
-              <FamilyProvider>
-                <MilestoneProvider>
-                  <UserPreferencesProvider>
-                    <NotificationProvider>
-                      <StorageProvider>
-                        <SubscriptionProvider>
-                          <ExportProvider>
-                            <PhotoBookProvider>
-                              <ThemeProvider
-                                value={
-                                  colorScheme === "dark"
-                                    ? DarkTheme
-                                    : DefaultTheme
-                                }
-                              >
-                                <RootLayoutNav />
-                                <StatusBar style="auto" />
-                              </ThemeProvider>
-                            </PhotoBookProvider>
-                          </ExportProvider>
-                        </SubscriptionProvider>
-                      </StorageProvider>
-                    </NotificationProvider>
-                  </UserPreferencesProvider>
-                </MilestoneProvider>
-              </FamilyProvider>
-            </EntryProvider>
-          </ChildProvider>
+          <UserPreferencesProvider>
+            <NotificationProvider>
+              <StorageProvider>
+                <SubscriptionProvider>
+                  <ExportProvider>
+                    <PhotoBookProvider>
+                      <ThemeProvider
+                        value={
+                          colorScheme === "dark" ? DarkTheme : DefaultTheme
+                        }
+                      >
+                        <RootLayoutNav />
+                        <StatusBar style="auto" />
+                      </ThemeProvider>
+                    </PhotoBookProvider>
+                  </ExportProvider>
+                </SubscriptionProvider>
+              </StorageProvider>
+            </NotificationProvider>
+          </UserPreferencesProvider>
         </AuthProvider>
       </AppStateProvider>
     </QueryProvider>

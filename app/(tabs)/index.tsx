@@ -28,7 +28,7 @@ import { VideoPlayer } from "@/components/video-player";
 import { type Entry, type EntryType } from "@/contexts/entry-context";
 import { useAuth } from "@/contexts/auth-context";
 import { useInfiniteEntries, useCreateEntry } from "@/hooks/use-entries";
-import { useChild } from "@/contexts/child-context";
+import { useChildFlat } from "@/hooks/use-children";
 import { useStorage, TIER_LIMITS } from "@/contexts/storage-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useDraft } from "@/hooks/use-draft";
@@ -195,7 +195,7 @@ export default function FeedScreen() {
     isFetchingNextPage,
   } = useInfiniteEntries({ limit: 20 });
   const createEntry = useCreateEntry();
-  const { child } = useChild();
+  const { child } = useChildFlat();
   const { canUpload, canUploadVideo, addUsage, tier, usedBytes } = useStorage();
   const {
     recordEntryPosted,
