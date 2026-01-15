@@ -752,7 +752,7 @@
         "Add reaction - verify it saves"
       ],
       "acceptanceCriteria": "Can comment and react with permission",
-      "passes": false
+      "passes": true
     },
     {
       "id": "SHARE-007",
@@ -800,7 +800,7 @@
         "Verify comment removed"
       ],
       "acceptanceCriteria": "Parents can delete any comment",
-      "passes": false
+      "passes": true
     },
     {
       "id": "NOTIF-001",

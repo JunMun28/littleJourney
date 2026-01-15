@@ -103,11 +103,46 @@ export interface CompleteMilestoneRequest {
   notes?: string;
 }
 
+// Comment and Reaction types
+export interface Comment {
+  id: string;
+  entryId: string;
+  text: string;
+  authorId: string;
+  authorName: string;
+  createdAt: string;
+}
+
+export interface Reaction {
+  id: string;
+  entryId: string;
+  emoji: string;
+  userId: string;
+  userName: string;
+  createdAt: string;
+}
+
+export interface CreateCommentRequest {
+  entryId: string;
+  text: string;
+  authorId: string;
+  authorName: string;
+}
+
+export interface AddReactionRequest {
+  entryId: string;
+  emoji: string;
+  userId: string;
+  userName: string;
+}
+
 // Mock data store (in-memory for development)
 let mockEntries: Entry[] = [];
 let mockChildren: Child[] = [];
 let mockFamilyMembers: FamilyMember[] = [];
 let mockMilestones: Milestone[] = [];
+let mockComments: Comment[] = [];
+let mockReactions: Reaction[] = [];
 
 // Helper to generate IDs
 function generateId(prefix: string): string {
@@ -511,6 +546,185 @@ export const milestoneApi = {
   },
 };
 
+// Comment API
+export const commentApi = {
+  async getComments(entryId: string): Promise<ApiResult<Comment[]>> {
+    await simulateDelay();
+
+    if (API_CONFIG.useMock) {
+      const comments = mockComments.filter((c) => c.entryId === entryId);
+      return { data: comments };
+    }
+
+    const response = await fetch(
+      `${API_CONFIG.baseUrl}/entries/${entryId}/comments`,
+      { headers: getAuthHeaders() },
+    );
+    return response.json();
+  },
+
+  async createComment(
+    request: CreateCommentRequest,
+  ): Promise<ApiResult<Comment>> {
+    await simulateDelay();
+
+    if (API_CONFIG.useMock) {
+      const comment: Comment = {
+        id: generateId("comment"),
+        entryId: request.entryId,
+        text: request.text,
+        authorId: request.authorId,
+        authorName: request.authorName,
+        createdAt: new Date().toISOString(),
+      };
+      mockComments.push(comment);
+      return { data: comment };
+    }
+
+    const response = await fetch(
+      `${API_CONFIG.baseUrl}/entries/${request.entryId}/comments`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify(request),
+      },
+    );
+    return response.json();
+  },
+
+  async deleteComment(id: string): Promise<ApiResult<{ success: boolean }>> {
+    await simulateDelay();
+
+    if (API_CONFIG.useMock) {
+      const index = mockComments.findIndex((c) => c.id === id);
+      if (index === -1) {
+        return { error: { code: "NOT_FOUND", message: "Comment not found" } };
+      }
+      mockComments.splice(index, 1);
+      return { data: { success: true } };
+    }
+
+    const response = await fetch(`${API_CONFIG.baseUrl}/comments/${id}`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    });
+    return response.json();
+  },
+
+  async getReactions(entryId: string): Promise<ApiResult<Reaction[]>> {
+    await simulateDelay();
+
+    if (API_CONFIG.useMock) {
+      const reactions = mockReactions.filter((r) => r.entryId === entryId);
+      return { data: reactions };
+    }
+
+    const response = await fetch(
+      `${API_CONFIG.baseUrl}/entries/${entryId}/reactions`,
+      { headers: getAuthHeaders() },
+    );
+    return response.json();
+  },
+
+  async addReaction(request: AddReactionRequest): Promise<ApiResult<Reaction>> {
+    await simulateDelay();
+
+    if (API_CONFIG.useMock) {
+      // Check for duplicate reaction from same user with same emoji
+      const existing = mockReactions.find(
+        (r) =>
+          r.entryId === request.entryId &&
+          r.userId === request.userId &&
+          r.emoji === request.emoji,
+      );
+      if (existing) {
+        return {
+          error: {
+            code: "DUPLICATE",
+            message: "User already reacted with this emoji",
+          },
+        };
+      }
+
+      const reaction: Reaction = {
+        id: generateId("reaction"),
+        entryId: request.entryId,
+        emoji: request.emoji,
+        userId: request.userId,
+        userName: request.userName,
+        createdAt: new Date().toISOString(),
+      };
+      mockReactions.push(reaction);
+      return { data: reaction };
+    }
+
+    const response = await fetch(
+      `${API_CONFIG.baseUrl}/entries/${request.entryId}/reactions`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify(request),
+      },
+    );
+    return response.json();
+  },
+
+  async removeReaction(id: string): Promise<ApiResult<{ success: boolean }>> {
+    await simulateDelay();
+
+    if (API_CONFIG.useMock) {
+      const index = mockReactions.findIndex((r) => r.id === id);
+      if (index === -1) {
+        return { error: { code: "NOT_FOUND", message: "Reaction not found" } };
+      }
+      mockReactions.splice(index, 1);
+      return { data: { success: true } };
+    }
+
+    const response = await fetch(`${API_CONFIG.baseUrl}/reactions/${id}`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    });
+    return response.json();
+  },
+
+  async getCommentCount(entryId: string): Promise<ApiResult<number>> {
+    await simulateDelay();
+
+    if (API_CONFIG.useMock) {
+      const count = mockComments.filter((c) => c.entryId === entryId).length;
+      return { data: count };
+    }
+
+    const response = await fetch(
+      `${API_CONFIG.baseUrl}/entries/${entryId}/comments/count`,
+      { headers: getAuthHeaders() },
+    );
+    return response.json();
+  },
+
+  async getReactionCount(entryId: string): Promise<ApiResult<number>> {
+    await simulateDelay();
+
+    if (API_CONFIG.useMock) {
+      const count = mockReactions.filter((r) => r.entryId === entryId).length;
+      return { data: count };
+    }
+
+    const response = await fetch(
+      `${API_CONFIG.baseUrl}/entries/${entryId}/reactions/count`,
+      { headers: getAuthHeaders() },
+    );
+    return response.json();
+  },
+
+  // Clear mock data (for testing)
+  _clearMockData(): void {
+    mockComments = [];
+    mockReactions = [];
+  },
+};
+
 // Utility to check if result is error
 export function isApiError<T>(result: ApiResult<T>): result is ApiError {
   return "error" in result && result.error !== undefined;
@@ -522,4 +736,5 @@ export function clearAllMockData(): void {
   childApi._clearMockData();
   familyApi._clearMockData();
   milestoneApi._clearMockData();
+  commentApi._clearMockData();
 }

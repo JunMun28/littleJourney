@@ -2246,3 +2246,34 @@
 **Verification:** tsc, lint, test (478 passed), build all pass.
 
 **Next:** Continue remaining PRD items: SHARE-002-010 (family sharing), SEARCH-002 (semantic search), VIDEO-001-002 (Cloudflare Stream), PAY items, Web Viewer (Phase 2)
+
+## 2026-01-16: Comments and Reactions Infrastructure (SHARE-006, SHARE-010)
+
+**PRD ref:** Phase 1, Section 6 (Family Sharing), SHARE-006, SHARE-010
+
+**Task:** Implement comments and reactions data model, API, hooks, and UI for entries
+
+**Decisions:**
+- Added Comment and Reaction types to api-client.ts
+- Comment: id, entryId, text, authorId, authorName, createdAt
+- Reaction: id, entryId, emoji, userId, userName, createdAt
+- commentApi provides: getComments, createComment, deleteComment, getReactions, addReaction, removeReaction, getCommentCount, getReactionCount
+- Duplicate reaction prevention (same user + emoji)
+- Created use-comments.ts with TanStack Query hooks: useComments, useCreateComment, useDeleteComment, useReactions, useAddReaction, useRemoveReaction
+- Entry detail screen shows engagement row: reaction count (❤️) + comment count (💬)
+- Tapping engagement row opens comments modal
+- Comments modal shows: reactions summary, comments list with delete buttons
+- Parents can delete any comment (PRD SHARE-010)
+- Delete confirmation overlay with cancel/confirm buttons
+- TDD approach: 17 API tests + 8 hook tests
+
+**Files changed:**
+- services/api-client.ts - Added Comment, Reaction types, CreateCommentRequest, AddReactionRequest interfaces, commentApi with CRUD operations
+- hooks/use-comments.ts - New: TanStack Query hooks for comments and reactions
+- app/entry/[id].tsx - Added engagement row, comments modal, delete comment flow
+- __tests__/services/comment-api.test.ts - New: 17 TDD tests for API
+- __tests__/hooks/use-comments.test.tsx - New: 8 TDD tests for hooks
+
+**Verification:** tsc, lint, test (503 passed), build all pass.
+
+**Next:** Continue remaining PRD items: SHARE-002-007 (Web Viewer dependent), SEARCH-002 (AI semantic search), VIDEO-001-002 (Cloudflare Stream), PAY items

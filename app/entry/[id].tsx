@@ -20,6 +20,11 @@ import { useLocalSearchParams, router } from "expo-router";
 import { ThemedText } from "@/components/themed-text";
 import { VideoPlayer } from "@/components/video-player";
 import { useEntry, useUpdateEntry, useDeleteEntry } from "@/hooks/use-entries";
+import {
+  useComments,
+  useReactions,
+  useDeleteComment,
+} from "@/hooks/use-comments";
 import { useAuth } from "@/contexts/auth-context";
 import {
   PRIMARY_COLOR,
@@ -27,10 +32,17 @@ import {
   ViewerColors,
   Spacing,
 } from "@/constants/theme";
+import type { Comment } from "@/services/api-client";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-type MenuState = "closed" | "options" | "confirmDelete" | "edit";
+type MenuState =
+  | "closed"
+  | "options"
+  | "confirmDelete"
+  | "edit"
+  | "comments"
+  | "confirmDeleteComment";
 
 export default function EntryDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -41,9 +53,15 @@ export default function EntryDetailScreen() {
   const updateEntryMutation = useUpdateEntry();
   const deleteEntryMutation = useDeleteEntry();
 
+  // Comments and reactions hooks (PRD SHARE-006, SHARE-010)
+  const { data: comments = [] } = useComments(id ?? "");
+  const { data: reactions = [] } = useReactions(id ?? "");
+  const deleteCommentMutation = useDeleteComment();
+
   const [activeIndex, setActiveIndex] = useState(0);
   const [menuState, setMenuState] = useState<MenuState>("closed");
   const [editCaption, setEditCaption] = useState("");
+  const [selectedComment, setSelectedComment] = useState<Comment | null>(null);
 
   // Sync editCaption with entry when entry loads or changes
   useEffect(() => {
@@ -120,6 +138,35 @@ export default function EntryDetailScreen() {
 
   const handleCancelEdit = useCallback(() => {
     setMenuState("closed");
+  }, []);
+
+  // Comments modal handlers (PRD SHARE-006, SHARE-010)
+  const handleOpenComments = useCallback(() => {
+    setMenuState("comments");
+  }, []);
+
+  const handleDeleteCommentPrompt = useCallback((comment: Comment) => {
+    setSelectedComment(comment);
+    setMenuState("confirmDeleteComment");
+  }, []);
+
+  const handleConfirmDeleteComment = useCallback(() => {
+    if (selectedComment && id) {
+      deleteCommentMutation.mutate(
+        { commentId: selectedComment.id, entryId: id },
+        {
+          onSuccess: () => {
+            setSelectedComment(null);
+            setMenuState("comments");
+          },
+        },
+      );
+    }
+  }, [selectedComment, id, deleteCommentMutation]);
+
+  const handleCancelDeleteComment = useCallback(() => {
+    setSelectedComment(null);
+    setMenuState("comments");
   }, []);
 
   // Loading state
@@ -238,6 +285,27 @@ export default function EntryDetailScreen() {
                 </ThemedText>
               )}
           </View>
+          {/* Reactions and comments row (PRD SHARE-006) */}
+          <Pressable
+            testID="comments-button"
+            style={styles.engagementRow}
+            onPress={handleOpenComments}
+          >
+            {reactions.length > 0 && (
+              <View style={styles.engagementItem}>
+                <ThemedText style={styles.engagementEmoji}>❤️</ThemedText>
+                <ThemedText style={styles.engagementCount}>
+                  {reactions.length}
+                </ThemedText>
+              </View>
+            )}
+            <View style={styles.engagementItem}>
+              <ThemedText style={styles.engagementEmoji}>💬</ThemedText>
+              <ThemedText style={styles.engagementCount}>
+                {comments.length}
+              </ThemedText>
+            </View>
+          </Pressable>
         </View>
       </View>
 
@@ -335,6 +403,134 @@ export default function EntryDetailScreen() {
             </View>
           </View>
         </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Comments Modal (PRD SHARE-006, SHARE-010) */}
+      <Modal
+        testID="comments-modal"
+        visible={
+          menuState === "comments" || menuState === "confirmDeleteComment"
+        }
+        transparent
+        animationType="slide"
+        onRequestClose={handleCloseMenu}
+      >
+        <View style={styles.commentsModalContainer}>
+          <View style={styles.commentsModalContent}>
+            <View style={styles.commentsModalHeader}>
+              <ThemedText style={styles.commentsModalTitle}>
+                Comments & Reactions
+              </ThemedText>
+              <Pressable
+                testID="close-comments-button"
+                onPress={handleCloseMenu}
+                style={styles.closeCommentsButton}
+              >
+                <ThemedText style={styles.closeCommentsText}>✕</ThemedText>
+              </Pressable>
+            </View>
+
+            {/* Reactions summary */}
+            {reactions.length > 0 && (
+              <View style={styles.reactionsSection}>
+                <ThemedText style={styles.sectionTitle}>Reactions</ThemedText>
+                <View style={styles.reactionsList}>
+                  {reactions.map((reaction) => (
+                    <View key={reaction.id} style={styles.reactionItem}>
+                      <ThemedText style={styles.reactionEmoji}>
+                        {reaction.emoji}
+                      </ThemedText>
+                      <ThemedText style={styles.reactionAuthor}>
+                        {reaction.userName}
+                      </ThemedText>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {/* Comments list */}
+            <View style={styles.commentsSection}>
+              <ThemedText style={styles.sectionTitle}>
+                Comments ({comments.length})
+              </ThemedText>
+              {comments.length === 0 ? (
+                <ThemedText style={styles.noCommentsText}>
+                  No comments yet
+                </ThemedText>
+              ) : (
+                <ScrollView style={styles.commentsList}>
+                  {comments.map((comment) => (
+                    <View key={comment.id} style={styles.commentItem}>
+                      <View style={styles.commentHeader}>
+                        <ThemedText style={styles.commentAuthor}>
+                          {comment.authorName}
+                        </ThemedText>
+                        <ThemedText style={styles.commentDate}>
+                          {new Date(comment.createdAt).toLocaleDateString(
+                            "en-SG",
+                            {
+                              day: "numeric",
+                              month: "short",
+                            },
+                          )}
+                        </ThemedText>
+                      </View>
+                      <ThemedText style={styles.commentText}>
+                        {comment.text}
+                      </ThemedText>
+                      {/* Delete button for parents (PRD SHARE-010) */}
+                      <Pressable
+                        testID={`delete-comment-${comment.id}`}
+                        style={styles.deleteCommentButton}
+                        onPress={() => handleDeleteCommentPrompt(comment)}
+                      >
+                        <ThemedText style={styles.deleteCommentText}>
+                          Delete
+                        </ThemedText>
+                      </Pressable>
+                    </View>
+                  ))}
+                </ScrollView>
+              )}
+            </View>
+
+            {/* Delete comment confirmation */}
+            {menuState === "confirmDeleteComment" && selectedComment && (
+              <View style={styles.deleteConfirmOverlay}>
+                <View style={styles.deleteConfirmBox}>
+                  <ThemedText style={styles.confirmTitle}>
+                    Delete this comment?
+                  </ThemedText>
+                  <ThemedText style={styles.confirmMessage}>
+                    &ldquo;{selectedComment.text.substring(0, 50)}
+                    {selectedComment.text.length > 50 ? "..." : ""}&rdquo;
+                  </ThemedText>
+                  <View style={styles.confirmButtons}>
+                    <Pressable
+                      testID="cancel-delete-comment"
+                      style={styles.confirmButton}
+                      onPress={handleCancelDeleteComment}
+                    >
+                      <ThemedText style={styles.menuItemText}>
+                        Cancel
+                      </ThemedText>
+                    </Pressable>
+                    <Pressable
+                      testID="confirm-delete-comment"
+                      style={[styles.confirmButton, styles.confirmButtonDanger]}
+                      onPress={handleConfirmDeleteComment}
+                    >
+                      <ThemedText style={styles.menuItemTextDanger}>
+                        Delete
+                      </ThemedText>
+                    </Pressable>
+                  </View>
+                </View>
+              </View>
+            )}
+          </View>
+        </View>
       </Modal>
     </View>
   );
@@ -563,5 +759,172 @@ const styles = StyleSheet.create({
     fontSize: 16,
     minHeight: 100,
     textAlignVertical: "top",
+  },
+  // Engagement row (reactions & comments counts)
+  engagementRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.lg,
+    marginTop: Spacing.md,
+  },
+  engagementItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+  },
+  engagementEmoji: {
+    fontSize: 16,
+  },
+  engagementCount: {
+    color: ViewerColors.textMuted,
+    fontSize: 14,
+  },
+  // Comments modal
+  commentsModalContainer: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: ViewerColors.overlay,
+  },
+  commentsModalContent: {
+    backgroundColor: ViewerColors.modalBackground,
+    borderTopLeftRadius: Spacing.lg,
+    borderTopRightRadius: Spacing.lg,
+    maxHeight: SCREEN_HEIGHT * 0.7,
+  },
+  commentsModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: Spacing.lg,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: ViewerColors.modalBorder,
+  },
+  commentsModalTitle: {
+    color: ViewerColors.text,
+    fontSize: 17,
+    fontWeight: "600",
+  },
+  closeCommentsButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: ViewerColors.buttonBackground,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  closeCommentsText: {
+    color: ViewerColors.text,
+    fontSize: 16,
+  },
+  reactionsSection: {
+    padding: Spacing.lg,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: ViewerColors.modalBorder,
+  },
+  sectionTitle: {
+    color: ViewerColors.textSubtle,
+    fontSize: 13,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    marginBottom: Spacing.md,
+  },
+  reactionsList: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.md,
+  },
+  reactionItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    backgroundColor: ViewerColors.buttonBackground,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: Spacing.lg,
+  },
+  reactionEmoji: {
+    fontSize: 16,
+  },
+  reactionAuthor: {
+    color: ViewerColors.text,
+    fontSize: 14,
+  },
+  commentsSection: {
+    padding: Spacing.lg,
+    paddingBottom: 40,
+  },
+  commentsList: {
+    maxHeight: SCREEN_HEIGHT * 0.4,
+  },
+  noCommentsText: {
+    color: ViewerColors.textMuted,
+    fontSize: 14,
+    fontStyle: "italic",
+  },
+  commentItem: {
+    marginBottom: Spacing.lg,
+    paddingBottom: Spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: ViewerColors.modalBorder,
+  },
+  commentHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.xs,
+  },
+  commentAuthor: {
+    color: ViewerColors.text,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  commentDate: {
+    color: ViewerColors.textMuted,
+    fontSize: 12,
+  },
+  commentText: {
+    color: ViewerColors.text,
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  deleteCommentButton: {
+    alignSelf: "flex-start",
+    marginTop: Spacing.sm,
+  },
+  deleteCommentText: {
+    color: SemanticColors.error,
+    fontSize: 13,
+  },
+  deleteConfirmOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: ViewerColors.overlayStrong,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  deleteConfirmBox: {
+    backgroundColor: ViewerColors.modalBackground,
+    borderRadius: 14,
+    padding: Spacing.lg,
+    width: 280,
+  },
+  confirmButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: Spacing.lg,
+    gap: Spacing.md,
+  },
+  confirmButton: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    borderRadius: 8,
+    backgroundColor: ViewerColors.buttonBackground,
+    alignItems: "center",
+  },
+  confirmButtonDanger: {
+    backgroundColor: SemanticColors.errorLight,
   },
 });
