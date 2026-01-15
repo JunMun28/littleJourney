@@ -5,6 +5,7 @@
  * - Uses mock implementations during development
  * - Ready for real Cloudflare Workers backend integration
  * - Works with TanStack Query for caching/revalidation
+ * - Includes auth token handling via getAuthHeaders
  */
 
 import { Entry, NewEntry } from "@/contexts/entry-context";
@@ -14,6 +15,7 @@ import {
 } from "@/contexts/child-context";
 import { FamilyMember, PermissionLevel } from "@/contexts/family-context";
 import { Milestone } from "@/contexts/milestone-context";
+import { getAuthHeaders } from "./auth-api";
 
 // API version of Child with ID (context version may not have it yet)
 export interface Child extends ChildBase {
@@ -141,9 +143,10 @@ export const entryApi = {
       };
     }
 
-    // Real API call (future)
+    // Real API call
     const response = await fetch(
       `${API_CONFIG.baseUrl}/entries?${new URLSearchParams(params as Record<string, string>)}`,
+      { headers: getAuthHeaders() },
     );
     return response.json();
   },
@@ -159,7 +162,9 @@ export const entryApi = {
       return { data: entry };
     }
 
-    const response = await fetch(`${API_CONFIG.baseUrl}/entries/${id}`);
+    const response = await fetch(`${API_CONFIG.baseUrl}/entries/${id}`, {
+      headers: getAuthHeaders(),
+    });
     return response.json();
   },
 
@@ -180,7 +185,7 @@ export const entryApi = {
 
     const response = await fetch(`${API_CONFIG.baseUrl}/entries`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
       body: JSON.stringify(request),
     });
     return response.json();
@@ -207,7 +212,7 @@ export const entryApi = {
       `${API_CONFIG.baseUrl}/entries/${request.id}`,
       {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify(request.updates),
       },
     );
@@ -228,6 +233,7 @@ export const entryApi = {
 
     const response = await fetch(`${API_CONFIG.baseUrl}/entries/${id}`, {
       method: "DELETE",
+      headers: getAuthHeaders(),
     });
     return response.json();
   },
@@ -247,7 +253,9 @@ export const childApi = {
       return { data: mockChildren };
     }
 
-    const response = await fetch(`${API_CONFIG.baseUrl}/children`);
+    const response = await fetch(`${API_CONFIG.baseUrl}/children`, {
+      headers: getAuthHeaders(),
+    });
     return response.json();
   },
 
@@ -265,7 +273,7 @@ export const childApi = {
 
     const response = await fetch(`${API_CONFIG.baseUrl}/children`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
       body: JSON.stringify(request),
     });
     return response.json();
@@ -291,7 +299,7 @@ export const childApi = {
       `${API_CONFIG.baseUrl}/children/${request.id}`,
       {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify(request.updates),
       },
     );
@@ -313,7 +321,9 @@ export const familyApi = {
       return { data: mockFamilyMembers };
     }
 
-    const response = await fetch(`${API_CONFIG.baseUrl}/family`);
+    const response = await fetch(`${API_CONFIG.baseUrl}/family`, {
+      headers: getAuthHeaders(),
+    });
     return response.json();
   },
 
@@ -337,7 +347,7 @@ export const familyApi = {
 
     const response = await fetch(`${API_CONFIG.baseUrl}/family/invite`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
       body: JSON.stringify(request),
     });
     return response.json();
@@ -361,6 +371,7 @@ export const familyApi = {
 
     const response = await fetch(`${API_CONFIG.baseUrl}/family/${id}`, {
       method: "DELETE",
+      headers: getAuthHeaders(),
     });
     return response.json();
   },
@@ -387,6 +398,7 @@ export const familyApi = {
 
     const response = await fetch(`${API_CONFIG.baseUrl}/family/${id}/resend`, {
       method: "POST",
+      headers: getAuthHeaders(),
     });
     return response.json();
   },
@@ -406,7 +418,9 @@ export const milestoneApi = {
       return { data: mockMilestones };
     }
 
-    const response = await fetch(`${API_CONFIG.baseUrl}/milestones`);
+    const response = await fetch(`${API_CONFIG.baseUrl}/milestones`, {
+      headers: getAuthHeaders(),
+    });
     return response.json();
   },
 
@@ -434,7 +448,7 @@ export const milestoneApi = {
 
     const response = await fetch(`${API_CONFIG.baseUrl}/milestones`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
       body: JSON.stringify(request),
     });
     return response.json();
@@ -465,7 +479,7 @@ export const milestoneApi = {
       `${API_CONFIG.baseUrl}/milestones/${request.id}/complete`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify(request),
       },
     );
@@ -486,6 +500,7 @@ export const milestoneApi = {
 
     const response = await fetch(`${API_CONFIG.baseUrl}/milestones/${id}`, {
       method: "DELETE",
+      headers: getAuthHeaders(),
     });
     return response.json();
   },

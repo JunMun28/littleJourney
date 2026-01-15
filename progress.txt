@@ -1790,3 +1790,29 @@
 **Verification:** tsc, lint, test (340 passed), build all pass.
 
 **Next:** Cloudflare Workers backend setup, Stripe SDK integration, or Web Viewer (Phase 2)
+
+## 2026-01-15: Auth API and Token Management
+
+**PRD ref:** Phase 1, Section 1.2 (Token Storage), API Layer architecture
+
+**Task:** Implement auth token management for API client integration readiness
+
+**Decisions:**
+- Created services/auth-api.ts for auth token handling (PRD Section 1.2)
+- In-memory token (currentToken) for synchronous access in API calls
+- SecureStore persistence for token survival across app restarts
+- getAuthHeaders() returns Authorization header or empty object
+- authApi includes: signIn, signOut, getCurrentUser, requestMagicLink, verifyMagicLink
+- Mock mode auto-stores token on sign in, clears on sign out
+- Updated api-client.ts to spread getAuthHeaders() into all fetch calls
+- All 4 APIs (entry, child, family, milestone) now include auth headers
+- TDD approach: 11 new tests for auth-api
+
+**Files changed:**
+- services/auth-api.ts - New: Token management + auth API endpoints
+- services/api-client.ts - Added getAuthHeaders import, spread auth headers in all fetch calls
+- __tests__/services/auth-api.test.ts - New: 11 TDD tests
+
+**Verification:** tsc, lint, test (351 passed), build all pass.
+
+**Next:** Cloudflare Workers backend setup, Stripe SDK integration, or Web Viewer (Phase 2)
