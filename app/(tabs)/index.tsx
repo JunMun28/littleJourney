@@ -161,7 +161,8 @@ function EntryCard({ entry, onPress }: EntryCardProps) {
   );
 }
 
-type CreateStep = "type" | "media" | "caption";
+type CreateStep = "type" | "source" | "caption";
+type MediaSource = "gallery" | "camera";
 
 export default function FeedScreen() {
   const { entries, addEntry, getOnThisDayEntries } = useEntries();
@@ -306,12 +307,34 @@ export default function FeedScreen() {
         setSelectedType(null);
         return;
       }
+      // Go to source selection (gallery or camera)
+      setCreateStep("source");
+    } else {
+      // Photo - go to source selection (gallery or camera)
+      setCreateStep("source");
+    }
+  };
 
-      // Request permission and open picker
+  const handleSourceSelect = async (source: MediaSource) => {
+    if (!selectedType || selectedType === "text") return;
+
+    if (selectedType === "video") {
+      await handleVideoSource(source);
+    } else {
+      await handlePhotoSource(source);
+    }
+  };
+
+  const handleVideoSource = async (source: MediaSource) => {
+    if (source === "gallery") {
+      // Request media library permission
       const { status } =
         await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
-        alert("Permission to access media library is required.");
+        Alert.alert(
+          "Permission Required",
+          "Permission to access media library is required.",
+        );
         return;
       }
 
@@ -322,41 +345,70 @@ export default function FeedScreen() {
       });
 
       if (!result.canceled && result.assets.length > 0) {
-        const video = result.assets[0];
-        const duration = video.duration ? video.duration / 1000 : 0; // ms to seconds
-        const fileSize = video.fileSize ?? 0;
-
-        // Check video duration limit
-        if (!canUploadVideo(duration)) {
-          const maxMinutes = tier === "standard" ? 2 : 10;
-          Alert.alert(
-            "Video Too Long",
-            `Your ${tier} plan allows videos up to ${maxMinutes} minutes. This video is ${Math.ceil(duration / 60)} minutes.`,
-            [{ text: "OK" }],
-          );
-          return;
-        }
-
-        // Check storage limit
-        if (!canUpload(fileSize)) {
-          Alert.alert(
-            "Storage Limit Reached",
-            "You don't have enough storage space for this video. Please upgrade your plan or free up space.",
-            [{ text: "OK" }],
-          );
-          return;
-        }
-
-        setSelectedMedia([video.uri]);
-        setSelectedMediaSizes([fileSize]);
-        setCreateStep("caption");
+        await processVideoAsset(result.assets[0]);
       }
     } else {
-      // Photo flow
+      // Camera capture
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Required",
+          "Permission to access camera is required.",
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets.length > 0) {
+        await processVideoAsset(result.assets[0]);
+      }
+    }
+  };
+
+  const processVideoAsset = async (video: ImagePicker.ImagePickerAsset) => {
+    const duration = video.duration ? video.duration / 1000 : 0; // ms to seconds
+    const fileSize = video.fileSize ?? 0;
+
+    // Check video duration limit
+    if (!canUploadVideo(duration)) {
+      const maxMinutes = tier === "standard" ? 2 : 10;
+      Alert.alert(
+        "Video Too Long",
+        `Your ${tier} plan allows videos up to ${maxMinutes} minutes. This video is ${Math.ceil(duration / 60)} minutes.`,
+        [{ text: "OK" }],
+      );
+      return;
+    }
+
+    // Check storage limit
+    if (!canUpload(fileSize)) {
+      Alert.alert(
+        "Storage Limit Reached",
+        "You don't have enough storage space for this video. Please upgrade your plan or free up space.",
+        [{ text: "OK" }],
+      );
+      return;
+    }
+
+    setSelectedMedia([video.uri]);
+    setSelectedMediaSizes([fileSize]);
+    setCreateStep("caption");
+  };
+
+  const handlePhotoSource = async (source: MediaSource) => {
+    if (source === "gallery") {
+      // Request media library permission
       const { status } =
         await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
-        alert("Permission to access media library is required.");
+        Alert.alert(
+          "Permission Required",
+          "Permission to access media library is required.",
+        );
         return;
       }
 
@@ -368,36 +420,57 @@ export default function FeedScreen() {
       });
 
       if (!result.canceled && result.assets.length > 0) {
-        const totalSize = result.assets.reduce(
-          (sum, a) => sum + (a.fileSize ?? 0),
-          0,
+        await processPhotoAssets(result.assets);
+      }
+    } else {
+      // Camera capture
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Required",
+          "Permission to access camera is required.",
         );
+        return;
+      }
 
-        // Check storage limit
-        if (!canUpload(totalSize)) {
-          Alert.alert(
-            "Storage Limit Reached",
-            "You don't have enough storage space for these photos. Please upgrade your plan or free up space.",
-            [{ text: "OK" }],
-          );
-          return;
-        }
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.8,
+        exif: true,
+      });
 
-        setSelectedMedia(result.assets.map((a) => a.uri));
-        setSelectedMediaSizes(result.assets.map((a) => a.fileSize ?? 0));
-
-        // Extract date from first photo's EXIF (PRD Section 3.4)
-        const firstAsset = result.assets[0];
-        const exifDate = extractDateFromExif(firstAsset.exif as ExifData);
-        if (exifDate) {
-          setEntryDate(new Date(exifDate));
-        } else {
-          setEntryDate(new Date());
-        }
-
-        setCreateStep("caption");
+      if (!result.canceled && result.assets.length > 0) {
+        await processPhotoAssets(result.assets);
       }
     }
+  };
+
+  const processPhotoAssets = async (assets: ImagePicker.ImagePickerAsset[]) => {
+    const totalSize = assets.reduce((sum, a) => sum + (a.fileSize ?? 0), 0);
+
+    // Check storage limit
+    if (!canUpload(totalSize)) {
+      Alert.alert(
+        "Storage Limit Reached",
+        "You don't have enough storage space for these photos. Please upgrade your plan or free up space.",
+        [{ text: "OK" }],
+      );
+      return;
+    }
+
+    setSelectedMedia(assets.map((a) => a.uri));
+    setSelectedMediaSizes(assets.map((a) => a.fileSize ?? 0));
+
+    // Extract date from first photo's EXIF (PRD Section 3.4)
+    const firstAsset = assets[0];
+    const exifDate = extractDateFromExif(firstAsset.exif as ExifData);
+    if (exifDate) {
+      setEntryDate(new Date(exifDate));
+    } else {
+      setEntryDate(new Date());
+    }
+
+    setCreateStep("caption");
   };
 
   const handleSubmit = () => {
@@ -545,6 +618,48 @@ export default function FeedScreen() {
                 >
                   <ThemedText style={styles.typeIcon}>✏️</ThemedText>
                   <ThemedText>Text</ThemedText>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          {createStep === "source" && (
+            <View style={styles.typeSelection}>
+              <ThemedText style={styles.stepTitle}>
+                {selectedType === "photo"
+                  ? "Choose photo source"
+                  : "Choose video source"}
+              </ThemedText>
+              <View style={styles.sourceOptions}>
+                <TouchableOpacity
+                  style={[
+                    styles.sourceOption,
+                    { backgroundColor: colors.backgroundSecondary },
+                  ]}
+                  onPress={() => handleSourceSelect("gallery")}
+                >
+                  <ThemedText style={styles.typeIcon}>🖼️</ThemedText>
+                  <ThemedText type="defaultSemiBold">Gallery</ThemedText>
+                  <ThemedText
+                    style={[styles.sourceHint, { color: colors.textMuted }]}
+                  >
+                    Choose from library
+                  </ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.sourceOption,
+                    { backgroundColor: colors.backgroundSecondary },
+                  ]}
+                  onPress={() => handleSourceSelect("camera")}
+                >
+                  <ThemedText style={styles.typeIcon}>📸</ThemedText>
+                  <ThemedText type="defaultSemiBold">Camera</ThemedText>
+                  <ThemedText
+                    style={[styles.sourceHint, { color: colors.textMuted }]}
+                  >
+                    Take a new {selectedType}
+                  </ThemedText>
                 </TouchableOpacity>
               </View>
             </View>
@@ -773,6 +888,22 @@ const styles = StyleSheet.create({
   typeIcon: {
     fontSize: 32,
     marginBottom: 8,
+  },
+  sourceOptions: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    gap: 16,
+  },
+  sourceOption: {
+    flex: 1,
+    alignItems: "center",
+    padding: 24,
+    borderRadius: 12,
+  },
+  sourceHint: {
+    fontSize: 12,
+    marginTop: 4,
+    textAlign: "center",
   },
   captionStep: {
     flex: 1,

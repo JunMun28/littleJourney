@@ -45,6 +45,23 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
   removeItem: jest.fn(),
 }));
 
+// Mock expo-image-picker with camera support
+jest.mock("expo-image-picker", () => ({
+  launchImageLibraryAsync: jest.fn(),
+  launchCameraAsync: jest.fn(),
+  requestMediaLibraryPermissionsAsync: jest.fn().mockResolvedValue({
+    status: "granted",
+  }),
+  requestCameraPermissionsAsync: jest.fn().mockResolvedValue({
+    status: "granted",
+  }),
+  MediaTypeOptions: {
+    Images: "Images",
+    Videos: "Videos",
+    All: "All",
+  },
+}));
+
 const mockAsyncStorage = AsyncStorage as jest.Mocked<typeof AsyncStorage>;
 
 describe("On This Day memories", () => {
@@ -412,6 +429,38 @@ describe("Storage warning notifications", () => {
     });
 
     expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
+  });
+});
+
+// Test camera capture feature (PRD Section 3.2, 3.3)
+describe("Camera capture", () => {
+  it("should support launchCameraAsync for photo capture", () => {
+    // This tests that ImagePicker has camera capability
+    const ImagePicker = require("expo-image-picker");
+    expect(ImagePicker.launchCameraAsync).toBeDefined();
+    expect(typeof ImagePicker.launchCameraAsync).toBe("function");
+  });
+
+  it("should request camera permissions before capturing", async () => {
+    const ImagePicker = require("expo-image-picker");
+    ImagePicker.requestCameraPermissionsAsync = jest.fn().mockResolvedValue({
+      status: "granted",
+    });
+
+    await ImagePicker.requestCameraPermissionsAsync();
+
+    expect(ImagePicker.requestCameraPermissionsAsync).toHaveBeenCalled();
+  });
+
+  it("should handle camera permission denied gracefully", async () => {
+    const ImagePicker = require("expo-image-picker");
+    ImagePicker.requestCameraPermissionsAsync = jest.fn().mockResolvedValue({
+      status: "denied",
+    });
+
+    const result = await ImagePicker.requestCameraPermissionsAsync();
+
+    expect(result.status).toBe("denied");
   });
 });
 

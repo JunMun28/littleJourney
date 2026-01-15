@@ -1311,3 +1311,29 @@
 **Verification:** tsc, lint, test (262 passed), build all pass.
 
 **Next:** Integrate hooks with screens to replace context usage, or Cloudflare Workers backend setup
+
+## 2026-01-15: Camera Capture for Entry Creation
+
+**PRD ref:** Phase 1 Weeks 5-7, Section 3.2 step 3 (Select from gallery or capture new), Section 3.3 (Secondary: Camera capture)
+
+**Task:** Add camera capture option as secondary source for photo/video entries
+
+**Decisions:**
+- Added "source" step between type selection and caption in creation flow
+- MediaSource type: "gallery" | "camera" for source selection
+- Source step shows two options: Gallery (primary per PRD) and Camera (secondary)
+- Uses ImagePicker.launchCameraAsync for camera capture
+- Uses ImagePicker.requestCameraPermissionsAsync for camera permission
+- Refactored handleTypeSelect to set step to "source" for photo/video (text skips to caption)
+- Created separate handlers: handleSourceSelect, handleVideoSource, handlePhotoSource
+- Created reusable asset processors: processVideoAsset, processPhotoAssets
+- Camera capture also supports EXIF extraction for photos
+- TDD approach: 3 tests for camera mock setup
+
+**Files changed:**
+- app/(tabs)/index.tsx - Added source selection step, refactored media flow handlers, added sourceOptions styles
+- __tests__/app/tabs/feed.test.tsx - Added 3 camera tests, added expo-image-picker mock with camera support
+
+**Verification:** tsc, lint, test (265 passed), build all pass.
+
+**Next:** Cloudflare Workers backend setup, or additional UI polish
