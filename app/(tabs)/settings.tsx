@@ -108,8 +108,12 @@ export default function SettingsScreen() {
     scheduleDailyPrompt,
     cancelDailyPrompt,
   } = useNotifications();
-  const { familyMembers, inviteFamilyMember, removeFamilyMember } =
-    useFamilyMembersFlat();
+  const {
+    familyMembers,
+    inviteFamilyMember,
+    removeFamilyMember,
+    resendInvite,
+  } = useFamilyMembersFlat();
   const { dailyPromptTime, setDailyPromptTime } = useUserPreferences();
   const { usedBytes, limitBytes, usagePercent, tier, setTier } = useStorage();
   const { exportData, isExporting, lastExportDate } = useExport();
@@ -610,19 +614,30 @@ export default function SettingsScreen() {
                     {member.status === "pending" ? "Pending" : "Active"}
                   </Text>
                 </View>
-                <Pressable
-                  onPress={() => removeFamilyMember(member.id)}
-                  hitSlop={8}
-                >
-                  <Text
-                    style={[
-                      styles.removeButton,
-                      { color: SemanticColors.error },
-                    ]}
+                <View style={styles.familyMemberActions}>
+                  {member.status === "pending" && (
+                    <Pressable
+                      onPress={() => resendInvite(member.id)}
+                      hitSlop={8}
+                      style={styles.resendButton}
+                    >
+                      <Text style={{ color: PRIMARY_COLOR }}>Resend</Text>
+                    </Pressable>
+                  )}
+                  <Pressable
+                    onPress={() => removeFamilyMember(member.id)}
+                    hitSlop={8}
                   >
-                    Remove
-                  </Text>
-                </Pressable>
+                    <Text
+                      style={[
+                        styles.removeButton,
+                        { color: SemanticColors.error },
+                      ]}
+                    >
+                      Remove
+                    </Text>
+                  </Pressable>
+                </View>
               </View>
             ))}
           </View>
@@ -1726,6 +1741,15 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#666",
     marginTop: 2,
+  },
+  familyMemberActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  resendButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
   removeButton: {
     fontSize: 14,

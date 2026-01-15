@@ -84,6 +84,27 @@ export function useRemoveFamilyMember() {
 }
 
 /**
+ * Resend invite to a family member
+ */
+export function useResendInvite() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string): Promise<FamilyMember> => {
+      const result = await familyApi.resendInvite(id);
+      if (isApiError(result)) {
+        throw new Error(result.error.message);
+      }
+      return result.data;
+    },
+    onSuccess: () => {
+      // Invalidate list to show updated invitedAt
+      queryClient.invalidateQueries({ queryKey: familyKeys.list() });
+    },
+  });
+}
+
+/**
  * Flattened hook for easy family member consumption in components
  * Returns familyMembers array and mutation helpers
  */
@@ -97,6 +118,7 @@ export function useFamilyMembersFlat() {
   } = useFamilyMembers();
   const inviteMutation = useInviteFamilyMember();
   const removeMutation = useRemoveFamilyMember();
+  const resendMutation = useResendInvite();
 
   const inviteFamilyMember = (request: InviteFamilyRequest) => {
     inviteMutation.mutate(request);
@@ -104,6 +126,10 @@ export function useFamilyMembersFlat() {
 
   const removeFamilyMember = (id: string) => {
     removeMutation.mutate(id);
+  };
+
+  const resendInvite = (id: string) => {
+    resendMutation.mutate(id);
   };
 
   return {
@@ -114,7 +140,9 @@ export function useFamilyMembersFlat() {
     refetch,
     inviteFamilyMember,
     removeFamilyMember,
+    resendInvite,
     isInviting: inviteMutation.isPending,
     isRemoving: removeMutation.isPending,
+    isResending: resendMutation.isPending,
   };
 }

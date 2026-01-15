@@ -17,7 +17,7 @@ import { MilestoneProvider } from "@/contexts/milestone-context";
 import { UserPreferencesProvider } from "@/contexts/user-preferences-context";
 import { StorageProvider } from "@/contexts/storage-context";
 import { SubscriptionProvider } from "@/contexts/subscription-context";
-import { clearAllMockData, childApi } from "@/services/api-client";
+import { clearAllMockData, childApi, familyApi } from "@/services/api-client";
 
 // Mock expo-image-picker
 jest.mock("expo-image-picker", () => ({
@@ -270,6 +270,51 @@ describe("SettingsScreen", () => {
 
     await waitFor(() => {
       expect(screen.getByText("No child profile added")).toBeTruthy();
+    });
+  });
+});
+
+describe("SettingsScreen - Family Member Management", () => {
+  beforeEach(() => {
+    clearAllMockData();
+  });
+
+  // Helper to set up test family member via API
+  async function setupPendingFamilyMember() {
+    await familyApi.inviteFamilyMember({
+      email: "grandma@example.com",
+      relationship: "Grandmother",
+      permissionLevel: "view_interact",
+    });
+  }
+
+  it("displays resend link button for pending family members", async () => {
+    await setupPendingFamilyMember();
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("grandma@example.com")).toBeTruthy();
+    });
+
+    // Should show Resend button for pending invites
+    expect(screen.getByText("Resend")).toBeTruthy();
+  });
+
+  it("shows pending status for invited family members", async () => {
+    await setupPendingFamilyMember();
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Pending/)).toBeTruthy();
+    });
+  });
+
+  it("shows relationship and status for family members", async () => {
+    await setupPendingFamilyMember();
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Grandmother/)).toBeTruthy();
     });
   });
 });

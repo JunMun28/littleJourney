@@ -1664,3 +1664,29 @@
 **Verification:** tsc, lint, test (312 passed), build all pass.
 
 **Next:** Run `eas init` to get actual projectId, Cloudflare Workers backend setup, or Stripe SDK integration
+
+## 2026-01-15: Resend Invite Link Feature
+
+**PRD ref:** Phase 1 Weeks 10-11, Section 6.4 (Link Management - Parent can resend link)
+
+**Task:** Add "Resend" action for pending family member invites per PRD requirement
+
+**Decisions:**
+- Added familyApi.resendInvite() method to API client (mock updates invitedAt timestamp)
+- Added useResendInvite() hook wrapping API call with cache invalidation
+- Added resendInvite to useFamilyMembersFlat hook for component consumption
+- Settings screen now shows "Resend" button next to pending family members only
+- Button uses PRIMARY_COLOR for visual consistency with other actions
+- Remove button still shown for all members (pending and accepted)
+- Buttons laid out horizontally with gap between Resend and Remove
+- TDD approach: 3 tests for family member management
+
+**Files changed:**
+- services/api-client.ts - Added resendInvite() method
+- hooks/use-family.ts - Added useResendInvite hook, updated useFamilyMembersFlat
+- app/(tabs)/settings.tsx - Added Resend button for pending members, new styles
+- __tests__/app/tabs/settings.test.tsx - Added 3 TDD tests for family member UI
+
+**Verification:** tsc, lint, test (315 passed), build all pass.
+
+**Next:** Cloudflare Workers backend setup, Stripe SDK integration, or Web Viewer (Phase 2)

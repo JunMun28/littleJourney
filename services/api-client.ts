@@ -365,6 +365,32 @@ export const familyApi = {
     return response.json();
   },
 
+  async resendInvite(id: string): Promise<ApiResult<FamilyMember>> {
+    await simulateDelay();
+
+    if (API_CONFIG.useMock) {
+      const index = mockFamilyMembers.findIndex((m) => m.id === id);
+      if (index === -1) {
+        return {
+          error: { code: "NOT_FOUND", message: "Family member not found" },
+        };
+      }
+      // Update invitedAt to now (simulates resending invite)
+      const updated: FamilyMember = {
+        ...mockFamilyMembers[index],
+        invitedAt: new Date().toISOString(),
+        status: "pending",
+      };
+      mockFamilyMembers[index] = updated;
+      return { data: updated };
+    }
+
+    const response = await fetch(`${API_CONFIG.baseUrl}/family/${id}/resend`, {
+      method: "POST",
+    });
+    return response.json();
+  },
+
   // Clear mock data (for testing)
   _clearMockData(): void {
     mockFamilyMembers = [];
