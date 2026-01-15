@@ -12,6 +12,7 @@ import {
   Platform,
   Alert,
   Image,
+  useColorScheme,
 } from "react-native";
 import DateTimePicker, {
   type DateTimePickerEvent,
@@ -33,8 +34,7 @@ import {
   PLAN_DETAILS,
   type BillingCycle,
 } from "@/contexts/subscription-context";
-
-const PRIMARY_COLOR = "#0a7ea4";
+import { PRIMARY_COLOR, Colors, SemanticColors } from "@/constants/theme";
 
 type ModalState =
   | "closed"
@@ -88,6 +88,9 @@ function getTierDisplayName(tier: string): string {
 }
 
 export default function SettingsScreen() {
+  const colorScheme = useColorScheme() ?? "light";
+  const colors = Colors[colorScheme];
+
   const {
     user,
     signOut,
@@ -342,27 +345,50 @@ export default function SettingsScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={[
+        styles.container,
+        { backgroundColor: colors.backgroundSecondary },
+      ]}
+      contentContainerStyle={styles.content}
+    >
       {/* Notifications Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionHeader}>Notifications</Text>
+      <View style={[styles.section, { backgroundColor: colors.card }]}>
+        <Text style={[styles.sectionHeader, { color: colors.textSecondary }]}>
+          Notifications
+        </Text>
 
         {permissionStatus !== "granted" && (
           <Pressable
-            style={styles.permissionBanner}
+            style={[
+              styles.permissionBanner,
+              { backgroundColor: SemanticColors.warningLight },
+            ]}
             onPress={handleRequestPermissions}
           >
-            <Text style={styles.permissionText}>
+            <Text
+              style={[
+                styles.permissionText,
+                { color: SemanticColors.warningText },
+              ]}
+            >
               Enable notifications to receive reminders
             </Text>
             <Text style={styles.permissionButton}>Enable</Text>
           </Pressable>
         )}
 
-        <View style={styles.settingRow}>
+        <View style={[styles.settingRow, { borderBottomColor: colors.border }]}>
           <View style={styles.settingInfo}>
-            <Text style={styles.settingLabel}>Daily Prompts</Text>
-            <Text style={styles.settingDescription}>
+            <Text style={[styles.settingLabel, { color: colors.text }]}>
+              Daily Prompts
+            </Text>
+            <Text
+              style={[
+                styles.settingDescription,
+                { color: colors.textSecondary },
+              ]}
+            >
               Reminder to capture moments
             </Text>
           </View>
@@ -372,17 +398,24 @@ export default function SettingsScreen() {
             onValueChange={(value) =>
               handleToggleNotification("dailyPrompt", value)
             }
-            trackColor={{ false: "#767577", true: PRIMARY_COLOR }}
+            trackColor={{ false: colors.border, true: PRIMARY_COLOR }}
           />
         </View>
 
         <Pressable
-          style={styles.settingRow}
+          style={[styles.settingRow, { borderBottomColor: colors.border }]}
           onPress={() => setModalState("timePicker")}
         >
           <View style={styles.settingInfo}>
-            <Text style={styles.settingLabel}>Reminder Time</Text>
-            <Text style={styles.settingDescription}>
+            <Text style={[styles.settingLabel, { color: colors.text }]}>
+              Reminder Time
+            </Text>
+            <Text
+              style={[
+                styles.settingDescription,
+                { color: colors.textSecondary },
+              ]}
+            >
               When to send daily prompts
             </Text>
           </View>
@@ -391,10 +424,17 @@ export default function SettingsScreen() {
           </Text>
         </Pressable>
 
-        <View style={styles.settingRow}>
+        <View style={[styles.settingRow, { borderBottomColor: colors.border }]}>
           <View style={styles.settingInfo}>
-            <Text style={styles.settingLabel}>On This Day Memories</Text>
-            <Text style={styles.settingDescription}>
+            <Text style={[styles.settingLabel, { color: colors.text }]}>
+              On This Day Memories
+            </Text>
+            <Text
+              style={[
+                styles.settingDescription,
+                { color: colors.textSecondary },
+              ]}
+            >
               See memories from past years
             </Text>
           </View>
@@ -404,14 +444,21 @@ export default function SettingsScreen() {
             onValueChange={(value) =>
               handleToggleNotification("memories", value)
             }
-            trackColor={{ false: "#767577", true: PRIMARY_COLOR }}
+            trackColor={{ false: colors.border, true: PRIMARY_COLOR }}
           />
         </View>
 
-        <View style={styles.settingRow}>
+        <View style={[styles.settingRow, { borderBottomColor: colors.border }]}>
           <View style={styles.settingInfo}>
-            <Text style={styles.settingLabel}>Milestone Reminders</Text>
-            <Text style={styles.settingDescription}>
+            <Text style={[styles.settingLabel, { color: colors.text }]}>
+              Milestone Reminders
+            </Text>
+            <Text
+              style={[
+                styles.settingDescription,
+                { color: colors.textSecondary },
+              ]}
+            >
               Upcoming milestone alerts
             </Text>
           </View>
@@ -421,14 +468,21 @@ export default function SettingsScreen() {
             onValueChange={(value) =>
               handleToggleNotification("milestoneReminder", value)
             }
-            trackColor={{ false: "#767577", true: PRIMARY_COLOR }}
+            trackColor={{ false: colors.border, true: PRIMARY_COLOR }}
           />
         </View>
 
-        <View style={styles.settingRow}>
+        <View style={[styles.settingRow, { borderBottomColor: colors.border }]}>
           <View style={styles.settingInfo}>
-            <Text style={styles.settingLabel}>Family Activity</Text>
-            <Text style={styles.settingDescription}>
+            <Text style={[styles.settingLabel, { color: colors.text }]}>
+              Family Activity
+            </Text>
+            <Text
+              style={[
+                styles.settingDescription,
+                { color: colors.textSecondary },
+              ]}
+            >
               Comments and reactions
             </Text>
           </View>
@@ -438,14 +492,16 @@ export default function SettingsScreen() {
             onValueChange={(value) =>
               handleToggleNotification("familyActivity", value)
             }
-            trackColor={{ false: "#767577", true: PRIMARY_COLOR }}
+            trackColor={{ false: colors.border, true: PRIMARY_COLOR }}
           />
         </View>
       </View>
 
       {/* Child Profile Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionHeader}>Child Profile</Text>
+      <View style={[styles.section, { backgroundColor: colors.card }]}>
+        <Text style={[styles.sectionHeader, { color: colors.textSecondary }]}>
+          Child Profile
+        </Text>
 
         {child ? (
           <View style={styles.childProfileContainer}>
@@ -456,18 +512,32 @@ export default function SettingsScreen() {
                   style={styles.childPhoto}
                 />
               ) : (
-                <View style={styles.childPhotoPlaceholder}>
+                <View
+                  style={[
+                    styles.childPhotoPlaceholder,
+                    { backgroundColor: colors.backgroundTertiary },
+                  ]}
+                >
                   <Text style={styles.childPhotoPlaceholderText}>👶</Text>
                 </View>
               )}
               <View style={styles.childDetails}>
-                <Text style={styles.childName}>{child.name}</Text>
+                <Text style={[styles.childName, { color: colors.text }]}>
+                  {child.name}
+                </Text>
                 {child.nickname && (
-                  <Text style={styles.childNickname}>
+                  <Text
+                    style={[
+                      styles.childNickname,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
                     &ldquo;{child.nickname}&rdquo;
                   </Text>
                 )}
-                <Text style={styles.childDob}>
+                <Text
+                  style={[styles.childDob, { color: colors.textSecondary }]}
+                >
                   Born{" "}
                   {new Date(child.dateOfBirth).toLocaleDateString("en-SG", {
                     day: "numeric",
@@ -492,13 +562,17 @@ export default function SettingsScreen() {
             </Pressable>
           </View>
         ) : (
-          <Text style={styles.noChildText}>No child profile added</Text>
+          <Text style={[styles.noChildText, { color: colors.textMuted }]}>
+            No child profile added
+          </Text>
         )}
       </View>
 
       {/* Family Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionHeader}>Family</Text>
+      <View style={[styles.section, { backgroundColor: colors.card }]}>
+        <Text style={[styles.sectionHeader, { color: colors.textSecondary }]}>
+          Family
+        </Text>
 
         <Pressable
           style={styles.actionButton}
@@ -510,10 +584,25 @@ export default function SettingsScreen() {
         {familyMembers.length > 0 && (
           <View style={styles.familyList}>
             {familyMembers.map((member) => (
-              <View key={member.id} style={styles.familyMemberRow}>
+              <View
+                key={member.id}
+                style={[
+                  styles.familyMemberRow,
+                  { borderBottomColor: colors.border },
+                ]}
+              >
                 <View style={styles.familyMemberInfo}>
-                  <Text style={styles.familyMemberEmail}>{member.email}</Text>
-                  <Text style={styles.familyMemberRelationship}>
+                  <Text
+                    style={[styles.familyMemberEmail, { color: colors.text }]}
+                  >
+                    {member.email}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.familyMemberRelationship,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
                     {member.relationship} •{" "}
                     {member.status === "pending" ? "Pending" : "Active"}
                   </Text>
@@ -522,7 +611,14 @@ export default function SettingsScreen() {
                   onPress={() => removeFamilyMember(member.id)}
                   hitSlop={8}
                 >
-                  <Text style={styles.removeButton}>Remove</Text>
+                  <Text
+                    style={[
+                      styles.removeButton,
+                      { color: SemanticColors.error },
+                    ]}
+                  >
+                    Remove
+                  </Text>
                 </Pressable>
               </View>
             ))}
@@ -531,23 +627,38 @@ export default function SettingsScreen() {
       </View>
 
       {/* Subscription Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionHeader}>Subscription</Text>
+      <View style={[styles.section, { backgroundColor: colors.card }]}>
+        <Text style={[styles.sectionHeader, { color: colors.textSecondary }]}>
+          Subscription
+        </Text>
 
         <View style={styles.subscriptionContainer}>
           <View style={styles.subscriptionHeader}>
-            <Text style={styles.subscriptionPlan}>
+            <Text style={[styles.subscriptionPlan, { color: colors.text }]}>
               {PLAN_DETAILS[currentPlan].name} Plan
             </Text>
             {isSubscribed && billingCycle && (
-              <Text style={styles.subscriptionCycle}>
+              <Text
+                style={[
+                  styles.subscriptionCycle,
+                  {
+                    backgroundColor: colors.backgroundTertiary,
+                    color: colors.textSecondary,
+                  },
+                ]}
+              >
                 {billingCycle === "monthly" ? "Monthly" : "Yearly"}
               </Text>
             )}
           </View>
 
           {isSubscribed && currentPeriodEnd && (
-            <Text style={styles.subscriptionPeriod}>
+            <Text
+              style={[
+                styles.subscriptionPeriod,
+                { color: colors.textSecondary },
+              ]}
+            >
               {cancelledAt ? "Access until" : "Renews"}{" "}
               {new Date(currentPeriodEnd).toLocaleDateString("en-SG", {
                 day: "numeric",
@@ -558,12 +669,25 @@ export default function SettingsScreen() {
           )}
 
           {cancelledAt ? (
-            <View style={styles.cancelledBanner}>
-              <Text style={styles.cancelledText}>
+            <View
+              style={[
+                styles.cancelledBanner,
+                { backgroundColor: SemanticColors.warningLight },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.cancelledText,
+                  { color: SemanticColors.warningText },
+                ]}
+              >
                 Your subscription has been cancelled
               </Text>
               <Pressable
-                style={styles.restoreButton}
+                style={[
+                  styles.restoreButton,
+                  { backgroundColor: SemanticColors.warningText },
+                ]}
                 onPress={handleRestoreSubscription}
                 disabled={isSubscriptionLoading}
               >
@@ -576,7 +700,11 @@ export default function SettingsScreen() {
               onPress={handleCancelSubscription}
               disabled={isSubscriptionLoading}
             >
-              <Text style={styles.managePlanText}>Cancel Subscription</Text>
+              <Text
+                style={[styles.managePlanText, { color: SemanticColors.error }]}
+              >
+                Cancel Subscription
+              </Text>
             </Pressable>
           ) : (
             <Pressable
@@ -591,20 +719,29 @@ export default function SettingsScreen() {
       </View>
 
       {/* Storage Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionHeader}>Storage</Text>
+      <View style={[styles.section, { backgroundColor: colors.card }]}>
+        <Text style={[styles.sectionHeader, { color: colors.textSecondary }]}>
+          Storage
+        </Text>
 
         <View style={styles.storageContainer}>
           <View style={styles.storageHeader}>
-            <Text style={styles.storageTier}>
+            <Text style={[styles.storageTier, { color: colors.text }]}>
               {getTierDisplayName(tier)} Plan
             </Text>
-            <Text style={styles.storageUsage}>
+            <Text
+              style={[styles.storageUsage, { color: colors.textSecondary }]}
+            >
               {formatBytes(usedBytes)} of {formatBytes(limitBytes)}
             </Text>
           </View>
 
-          <View style={styles.progressBarContainer}>
+          <View
+            style={[
+              styles.progressBarContainer,
+              { backgroundColor: colors.border },
+            ]}
+          >
             <View
               style={[
                 styles.progressBarFill,
@@ -612,16 +749,20 @@ export default function SettingsScreen() {
                   width: `${Math.min(usagePercent, 100)}%`,
                   backgroundColor:
                     usagePercent >= 90
-                      ? "#ff3b30"
+                      ? SemanticColors.error
                       : usagePercent >= 80
-                        ? "#ff9500"
+                        ? SemanticColors.warning
                         : PRIMARY_COLOR,
                 },
               ]}
             />
           </View>
 
-          <Text style={styles.storagePercent}>{usagePercent}% used</Text>
+          <Text
+            style={[styles.storagePercent, { color: colors.textSecondary }]}
+          >
+            {usagePercent}% used
+          </Text>
 
           {tier === "free" && (
             <Pressable
@@ -637,11 +778,18 @@ export default function SettingsScreen() {
       </View>
 
       {/* Photo Book Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionHeader}>Photo Book</Text>
+      <View style={[styles.section, { backgroundColor: colors.card }]}>
+        <Text style={[styles.sectionHeader, { color: colors.textSecondary }]}>
+          Photo Book
+        </Text>
 
         <View style={styles.photoBookContainer}>
-          <Text style={styles.photoBookDescription}>
+          <Text
+            style={[
+              styles.photoBookDescription,
+              { color: colors.textSecondary },
+            ]}
+          >
             Create a beautiful photo book from your milestone moments
           </Text>
 
@@ -656,8 +804,10 @@ export default function SettingsScreen() {
       </View>
 
       {/* Data & Privacy Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionHeader}>Data & Privacy</Text>
+      <View style={[styles.section, { backgroundColor: colors.card }]}>
+        <Text style={[styles.sectionHeader, { color: colors.textSecondary }]}>
+          Data & Privacy
+        </Text>
 
         <Pressable
           style={[
@@ -674,38 +824,61 @@ export default function SettingsScreen() {
         </Pressable>
 
         {lastExportDate && (
-          <Text style={styles.exportInfo}>
+          <Text style={[styles.exportInfo, { color: colors.textSecondary }]}>
             Last exported:{" "}
             {new Date(lastExportDate).toLocaleDateString("en-SG")}
           </Text>
         )}
 
-        <Text style={styles.exportDescription}>
+        <Text style={[styles.exportDescription, { color: colors.textMuted }]}>
           Export all your entries, milestones, and child data as a JSON file.
         </Text>
       </View>
 
       {/* Account Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionHeader}>Account</Text>
+      <View style={[styles.section, { backgroundColor: colors.card }]}>
+        <Text style={[styles.sectionHeader, { color: colors.textSecondary }]}>
+          Account
+        </Text>
 
         {user && (
-          <View style={styles.accountInfo}>
-            <Text style={styles.accountEmail}>{user.email}</Text>
+          <View
+            style={[styles.accountInfo, { borderBottomColor: colors.border }]}
+          >
+            <Text style={[styles.accountEmail, { color: colors.text }]}>
+              {user.email}
+            </Text>
           </View>
         )}
 
         <Pressable style={styles.signOutButton} onPress={handleSignOut}>
-          <Text style={styles.signOutText}>Sign Out</Text>
+          <Text style={[styles.signOutText, { color: SemanticColors.error }]}>
+            Sign Out
+          </Text>
         </Pressable>
 
         {/* Account Deletion */}
         {deletionScheduledAt ? (
-          <View style={styles.deletionScheduledContainer}>
-            <Text style={styles.deletionScheduledTitle}>
+          <View
+            style={[
+              styles.deletionScheduledContainer,
+              { backgroundColor: SemanticColors.warningLight },
+            ]}
+          >
+            <Text
+              style={[
+                styles.deletionScheduledTitle,
+                { color: SemanticColors.warningText },
+              ]}
+            >
               Account deletion scheduled
             </Text>
-            <Text style={styles.deletionScheduledDate}>
+            <Text
+              style={[
+                styles.deletionScheduledDate,
+                { color: SemanticColors.warningText },
+              ]}
+            >
               Your account and all data will be permanently deleted on{" "}
               {new Date(deletionScheduledAt).toLocaleDateString("en-SG", {
                 day: "numeric",
@@ -714,11 +887,21 @@ export default function SettingsScreen() {
               })}
             </Text>
             <Pressable
-              style={styles.cancelDeletionButton}
+              style={[
+                styles.cancelDeletionButton,
+                { borderColor: SemanticColors.warningText },
+              ]}
               onPress={handleCancelDeletion}
               testID="cancel-deletion-button"
             >
-              <Text style={styles.cancelDeletionText}>Cancel Deletion</Text>
+              <Text
+                style={[
+                  styles.cancelDeletionText,
+                  { color: SemanticColors.warningText },
+                ]}
+              >
+                Cancel Deletion
+              </Text>
             </Pressable>
           </View>
         ) : (
@@ -727,7 +910,14 @@ export default function SettingsScreen() {
             onPress={() => setModalState("deleteAccount")}
             testID="delete-account-button"
           >
-            <Text style={styles.deleteAccountText}>Delete Account</Text>
+            <Text
+              style={[
+                styles.deleteAccountText,
+                { color: SemanticColors.error },
+              ]}
+            >
+              Delete Account
+            </Text>
           </Pressable>
         )}
       </View>
@@ -740,14 +930,27 @@ export default function SettingsScreen() {
         onRequestClose={() => setModalState("closed")}
       >
         <KeyboardAvoidingView
-          style={styles.modalContainer}
+          style={[
+            styles.modalContainer,
+            { backgroundColor: colors.backgroundSecondary },
+          ]}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          <View style={styles.modalHeader}>
+          <View
+            style={[
+              styles.modalHeader,
+              {
+                backgroundColor: colors.card,
+                borderBottomColor: colors.border,
+              },
+            ]}
+          >
             <Pressable onPress={() => setModalState("closed")}>
               <Text style={styles.modalCancel}>Cancel</Text>
             </Pressable>
-            <Text style={styles.modalTitle}>Invite Family</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              Invite Family
+            </Text>
             <Pressable onPress={handleInviteFamily} disabled={!isInviteValid}>
               <Text
                 style={[
@@ -761,31 +964,54 @@ export default function SettingsScreen() {
           </View>
 
           <View style={styles.modalContent}>
-            <Text style={styles.inputLabel}>Email</Text>
+            <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
+              Email
+            </Text>
             <TextInput
-              style={styles.textInput}
+              style={[
+                styles.textInput,
+                {
+                  backgroundColor: colors.card,
+                  color: colors.text,
+                  borderColor: colors.inputBorder,
+                },
+              ]}
               value={inviteEmail}
               onChangeText={setInviteEmail}
               placeholder="grandma@example.com"
+              placeholderTextColor={colors.placeholder}
               keyboardType="email-address"
               autoCapitalize="none"
               autoComplete="email"
             />
 
-            <Text style={styles.inputLabel}>Relationship</Text>
+            <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
+              Relationship
+            </Text>
             <TextInput
-              style={styles.textInput}
+              style={[
+                styles.textInput,
+                {
+                  backgroundColor: colors.card,
+                  color: colors.text,
+                  borderColor: colors.inputBorder,
+                },
+              ]}
               value={inviteRelationship}
               onChangeText={setInviteRelationship}
               placeholder="Grandmother, Uncle, etc."
+              placeholderTextColor={colors.placeholder}
               autoCapitalize="words"
             />
 
-            <Text style={styles.inputLabel}>Permission</Text>
+            <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
+              Permission
+            </Text>
             <View style={styles.permissionOptions}>
               <Pressable
                 style={[
                   styles.permissionOption,
+                  { backgroundColor: colors.card, borderColor: colors.border },
                   invitePermission === "view_interact" &&
                     styles.permissionOptionSelected,
                 ]}
@@ -794,6 +1020,7 @@ export default function SettingsScreen() {
                 <Text
                   style={[
                     styles.permissionOptionText,
+                    { color: colors.textSecondary },
                     invitePermission === "view_interact" &&
                       styles.permissionOptionTextSelected,
                   ]}
@@ -804,6 +1031,7 @@ export default function SettingsScreen() {
               <Pressable
                 style={[
                   styles.permissionOption,
+                  { backgroundColor: colors.card, borderColor: colors.border },
                   invitePermission === "view_only" &&
                     styles.permissionOptionSelected,
                 ]}
@@ -812,6 +1040,7 @@ export default function SettingsScreen() {
                 <Text
                   style={[
                     styles.permissionOptionText,
+                    { color: colors.textSecondary },
                     invitePermission === "view_only" &&
                       styles.permissionOptionTextSelected,
                   ]}
@@ -831,12 +1060,27 @@ export default function SettingsScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setModalState("closed")}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
+        <View
+          style={[
+            styles.modalContainer,
+            { backgroundColor: colors.backgroundSecondary },
+          ]}
+        >
+          <View
+            style={[
+              styles.modalHeader,
+              {
+                backgroundColor: colors.card,
+                borderBottomColor: colors.border,
+              },
+            ]}
+          >
             <Pressable onPress={() => setModalState("closed")}>
               <Text style={styles.modalCancel}>Cancel</Text>
             </Pressable>
-            <Text style={styles.modalTitle}>Reminder Time</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              Reminder Time
+            </Text>
             <Pressable onPress={handleSaveTime}>
               <Text style={styles.modalSave}>Save</Text>
             </Pressable>
@@ -866,10 +1110,21 @@ export default function SettingsScreen() {
         }}
       >
         <KeyboardAvoidingView
-          style={styles.modalContainer}
+          style={[
+            styles.modalContainer,
+            { backgroundColor: colors.backgroundSecondary },
+          ]}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          <View style={styles.modalHeader}>
+          <View
+            style={[
+              styles.modalHeader,
+              {
+                backgroundColor: colors.card,
+                borderBottomColor: colors.border,
+              },
+            ]}
+          >
             <Pressable
               onPress={() => {
                 setDeleteConfirmText("");
@@ -878,41 +1133,97 @@ export default function SettingsScreen() {
             >
               <Text style={styles.modalCancel}>Cancel</Text>
             </Pressable>
-            <Text style={styles.modalTitle}>Delete Account</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              Delete Account
+            </Text>
             <View style={{ width: 50 }} />
           </View>
 
           <View style={styles.deleteModalContent}>
-            <Text style={styles.deleteWarningTitle}>⚠️ Warning</Text>
-            <Text style={styles.deleteWarningText}>
+            <Text
+              style={[
+                styles.deleteWarningTitle,
+                { color: SemanticColors.error },
+              ]}
+            >
+              ⚠️ Warning
+            </Text>
+            <Text style={[styles.deleteWarningText, { color: colors.text }]}>
               This will permanently delete your account and all your data,
               including:
             </Text>
             <View style={styles.deleteWarningList}>
-              <Text style={styles.deleteWarningItem}>
+              <Text
+                style={[
+                  styles.deleteWarningItem,
+                  { color: colors.textSecondary },
+                ]}
+              >
                 • All journal entries
               </Text>
-              <Text style={styles.deleteWarningItem}>
+              <Text
+                style={[
+                  styles.deleteWarningItem,
+                  { color: colors.textSecondary },
+                ]}
+              >
                 • All photos and videos
               </Text>
-              <Text style={styles.deleteWarningItem}>• Child profiles</Text>
-              <Text style={styles.deleteWarningItem}>• Milestones</Text>
-              <Text style={styles.deleteWarningItem}>
+              <Text
+                style={[
+                  styles.deleteWarningItem,
+                  { color: colors.textSecondary },
+                ]}
+              >
+                • Child profiles
+              </Text>
+              <Text
+                style={[
+                  styles.deleteWarningItem,
+                  { color: colors.textSecondary },
+                ]}
+              >
+                • Milestones
+              </Text>
+              <Text
+                style={[
+                  styles.deleteWarningItem,
+                  { color: colors.textSecondary },
+                ]}
+              >
                 • Family member access
               </Text>
             </View>
 
-            <Text style={styles.deleteGracePeriod}>
+            <Text
+              style={[
+                styles.deleteGracePeriod,
+                {
+                  backgroundColor: colors.backgroundTertiary,
+                  color: colors.textSecondary,
+                },
+              ]}
+            >
               You will have 30 days to cancel this request. After that, your
               data will be permanently deleted and cannot be recovered.
             </Text>
 
-            <Text style={styles.inputLabel}>Type DELETE to confirm</Text>
+            <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
+              Type DELETE to confirm
+            </Text>
             <TextInput
-              style={styles.textInput}
+              style={[
+                styles.textInput,
+                {
+                  backgroundColor: colors.card,
+                  color: colors.text,
+                  borderColor: colors.inputBorder,
+                },
+              ]}
               value={deleteConfirmText}
               onChangeText={setDeleteConfirmText}
               placeholder="DELETE"
+              placeholderTextColor={colors.placeholder}
               autoCapitalize="characters"
               testID="delete-confirm-input"
             />
@@ -947,30 +1258,56 @@ export default function SettingsScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setModalState("closed")}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
+        <View
+          style={[
+            styles.modalContainer,
+            { backgroundColor: colors.backgroundSecondary },
+          ]}
+        >
+          <View
+            style={[
+              styles.modalHeader,
+              {
+                backgroundColor: colors.card,
+                borderBottomColor: colors.border,
+              },
+            ]}
+          >
             <Pressable onPress={() => setModalState("closed")}>
               <Text style={styles.modalCancel}>Cancel</Text>
             </Pressable>
-            <Text style={styles.modalTitle}>Choose Plan</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              Choose Plan
+            </Text>
             <View style={{ width: 50 }} />
           </View>
 
           <ScrollView style={styles.subscriptionModalContent}>
             {/* Billing Cycle Toggle */}
-            <View style={styles.billingToggle}>
+            <View
+              style={[
+                styles.billingToggle,
+                { backgroundColor: colors.backgroundTertiary },
+              ]}
+            >
               <Pressable
                 style={[
                   styles.billingOption,
-                  selectedCycle === "monthly" && styles.billingOptionSelected,
+                  selectedCycle === "monthly" && [
+                    styles.billingOptionSelected,
+                    { backgroundColor: colors.card },
+                  ],
                 ]}
                 onPress={() => setSelectedCycle("monthly")}
               >
                 <Text
                   style={[
                     styles.billingOptionText,
-                    selectedCycle === "monthly" &&
+                    { color: colors.textSecondary },
+                    selectedCycle === "monthly" && [
                       styles.billingOptionTextSelected,
+                      { color: colors.text },
+                    ],
                   ]}
                 >
                   Monthly
@@ -979,15 +1316,21 @@ export default function SettingsScreen() {
               <Pressable
                 style={[
                   styles.billingOption,
-                  selectedCycle === "yearly" && styles.billingOptionSelected,
+                  selectedCycle === "yearly" && [
+                    styles.billingOptionSelected,
+                    { backgroundColor: colors.card },
+                  ],
                 ]}
                 onPress={() => setSelectedCycle("yearly")}
               >
                 <Text
                   style={[
                     styles.billingOptionText,
-                    selectedCycle === "yearly" &&
+                    { color: colors.textSecondary },
+                    selectedCycle === "yearly" && [
                       styles.billingOptionTextSelected,
+                      { color: colors.text },
+                    ],
                   ]}
                 >
                   Yearly
@@ -1002,20 +1345,29 @@ export default function SettingsScreen() {
                 key={plan}
                 style={[
                   styles.planCard,
+                  { backgroundColor: colors.card, borderColor: colors.border },
                   selectedPlan === plan && styles.planCardSelected,
                 ]}
                 onPress={() => setSelectedPlan(plan)}
                 testID={`plan-${plan}`}
               >
                 <View style={styles.planHeader}>
-                  <Text style={styles.planName}>{PLAN_DETAILS[plan].name}</Text>
+                  <Text style={[styles.planName, { color: colors.text }]}>
+                    {PLAN_DETAILS[plan].name}
+                  </Text>
                   <Text style={styles.planPrice}>
                     {getPrice(plan, selectedCycle)}
                   </Text>
                 </View>
                 <View style={styles.planFeatures}>
                   {PLAN_DETAILS[plan].features.map((feature, index) => (
-                    <Text key={index} style={styles.planFeature}>
+                    <Text
+                      key={index}
+                      style={[
+                        styles.planFeature,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
                       ✓ {feature}
                     </Text>
                   ))}
@@ -1045,7 +1397,12 @@ export default function SettingsScreen() {
               </Text>
             </Pressable>
 
-            <Text style={styles.subscriptionDisclaimer}>
+            <Text
+              style={[
+                styles.subscriptionDisclaimer,
+                { color: colors.textMuted },
+              ]}
+            >
               Payment will be processed via Stripe. You can cancel anytime.
             </Text>
           </ScrollView>
@@ -1060,14 +1417,27 @@ export default function SettingsScreen() {
         onRequestClose={() => setModalState("closed")}
       >
         <KeyboardAvoidingView
-          style={styles.modalContainer}
+          style={[
+            styles.modalContainer,
+            { backgroundColor: colors.backgroundSecondary },
+          ]}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          <View style={styles.modalHeader}>
+          <View
+            style={[
+              styles.modalHeader,
+              {
+                backgroundColor: colors.card,
+                borderBottomColor: colors.border,
+              },
+            ]}
+          >
             <Pressable onPress={() => setModalState("closed")}>
               <Text style={styles.modalCancel}>Cancel</Text>
             </Pressable>
-            <Text style={styles.modalTitle}>Edit Child Profile</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              Edit Child Profile
+            </Text>
             <Pressable onPress={handleSaveChild} disabled={!isChildFormValid}>
               <Text
                 style={[
@@ -1094,9 +1464,24 @@ export default function SettingsScreen() {
                     style={styles.editChildPhotoImage}
                   />
                 ) : (
-                  <View style={styles.editChildPhotoPlaceholder}>
+                  <View
+                    style={[
+                      styles.editChildPhotoPlaceholder,
+                      {
+                        backgroundColor: colors.backgroundTertiary,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  >
                     <Text style={styles.editChildPhotoPlaceholderText}>📷</Text>
-                    <Text style={styles.editChildPhotoLabel}>Add Photo</Text>
+                    <Text
+                      style={[
+                        styles.editChildPhotoLabel,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      Add Photo
+                    </Text>
                   </View>
                 )}
               </Pressable>
@@ -1105,41 +1490,76 @@ export default function SettingsScreen() {
                   onPress={() => setEditChildPhoto(undefined)}
                   style={styles.removePhotoButton}
                 >
-                  <Text style={styles.removePhotoText}>Remove Photo</Text>
+                  <Text
+                    style={[
+                      styles.removePhotoText,
+                      { color: SemanticColors.error },
+                    ]}
+                  >
+                    Remove Photo
+                  </Text>
                 </Pressable>
               )}
             </View>
 
             {/* Name Field */}
-            <Text style={styles.inputLabel}>Name *</Text>
+            <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
+              Name *
+            </Text>
             <TextInput
-              style={styles.textInput}
+              style={[
+                styles.textInput,
+                {
+                  backgroundColor: colors.card,
+                  color: colors.text,
+                  borderColor: colors.inputBorder,
+                },
+              ]}
               value={editChildName}
               onChangeText={setEditChildName}
               placeholder="Child's name"
+              placeholderTextColor={colors.placeholder}
               autoCapitalize="words"
               testID="edit-child-name-input"
             />
 
             {/* Nickname Field */}
-            <Text style={styles.inputLabel}>Nickname</Text>
+            <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
+              Nickname
+            </Text>
             <TextInput
-              style={styles.textInput}
+              style={[
+                styles.textInput,
+                {
+                  backgroundColor: colors.card,
+                  color: colors.text,
+                  borderColor: colors.inputBorder,
+                },
+              ]}
               value={editChildNickname}
               onChangeText={setEditChildNickname}
               placeholder="Optional nickname"
+              placeholderTextColor={colors.placeholder}
               autoCapitalize="words"
               testID="edit-child-nickname-input"
             />
 
             {/* Date of Birth */}
-            <Text style={styles.inputLabel}>Date of Birth *</Text>
+            <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
+              Date of Birth *
+            </Text>
             <Pressable
-              style={styles.dateButton}
+              style={[
+                styles.dateButton,
+                {
+                  backgroundColor: colors.card,
+                  borderColor: colors.inputBorder,
+                },
+              ]}
               onPress={() => setModalState("editChildDob")}
               testID="edit-child-dob-button"
             >
-              <Text style={styles.dateButtonText}>
+              <Text style={[styles.dateButtonText, { color: colors.text }]}>
                 {editChildDob.toLocaleDateString("en-SG", {
                   day: "numeric",
                   month: "long",
@@ -1149,7 +1569,12 @@ export default function SettingsScreen() {
             </Pressable>
 
             {modalState === "editChildDob" && (
-              <View style={styles.dobPickerContainer}>
+              <View
+                style={[
+                  styles.dobPickerContainer,
+                  { backgroundColor: colors.card },
+                ]}
+              >
                 <DateTimePicker
                   testID="edit-child-dob-picker"
                   value={editChildDob}
@@ -1162,7 +1587,9 @@ export default function SettingsScreen() {
             )}
 
             {/* Cultural Tradition */}
-            <Text style={styles.inputLabel}>Cultural Tradition</Text>
+            <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
+              Cultural Tradition
+            </Text>
             <View style={styles.cultureOptions}>
               {(["chinese", "malay", "indian", "none"] as const).map(
                 (culture) => (
@@ -1170,6 +1597,10 @@ export default function SettingsScreen() {
                     key={culture}
                     style={[
                       styles.cultureOption,
+                      {
+                        backgroundColor: colors.backgroundTertiary,
+                        borderColor: colors.border,
+                      },
                       editChildCulture === culture &&
                         styles.cultureOptionSelected,
                     ]}
@@ -1179,6 +1610,7 @@ export default function SettingsScreen() {
                     <Text
                       style={[
                         styles.cultureOptionText,
+                        { color: colors.textSecondary },
                         editChildCulture === culture &&
                           styles.cultureOptionTextSelected,
                       ]}

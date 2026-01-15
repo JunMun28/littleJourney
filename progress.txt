@@ -839,3 +839,32 @@
 **Verification:** tsc, lint, test (157 passed), build all pass.
 
 **Next:** Continue UI polish for settings.tsx, entry detail screens
+
+## 2026-01-15: UI Polish - Settings Screen Theme Integration
+
+**PRD ref:** Phase 1 Weeks 12-13 (Polish)
+
+**Task:** Apply theme system to settings.tsx screen
+
+**Decisions:**
+- Added useColorScheme hook + Colors/SemanticColors imports from theme
+- Removed local PRIMARY_COLOR definition, use imported constant
+- Dynamic colors via colors = Colors[colorScheme] pattern
+- All sections: dynamic card/backgroundSecondary for light/dark mode
+- Notification toggles: colors.border for track off color
+- Setting rows: dynamic text/textSecondary colors
+- Permission banners: SemanticColors.warningLight/warningText
+- Family members: dynamic border/text colors, SemanticColors.error for remove
+- Storage progress bar: SemanticColors.error/warning for threshold colors
+- Account section: SemanticColors.error for sign out and delete buttons
+- All modals: dynamic backgroundSecondary/card/border colors
+- Form inputs: dynamic backgroundColor/color/borderColor/placeholderTextColor
+- Subscription modal: dynamic billing toggle, plan cards with theme colors
+- Edit child modal: dynamic photo placeholder, form inputs, culture options
+
+**Files changed:**
+- app/(tabs)/settings.tsx - Full theme integration with dynamic colors
+
+**Verification:** tsc, lint, test (157 passed), build all pass.
+
+**Next:** Continue UI polish for entry detail screens
