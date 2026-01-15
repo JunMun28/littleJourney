@@ -434,7 +434,7 @@
         "Verify 'Edited by [Parent B]' shown"
       ],
       "acceptanceCriteria": "Either parent can edit any entry",
-      "passes": false
+      "passes": true
     },
     {
       "id": "ENTRY-014",

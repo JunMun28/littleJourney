@@ -21,6 +21,7 @@ export interface Entry {
   createdBy?: string; // User ID who created (for attribution)
   createdByName?: string; // Display name for "Posted by" (PRD Section 4.2)
   updatedBy?: string; // User ID who last edited
+  updatedByName?: string; // Display name for "Edited by" (PRD ENTRY-013)
 }
 
 export type NewEntry = Omit<Entry, "id" | "createdAt" | "updatedAt">;

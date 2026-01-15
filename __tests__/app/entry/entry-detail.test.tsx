@@ -9,6 +9,14 @@ import { View } from "react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { entryApi, clearAllMockData } from "@/services/api-client";
+import { AuthProvider } from "@/contexts/auth-context";
+
+// Mock expo-secure-store for AuthProvider
+jest.mock("expo-secure-store", () => ({
+  getItemAsync: jest.fn().mockResolvedValue(null),
+  setItemAsync: jest.fn().mockResolvedValue(undefined),
+  deleteItemAsync: jest.fn().mockResolvedValue(undefined),
+}));
 
 // Mock expo-av
 jest.mock("expo-av", () => {
@@ -45,7 +53,7 @@ jest.mock("expo-router", () => ({
 // Import after mocks
 import EntryDetailScreen from "@/app/entry/[id]";
 
-// Create test wrapper with QueryClient
+// Create test wrapper with QueryClient and AuthProvider
 function createWrapper() {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -61,7 +69,9 @@ function createWrapper() {
 
   return function Wrapper({ children }: { children: React.ReactNode }) {
     return (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>{children}</AuthProvider>
+      </QueryClientProvider>
     );
   };
 }
@@ -369,6 +379,89 @@ describe("EntryDetailScreen", () => {
       // Wait for the UI to update with new caption
       await waitFor(() => {
         expect(screen.getByText("New caption!")).toBeTruthy();
+      });
+    });
+  });
+
+  describe("ENTRY-013: Edit other parent's entry", () => {
+    it("shows 'Edited by' indicator when entry was edited by different user than creator", async () => {
+      // Create entry as Parent A
+      const entry = await createTestEntry({
+        caption: "Original caption",
+      });
+      // Simulate entry being edited by different user via API update
+      await entryApi.updateEntry({
+        id: entry.id,
+        updates: {
+          caption: "Edited caption",
+          updatedBy: "user-parent-b",
+          updatedByName: "Parent B",
+        },
+      });
+      mockParams = { id: entry.id };
+
+      render(<EntryDetailScreen />, { wrapper: createWrapper() });
+
+      await waitFor(() => {
+        expect(screen.getByText("Edited caption")).toBeTruthy();
+      });
+
+      // Should show edited by indicator
+      expect(screen.getByText(/Edited by Parent B/)).toBeTruthy();
+    });
+
+    it("does not show 'Edited by' indicator when entry edited by same user who created it", async () => {
+      const entry = await createTestEntry({
+        caption: "Original caption",
+      });
+      // Update by same user who created
+      await entryApi.updateEntry({
+        id: entry.id,
+        updates: {
+          caption: "Edited caption",
+          updatedBy: entry.createdBy,
+          updatedByName: entry.createdByName,
+        },
+      });
+      mockParams = { id: entry.id };
+
+      render(<EntryDetailScreen />, { wrapper: createWrapper() });
+
+      await waitFor(() => {
+        expect(screen.getByText("Edited caption")).toBeTruthy();
+      });
+
+      // Should NOT show edited by indicator
+      expect(screen.queryByText(/Edited by/)).toBeNull();
+    });
+
+    it("allows any parent to edit any entry", async () => {
+      // Create entry
+      const entry = await createTestEntry({
+        caption: "Original caption",
+      });
+      mockParams = { id: entry.id };
+
+      render(<EntryDetailScreen />, { wrapper: createWrapper() });
+
+      await waitFor(() => {
+        expect(screen.getByText("Original caption")).toBeTruthy();
+      });
+
+      // All entries should have edit option available
+      fireEvent.press(screen.getByTestId("options-button"));
+      expect(screen.getByText("Edit")).toBeTruthy();
+
+      // Verify edit works
+      fireEvent.press(screen.getByText("Edit"));
+      fireEvent.changeText(
+        screen.getByTestId("caption-input"),
+        "Edited by another parent",
+      );
+      fireEvent.press(screen.getByText("Save"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Edited by another parent")).toBeTruthy();
       });
     });
   });

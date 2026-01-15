@@ -1959,3 +1959,28 @@
 **Verification:** tsc, lint, test (372 passed), build all pass.
 
 **Next:** Continue remaining PRD items: backend integration (AUTH, SHARE, VIDEO, PAY), analytics, or Web Viewer (Phase 2)
+
+## 2026-01-16: Edit Other Parent's Entry (ENTRY-013)
+
+**PRD ref:** Phase 1, Section 3.6 (Entry Ownership), ENTRY-013
+
+**Task:** Implement ability for any parent to edit any entry with "Edited by" attribution
+
+**Decisions:**
+- Added updatedByName field to Entry interface for "Edited by" display name
+- Entry detail shows "Edited by [Name]" when updatedBy differs from createdBy
+- Styled as italic text next to date with dot separator
+- handleSaveEdit passes current user id and display name to mutation
+- User display name derived from: user.name > email prefix > "Unknown User"
+- Any parent can edit any entry (no ownership restrictions per PRD)
+- TDD approach: 3 new tests for "Edited by" indicator logic
+
+**Files changed:**
+- contexts/entry-context.tsx - Added updatedByName field to Entry interface
+- app/entry/[id].tsx - Added useAuth, "Edited by" indicator UI, metaRow/editedBy styles, pass user info in handleSaveEdit
+- __tests__/app/entry/entry-detail.test.tsx - Added AuthProvider wrapper, expo-secure-store mock, 3 TDD tests for ENTRY-013
+- prd-items.json - Updated ENTRY-013 to passes: true
+
+**Verification:** tsc, lint, test (375 passed), build all pass.
+
+**Next:** Continue remaining PRD items: backend integration (AUTH, SHARE, VIDEO, PAY), analytics, or Web Viewer (Phase 2)

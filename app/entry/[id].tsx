@@ -20,6 +20,7 @@ import { useLocalSearchParams, router } from "expo-router";
 import { ThemedText } from "@/components/themed-text";
 import { VideoPlayer } from "@/components/video-player";
 import { useEntry, useUpdateEntry, useDeleteEntry } from "@/hooks/use-entries";
+import { useAuth } from "@/contexts/auth-context";
 import {
   PRIMARY_COLOR,
   SemanticColors,
@@ -33,6 +34,7 @@ type MenuState = "closed" | "options" | "confirmDelete" | "edit";
 
 export default function EntryDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { user } = useAuth();
 
   // TanStack Query hooks
   const { data: entry, isLoading, isError } = useEntry(id);
@@ -94,8 +96,19 @@ export default function EntryDetailScreen() {
 
   const handleSaveEdit = useCallback(() => {
     if (entry) {
+      // Get user display name: nickname or email prefix as fallback
+      const userName =
+        user?.name ?? user?.email?.split("@")[0] ?? "Unknown User";
+
       updateEntryMutation.mutate(
-        { id: entry.id, updates: { caption: editCaption } },
+        {
+          id: entry.id,
+          updates: {
+            caption: editCaption,
+            updatedBy: user?.id,
+            updatedByName: userName,
+          },
+        },
         {
           onSuccess: () => {
             setMenuState("closed");
@@ -103,7 +116,7 @@ export default function EntryDetailScreen() {
         },
       );
     }
-  }, [entry, editCaption, updateEntryMutation]);
+  }, [entry, editCaption, updateEntryMutation, user]);
 
   const handleCancelEdit = useCallback(() => {
     setMenuState("closed");
@@ -214,7 +227,17 @@ export default function EntryDetailScreen() {
           {entry.caption && (
             <ThemedText style={styles.caption}>{entry.caption}</ThemedText>
           )}
-          <ThemedText style={styles.date}>{formattedDate}</ThemedText>
+          <View style={styles.metaRow}>
+            <ThemedText style={styles.date}>{formattedDate}</ThemedText>
+            {/* Show "Edited by" when entry was edited by different user (PRD ENTRY-013) */}
+            {entry.updatedBy &&
+              entry.updatedByName &&
+              entry.updatedBy !== entry.createdBy && (
+                <ThemedText style={styles.editedBy}>
+                  · Edited by {entry.updatedByName}
+                </ThemedText>
+              )}
+          </View>
         </View>
       </View>
 
@@ -413,9 +436,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: Spacing.sm,
   },
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+  },
   date: {
     color: ViewerColors.textMuted,
     fontSize: 14,
+  },
+  editedBy: {
+    color: ViewerColors.textMuted,
+    fontSize: 14,
+    fontStyle: "italic",
   },
   optionsButton: {
     width: 44,
