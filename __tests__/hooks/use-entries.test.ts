@@ -8,6 +8,7 @@ import {
   useCreateEntry,
   useUpdateEntry,
   useDeleteEntry,
+  useEntriesFlat,
 } from "@/hooks/use-entries";
 
 // Create wrapper with fresh QueryClient for each test
@@ -187,6 +188,100 @@ describe("useEntries hook", () => {
       // Verify deletion
       const getResult = await entryApi.getEntry(entryId);
       expect("error" in getResult).toBe(true);
+    });
+  });
+
+  describe("useEntriesFlat", () => {
+    it("should return flat entries array", async () => {
+      // Create entries
+      await entryApi.createEntry({
+        entry: { type: "photo", date: "2024-01-15", caption: "Entry 1" },
+      });
+      await entryApi.createEntry({
+        entry: { type: "text", date: "2024-01-16", caption: "Entry 2" },
+      });
+
+      const { result } = renderHook(() => useEntriesFlat(), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      expect(result.current.entries).toHaveLength(2);
+      expect(result.current.entries[0].caption).toBe("Entry 2"); // newest first
+    });
+
+    it("should return empty array when loading", () => {
+      const { result } = renderHook(() => useEntriesFlat(), {
+        wrapper: createWrapper(),
+      });
+
+      // While loading, entries should be empty array
+      expect(result.current.entries).toEqual([]);
+    });
+
+    it("should provide getOnThisDayEntries that filters by month/day from previous years", async () => {
+      const today = new Date();
+      const todayMonth = String(today.getMonth() + 1).padStart(2, "0");
+      const todayDay = String(today.getDate()).padStart(2, "0");
+      const lastYear = today.getFullYear() - 1;
+      const twoYearsAgo = today.getFullYear() - 2;
+
+      // Create entry from last year same day
+      await entryApi.createEntry({
+        entry: {
+          type: "photo",
+          date: `${lastYear}-${todayMonth}-${todayDay}`,
+          caption: "Last year same day",
+        },
+      });
+
+      // Create entry from 2 years ago same day
+      await entryApi.createEntry({
+        entry: {
+          type: "text",
+          date: `${twoYearsAgo}-${todayMonth}-${todayDay}`,
+          caption: "Two years ago same day",
+        },
+      });
+
+      // Create entry from this year (should not appear)
+      await entryApi.createEntry({
+        entry: {
+          type: "photo",
+          date: `${today.getFullYear()}-${todayMonth}-${todayDay}`,
+          caption: "This year",
+        },
+      });
+
+      // Create entry from different day (should not appear)
+      const differentDay = todayDay === "15" ? "14" : "15";
+      await entryApi.createEntry({
+        entry: {
+          type: "text",
+          date: `${lastYear}-${todayMonth}-${differentDay}`,
+          caption: "Different day",
+        },
+      });
+
+      const { result } = renderHook(() => useEntriesFlat(), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      const onThisDay = result.current.getOnThisDayEntries();
+      expect(onThisDay).toHaveLength(2);
+      expect(onThisDay.some((e) => e.caption === "Last year same day")).toBe(
+        true,
+      );
+      expect(
+        onThisDay.some((e) => e.caption === "Two years ago same day"),
+      ).toBe(true);
     });
   });
 });

@@ -7,6 +7,7 @@
  * - Optimistic updates (future)
  */
 
+import { useMemo, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { entryApi, isApiError, GetEntriesParams } from "@/services/api-client";
 import { Entry, NewEntry } from "@/contexts/entry-context";
@@ -126,4 +127,50 @@ export function useDeleteEntry() {
       queryClient.invalidateQueries({ queryKey: entryKeys.lists() });
     },
   });
+}
+
+/**
+ * High-level hook for Feed screen that provides:
+ * - Flat entries array (not paginated)
+ * - getOnThisDayEntries helper
+ * - Loading/error states
+ * - Refetch capability
+ *
+ * This is a convenience wrapper to replace EntryContext usage
+ */
+export function useEntriesFlat(params?: GetEntriesParams) {
+  const query = useEntries(params);
+
+  // Flatten paginated data to simple array
+  const entries = useMemo(() => {
+    return query.data?.items ?? [];
+  }, [query.data?.items]);
+
+  // Get entries from same day in previous years (PRD Section 4.5)
+  const getOnThisDayEntries = useCallback((): Entry[] => {
+    const today = new Date();
+    const todayMonth = today.getMonth();
+    const todayDay = today.getDate();
+    const todayYear = today.getFullYear();
+
+    return entries.filter((entry) => {
+      const entryDate = new Date(entry.date);
+      return (
+        entryDate.getMonth() === todayMonth &&
+        entryDate.getDate() === todayDay &&
+        entryDate.getFullYear() < todayYear
+      );
+    });
+  }, [entries]);
+
+  return {
+    entries,
+    getOnThisDayEntries,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error,
+    isSuccess: query.isSuccess,
+    refetch: query.refetch,
+    isFetching: query.isFetching,
+  };
 }

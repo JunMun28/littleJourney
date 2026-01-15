@@ -1337,3 +1337,25 @@
 **Verification:** tsc, lint, test (265 passed), build all pass.
 
 **Next:** Cloudflare Workers backend setup, or additional UI polish
+
+## 2026-01-15: TanStack Query useEntriesFlat Hook
+
+**PRD ref:** Phase 1 Technical Architecture (TanStack Query for server state)
+
+**Task:** Add useEntriesFlat hook to enable Feed screen migration from EntryContext
+
+**Decisions:**
+- Created useEntriesFlat hook that wraps useEntries with convenience features
+- Flattens paginated API response to simple Entry[] array
+- Includes getOnThisDayEntries() computed from entries (same logic as EntryContext)
+- Returns loading/error/success states + refetch capability
+- Maintains same API shape as EntryContext for easy migration
+- TDD approach: 3 new tests for flat hook (total 10 use-entries tests)
+
+**Files changed:**
+- hooks/use-entries.ts - Added useEntriesFlat hook with entries array + getOnThisDayEntries
+- __tests__/hooks/use-entries.test.ts - Added 3 TDD tests for useEntriesFlat
+
+**Verification:** tsc, lint, test (268 passed), build all pass.
+
+**Next:** Integrate useEntriesFlat + useCreateEntry with Feed screen to replace EntryContext usage
