@@ -57,6 +57,12 @@ interface NotificationContextValue {
   sendStorageWarningNotification: (usagePercent: number) => Promise<void>;
   // Photo book birthday prompt (PRD Section 10.1)
   sendPhotoBookBirthdayPrompt: (childName: string) => Promise<void>;
+  // Family activity (PRD Section 7.1 - comment/reaction)
+  sendFamilyActivityNotification: (
+    activityType: "comment" | "reaction",
+    memberName: string,
+    preview?: string,
+  ) => Promise<void>;
   // Smart frequency (PRD Section 7.3)
   promptFrequency: PromptFrequency;
   consecutiveIgnoredDays: number;
@@ -358,6 +364,46 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     });
   }, []);
 
+  // Family activity notification (PRD Section 7.1 - comment/reaction from family members)
+  const sendFamilyActivityNotification = useCallback(
+    async (
+      activityType: "comment" | "reaction",
+      memberName: string,
+      preview?: string,
+    ) => {
+      // Skip if family activity notifications disabled
+      if (!settings.familyActivity) {
+        return;
+      }
+
+      let title: string;
+      let body: string;
+
+      if (activityType === "comment") {
+        title = `💬 ${memberName} commented`;
+        // Truncate long comment previews
+        const truncatedPreview =
+          preview && preview.length > 50
+            ? `${preview.substring(0, 50)}...`
+            : preview;
+        body = truncatedPreview || "View the comment on your entry.";
+      } else {
+        title = `❤️ ${memberName} reacted`;
+        body = "to one of your entries.";
+      }
+
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title,
+          body,
+          data: { type: "family_activity", activityType },
+        },
+        trigger: null, // Send immediately
+      });
+    },
+    [settings.familyActivity],
+  );
+
   // Smart frequency methods (PRD Section 7.3)
   const recordIgnoredPrompt = useCallback(() => {
     setConsecutiveIgnoredDays((prev) => {
@@ -394,6 +440,8 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     sendStorageWarningNotification,
     // Photo book birthday prompt
     sendPhotoBookBirthdayPrompt,
+    // Family activity
+    sendFamilyActivityNotification,
     // Smart frequency
     promptFrequency,
     consecutiveIgnoredDays,

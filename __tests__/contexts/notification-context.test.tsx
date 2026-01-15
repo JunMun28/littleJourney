@@ -523,6 +523,110 @@ describe("NotificationContext", () => {
     });
   });
 
+  // Family Activity Notification tests (PRD Section 7.1)
+  describe("Family Activity Notification", () => {
+    it("provides sendFamilyActivityNotification method", () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+
+      expect(typeof result.current.sendFamilyActivityNotification).toBe(
+        "function",
+      );
+    });
+
+    it("sends notification for comment activity", async () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+      const Notifications = require("expo-notifications");
+
+      Notifications.scheduleNotificationAsync.mockClear();
+
+      await act(async () => {
+        await result.current.sendFamilyActivityNotification(
+          "comment",
+          "Grandma",
+          "What a cute photo!",
+        );
+      });
+
+      expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: expect.objectContaining({
+            title: expect.stringContaining("Grandma"),
+            body: expect.stringContaining("What a cute photo!"),
+            data: { type: "family_activity", activityType: "comment" },
+          }),
+          trigger: null, // Immediate notification
+        }),
+      );
+    });
+
+    it("sends notification for reaction activity", async () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+      const Notifications = require("expo-notifications");
+
+      Notifications.scheduleNotificationAsync.mockClear();
+
+      await act(async () => {
+        await result.current.sendFamilyActivityNotification(
+          "reaction",
+          "Uncle John",
+        );
+      });
+
+      expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: expect.objectContaining({
+            title: expect.stringContaining("Uncle John"),
+            data: { type: "family_activity", activityType: "reaction" },
+          }),
+          trigger: null,
+        }),
+      );
+    });
+
+    it("does not send notification when familyActivity setting is disabled", async () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+      const Notifications = require("expo-notifications");
+
+      // Disable family activity notifications
+      await act(async () => {
+        result.current.updateSettings({ familyActivity: false });
+      });
+
+      Notifications.scheduleNotificationAsync.mockClear();
+
+      await act(async () => {
+        await result.current.sendFamilyActivityNotification(
+          "comment",
+          "Grandma",
+          "Nice!",
+        );
+      });
+
+      expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
+    });
+
+    it("truncates long comment previews", async () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+      const Notifications = require("expo-notifications");
+
+      Notifications.scheduleNotificationAsync.mockClear();
+
+      const longComment =
+        "This is a very long comment that should be truncated to keep the notification body reasonable in length";
+
+      await act(async () => {
+        await result.current.sendFamilyActivityNotification(
+          "comment",
+          "Grandma",
+          longComment,
+        );
+      });
+
+      const call = Notifications.scheduleNotificationAsync.mock.calls[0][0];
+      expect(call.content.body.length).toBeLessThanOrEqual(53); // 50 chars + "..."
+    });
+  });
+
   // Photo Book Birthday Prompt tests (PRD Section 10.1)
   describe("Photo Book Birthday Prompt", () => {
     it("provides sendPhotoBookBirthdayPrompt method", () => {

@@ -1740,3 +1740,26 @@
 **Verification:** tsc, lint, test (323 passed), build all pass.
 
 **Next:** Cloudflare Workers backend setup, Stripe SDK integration, or Web Viewer (Phase 2)
+
+## 2026-01-15: Family Activity Push Notification
+
+**PRD ref:** Phase 1 Weeks 10-11, Section 7.1 (Notification Types - Family Activity on comment/reaction)
+
+**Task:** Implement family activity push notifications for comments and reactions from family members
+
+**Decisions:**
+- Added sendFamilyActivityNotification(activityType, memberName, preview?) to NotificationContext
+- activityType: "comment" | "reaction" per PRD family activity triggers
+- Comment notifications show 💬 emoji with member name and preview (truncated to 50 chars)
+- Reaction notifications show ❤️ emoji with member name
+- Respects settings.familyActivity toggle - no notification if disabled
+- Notification data type: "family_activity" with activityType for tap handling
+- TDD approach: 5 tests written first
+
+**Files changed:**
+- contexts/notification-context.tsx - Added sendFamilyActivityNotification method to interface and implementation
+- __tests__/contexts/notification-context.test.tsx - Added 5 TDD tests for family activity notification
+
+**Verification:** tsc, lint, test (328 passed), build all pass.
+
+**Next:** Cloudflare Workers backend setup, Stripe SDK integration, or Web Viewer (Phase 2)
