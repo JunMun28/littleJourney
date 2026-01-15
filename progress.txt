@@ -1259,3 +1259,27 @@
 **Verification:** tsc, lint, test (241 passed), build all pass.
 
 **Next:** Migrate contexts to use TanStack Query hooks, actual Stripe SDK integration, or Cloudflare Workers backend
+
+## 2026-01-15: TanStack Query Hooks for Entries
+
+**PRD ref:** Phase 1 Technical Architecture (TanStack Query for server state)
+
+**Task:** Create TanStack Query hooks to wrap entryApi, first step in migrating from context-based state
+
+**Decisions:**
+- Created use-entries.ts with 5 hooks: useEntries, useEntry, useCreateEntry, useUpdateEntry, useDeleteEntry
+- entryKeys factory for consistent cache key management (all, lists, list, details, detail)
+- useEntries supports GetEntriesParams for pagination
+- useEntry has enabled: !!id to skip fetch when ID undefined
+- Mutations invalidate relevant queries for automatic cache sync
+- useUpdateEntry also sets detail cache directly for instant UI update
+- useDeleteEntry removes detail from cache on success
+- TDD approach: 7 tests covering all hooks
+
+**Files changed:**
+- hooks/use-entries.ts - New: TanStack Query hooks for entry CRUD operations
+- __tests__/hooks/use-entries.test.ts - New: 7 TDD tests for all entry hooks
+
+**Verification:** tsc, lint, test (248 passed), build all pass.
+
+**Next:** Create similar hooks for child/family/milestone APIs, or integrate hooks with Feed screen to replace EntryContext usage

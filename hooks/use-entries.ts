@@ -1,0 +1,129 @@
+/**
+ * TanStack Query hooks for entry operations
+ *
+ * These hooks wrap the entryApi and provide:
+ * - Automatic caching and cache invalidation
+ * - Loading and error states
+ * - Optimistic updates (future)
+ */
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { entryApi, isApiError, GetEntriesParams } from "@/services/api-client";
+import { Entry, NewEntry } from "@/contexts/entry-context";
+
+// Query keys for cache management
+export const entryKeys = {
+  all: ["entries"] as const,
+  lists: () => [...entryKeys.all, "list"] as const,
+  list: (params?: GetEntriesParams) =>
+    [...entryKeys.lists(), params ?? {}] as const,
+  details: () => [...entryKeys.all, "detail"] as const,
+  detail: (id: string) => [...entryKeys.details(), id] as const,
+};
+
+/**
+ * Fetch paginated entries list
+ */
+export function useEntries(params?: GetEntriesParams) {
+  return useQuery({
+    queryKey: entryKeys.list(params),
+    queryFn: async () => {
+      const result = await entryApi.getEntries(params);
+      if (isApiError(result)) {
+        throw new Error(result.error.message);
+      }
+      return result.data;
+    },
+  });
+}
+
+/**
+ * Fetch single entry by ID
+ */
+export function useEntry(id: string | undefined) {
+  return useQuery({
+    queryKey: entryKeys.detail(id ?? ""),
+    queryFn: async () => {
+      if (!id) throw new Error("Entry ID required");
+      const result = await entryApi.getEntry(id);
+      if (isApiError(result)) {
+        throw new Error(result.error.message);
+      }
+      return result.data;
+    },
+    enabled: !!id,
+  });
+}
+
+/**
+ * Create a new entry
+ */
+export function useCreateEntry() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (entry: NewEntry): Promise<Entry> => {
+      const result = await entryApi.createEntry({ entry });
+      if (isApiError(result)) {
+        throw new Error(result.error.message);
+      }
+      return result.data;
+    },
+    onSuccess: () => {
+      // Invalidate entries list to trigger refetch
+      queryClient.invalidateQueries({ queryKey: entryKeys.lists() });
+    },
+  });
+}
+
+/**
+ * Update an existing entry
+ */
+export function useUpdateEntry() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      updates,
+    }: {
+      id: string;
+      updates: Partial<NewEntry>;
+    }): Promise<Entry> => {
+      const result = await entryApi.updateEntry({ id, updates });
+      if (isApiError(result)) {
+        throw new Error(result.error.message);
+      }
+      return result.data;
+    },
+    onSuccess: (data) => {
+      // Update cache for this specific entry
+      queryClient.setQueryData(entryKeys.detail(data.id), data);
+      // Invalidate lists to reflect change
+      queryClient.invalidateQueries({ queryKey: entryKeys.lists() });
+    },
+  });
+}
+
+/**
+ * Delete an entry
+ */
+export function useDeleteEntry() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string): Promise<{ success: boolean }> => {
+      const result = await entryApi.deleteEntry(id);
+      if (isApiError(result)) {
+        throw new Error(result.error.message);
+      }
+      return result.data;
+    },
+    onSuccess: (_, id) => {
+      // Remove from cache
+      queryClient.removeQueries({ queryKey: entryKeys.detail(id) });
+      // Invalidate lists
+      queryClient.invalidateQueries({ queryKey: entryKeys.lists() });
+    },
+  });
+}
