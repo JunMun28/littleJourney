@@ -1430,3 +1430,31 @@
 **Verification:** tsc, lint, test (276 passed), build all pass.
 
 **Next:** Settings screen TanStack Query migration (family, child hooks) or Cloudflare Workers backend setup
+
+## 2026-01-15: Settings Screen TanStack Query Migration
+
+**PRD ref:** Phase 1 Technical Architecture (TanStack Query for server state)
+
+**Task:** Migrate Settings screen from context-based state to TanStack Query hooks
+
+**Decisions:**
+- Created useChildFlat hook wrapping useChildren + useUpdateChild with convenience features
+- useChildFlat returns first child (MVP single-child support) or null if none exists
+- Created useFamilyMembersFlat hook wrapping useFamilyMembers + mutations
+- useFamilyMembersFlat returns familyMembers array with inviteFamilyMember/removeFamilyMember helpers
+- Settings screen now uses useChildFlat and useFamilyMembersFlat from hooks instead of contexts
+- ChildContext and FamilyContext still exist for type exports (backward compatibility)
+- Tests updated to use QueryClientProvider wrapper and childApi.createChild for setup
+- TDD approach: 6 new tests for flat hooks + 2 new tests for settings
+
+**Files changed:**
+- hooks/use-children.ts - Added useChildFlat hook
+- hooks/use-family.ts - Added useFamilyMembersFlat hook
+- app/(tabs)/settings.tsx - Replaced context imports with TanStack Query hooks
+- __tests__/hooks/use-children.test.ts - Added 3 tests for useChildFlat
+- __tests__/hooks/use-family.test.ts - Added 3 tests for useFamilyMembersFlat
+- __tests__/app/tabs/settings.test.tsx - Updated to QueryClientProvider, use API for test data
+
+**Verification:** tsc, lint, test (284 passed), build all pass.
+
+**Next:** Cloudflare Workers backend setup or additional screens migration (onboarding screens)

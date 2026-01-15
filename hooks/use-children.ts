@@ -91,3 +91,33 @@ export function useUpdateChild() {
     },
   });
 }
+
+/**
+ * Flattened hook for easy child consumption in components
+ * Returns the first (primary) child, or null if no children exist
+ *
+ * MVP supports single child, so this returns the first child in the list
+ */
+export function useChildFlat() {
+  const { data: children, isLoading, isError, error, refetch } = useChildren();
+  const updateChildMutation = useUpdateChild();
+
+  // MVP: single child support - return first child
+  const child = children?.[0] ?? null;
+
+  const updateChild = (updates: UpdateChildRequest["updates"]) => {
+    if (child?.id) {
+      updateChildMutation.mutate({ id: child.id, updates });
+    }
+  };
+
+  return {
+    child,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    updateChild,
+    isUpdating: updateChildMutation.isPending,
+  };
+}

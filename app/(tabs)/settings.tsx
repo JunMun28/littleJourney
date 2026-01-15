@@ -20,13 +20,13 @@ import DateTimePicker, {
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { useAuth } from "@/contexts/auth-context";
-import { useChild, type CulturalTradition } from "@/contexts/child-context";
+import { type CulturalTradition } from "@/contexts/child-context";
 import { useExport } from "@/contexts/export-context";
 import {
   useNotifications,
   type NotificationSettings,
 } from "@/contexts/notification-context";
-import { useFamily, type PermissionLevel } from "@/contexts/family-context";
+import { type PermissionLevel } from "@/contexts/family-context";
 import { useUserPreferences } from "@/contexts/user-preferences-context";
 import { useStorage, type SubscriptionTier } from "@/contexts/storage-context";
 import {
@@ -34,6 +34,8 @@ import {
   PLAN_DETAILS,
   type BillingCycle,
 } from "@/contexts/subscription-context";
+import { useChildFlat } from "@/hooks/use-children";
+import { useFamilyMembersFlat } from "@/hooks/use-family";
 import { PRIMARY_COLOR, Colors, SemanticColors } from "@/constants/theme";
 
 type ModalState =
@@ -106,11 +108,12 @@ export default function SettingsScreen() {
     scheduleDailyPrompt,
     cancelDailyPrompt,
   } = useNotifications();
-  const { familyMembers, inviteFamilyMember, removeFamilyMember } = useFamily();
+  const { familyMembers, inviteFamilyMember, removeFamilyMember } =
+    useFamilyMembersFlat();
   const { dailyPromptTime, setDailyPromptTime } = useUserPreferences();
   const { usedBytes, limitBytes, usagePercent, tier, setTier } = useStorage();
   const { exportData, isExporting, lastExportDate } = useExport();
-  const { child, updateChild } = useChild();
+  const { child, updateChild } = useChildFlat();
   const {
     currentPlan,
     billingCycle,

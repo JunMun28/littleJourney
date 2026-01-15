@@ -82,3 +82,39 @@ export function useRemoveFamilyMember() {
     },
   });
 }
+
+/**
+ * Flattened hook for easy family member consumption in components
+ * Returns familyMembers array and mutation helpers
+ */
+export function useFamilyMembersFlat() {
+  const {
+    data: familyMembers,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useFamilyMembers();
+  const inviteMutation = useInviteFamilyMember();
+  const removeMutation = useRemoveFamilyMember();
+
+  const inviteFamilyMember = (request: InviteFamilyRequest) => {
+    inviteMutation.mutate(request);
+  };
+
+  const removeFamilyMember = (id: string) => {
+    removeMutation.mutate(id);
+  };
+
+  return {
+    familyMembers: familyMembers ?? [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+    inviteFamilyMember,
+    removeFamilyMember,
+    isInviting: inviteMutation.isPending,
+    isRemoving: removeMutation.isPending,
+  };
+}

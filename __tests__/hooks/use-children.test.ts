@@ -6,6 +6,7 @@ import {
   useChildren,
   useCreateChild,
   useUpdateChild,
+  useChildFlat,
 } from "@/hooks/use-children";
 
 // Create wrapper with fresh QueryClient for each test
@@ -111,6 +112,55 @@ describe("useChildren hooks", () => {
       });
 
       expect(result.current.data?.nickname).toBe("Sophie");
+    });
+  });
+
+  describe("useChildFlat", () => {
+    it("should return null child when no children exist", async () => {
+      const { result } = renderHook(() => useChildFlat(), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.child).toBeNull();
+    });
+
+    it("should return first child when children exist", async () => {
+      await childApi.createChild({
+        name: "Emma",
+        dateOfBirth: "2024-01-15",
+        culturalTradition: "chinese",
+      });
+
+      const { result } = renderHook(() => useChildFlat(), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(result.current.child).not.toBeNull();
+      });
+
+      expect(result.current.child?.name).toBe("Emma");
+      expect(result.current.child?.culturalTradition).toBe("chinese");
+    });
+
+    it("should provide updateChild function", async () => {
+      await childApi.createChild({
+        name: "Oliver",
+        dateOfBirth: "2024-03-20",
+      });
+
+      const wrapper = createWrapper();
+      const { result } = renderHook(() => useChildFlat(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.child).not.toBeNull();
+      });
+
+      expect(result.current.updateChild).toBeDefined();
     });
   });
 });

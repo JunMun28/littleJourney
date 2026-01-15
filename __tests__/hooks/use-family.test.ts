@@ -6,6 +6,7 @@ import {
   useFamilyMembers,
   useInviteFamilyMember,
   useRemoveFamilyMember,
+  useFamilyMembersFlat,
 } from "@/hooks/use-family";
 
 // Create wrapper with fresh QueryClient for each test
@@ -115,6 +116,57 @@ describe("useFamily hooks", () => {
       const getResult = await familyApi.getFamilyMembers();
       if ("error" in getResult) throw new Error("Failed to get members");
       expect(getResult.data.length).toBe(0);
+    });
+  });
+
+  describe("useFamilyMembersFlat", () => {
+    it("should return empty array when no family members", async () => {
+      const { result } = renderHook(() => useFamilyMembersFlat(), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.familyMembers).toEqual([]);
+    });
+
+    it("should return family members array", async () => {
+      await familyApi.inviteFamilyMember({
+        email: "grandma@example.com",
+        relationship: "Grandmother",
+        permissionLevel: "view_interact",
+      });
+      await familyApi.inviteFamilyMember({
+        email: "uncle@example.com",
+        relationship: "Uncle",
+        permissionLevel: "view_only",
+      });
+
+      const { result } = renderHook(() => useFamilyMembersFlat(), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(result.current.familyMembers.length).toBe(2);
+      });
+
+      expect(result.current.familyMembers[0].email).toBe("grandma@example.com");
+      expect(result.current.familyMembers[1].email).toBe("uncle@example.com");
+    });
+
+    it("should provide inviteFamilyMember and removeFamilyMember functions", async () => {
+      const { result } = renderHook(() => useFamilyMembersFlat(), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.inviteFamilyMember).toBeDefined();
+      expect(result.current.removeFamilyMember).toBeDefined();
     });
   });
 });

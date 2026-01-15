@@ -1,8 +1,14 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react-native";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+} from "@testing-library/react-native";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import SettingsScreen from "@/app/(tabs)/settings";
 import { AuthProvider } from "@/contexts/auth-context";
-import { ChildProvider, useChild } from "@/contexts/child-context";
+import { ChildProvider } from "@/contexts/child-context";
 import { EntryProvider } from "@/contexts/entry-context";
 import { ExportProvider } from "@/contexts/export-context";
 import { NotificationProvider } from "@/contexts/notification-context";
@@ -11,6 +17,7 @@ import { MilestoneProvider } from "@/contexts/milestone-context";
 import { UserPreferencesProvider } from "@/contexts/user-preferences-context";
 import { StorageProvider } from "@/contexts/storage-context";
 import { SubscriptionProvider } from "@/contexts/subscription-context";
+import { clearAllMockData, childApi } from "@/services/api-client";
 
 // Mock expo-image-picker
 jest.mock("expo-image-picker", () => ({
@@ -63,35 +70,56 @@ jest.mock("expo-sharing", () => ({
   shareAsync: jest.fn().mockResolvedValue(undefined),
 }));
 
+// Create fresh QueryClient for each test
+function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, staleTime: 0 },
+      mutations: { retry: false },
+    },
+  });
+}
+
 const renderWithProviders = (component: React.ReactElement) => {
+  const queryClient = createTestQueryClient();
   return render(
-    <AuthProvider>
-      <ChildProvider>
-        <EntryProvider>
-          <MilestoneProvider>
-            <NotificationProvider>
-              <FamilyProvider>
-                <UserPreferencesProvider>
-                  <StorageProvider>
-                    <SubscriptionProvider>
-                      <ExportProvider>{component}</ExportProvider>
-                    </SubscriptionProvider>
-                  </StorageProvider>
-                </UserPreferencesProvider>
-              </FamilyProvider>
-            </NotificationProvider>
-          </MilestoneProvider>
-        </EntryProvider>
-      </ChildProvider>
-    </AuthProvider>,
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <ChildProvider>
+          <EntryProvider>
+            <MilestoneProvider>
+              <NotificationProvider>
+                <FamilyProvider>
+                  <UserPreferencesProvider>
+                    <StorageProvider>
+                      <SubscriptionProvider>
+                        <ExportProvider>{component}</ExportProvider>
+                      </SubscriptionProvider>
+                    </StorageProvider>
+                  </UserPreferencesProvider>
+                </FamilyProvider>
+              </NotificationProvider>
+            </MilestoneProvider>
+          </EntryProvider>
+        </ChildProvider>
+      </AuthProvider>
+    </QueryClientProvider>,
   );
 };
 
 describe("SettingsScreen", () => {
-  it("renders section headers", () => {
+  beforeEach(() => {
+    clearAllMockData();
+  });
+
+  it("renders section headers", async () => {
     renderWithProviders(<SettingsScreen />);
 
-    expect(screen.getByText("Notifications")).toBeTruthy();
+    // Wait for TanStack Query to settle
+    await waitFor(() => {
+      expect(screen.getByText("Notifications")).toBeTruthy();
+    });
+
     expect(screen.getByText("Family")).toBeTruthy();
     expect(screen.getByText("Subscription")).toBeTruthy();
     expect(screen.getByText("Storage")).toBeTruthy();
@@ -99,29 +127,39 @@ describe("SettingsScreen", () => {
     expect(screen.getByText("Account")).toBeTruthy();
   });
 
-  it("renders notification toggle switches", () => {
+  it("renders notification toggle switches", async () => {
     renderWithProviders(<SettingsScreen />);
 
-    expect(screen.getByText("Daily Prompts")).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText("Daily Prompts")).toBeTruthy();
+    });
     expect(screen.getByText("On This Day Memories")).toBeTruthy();
     expect(screen.getByText("Milestone Reminders")).toBeTruthy();
     expect(screen.getByText("Family Activity")).toBeTruthy();
   });
 
-  it("renders invite family button", () => {
+  it("renders invite family button", async () => {
     renderWithProviders(<SettingsScreen />);
 
-    expect(screen.getByText("Invite Family Member")).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText("Invite Family Member")).toBeTruthy();
+    });
   });
 
-  it("renders sign out button", () => {
+  it("renders sign out button", async () => {
     renderWithProviders(<SettingsScreen />);
 
-    expect(screen.getByText("Sign Out")).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText("Sign Out")).toBeTruthy();
+    });
   });
 
-  it("toggles notification setting when switch is pressed", () => {
+  it("toggles notification setting when switch is pressed", async () => {
     renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("switch-dailyPrompt")).toBeTruthy();
+    });
 
     const dailyPromptSwitch = screen.getByTestId("switch-dailyPrompt");
     expect(dailyPromptSwitch.props.value).toBe(true);
@@ -132,23 +170,29 @@ describe("SettingsScreen", () => {
     expect(screen.getByTestId("switch-dailyPrompt").props.value).toBe(false);
   });
 
-  it("displays daily prompt time setting row", () => {
+  it("displays daily prompt time setting row", async () => {
     renderWithProviders(<SettingsScreen />);
 
-    expect(screen.getByText("Reminder Time")).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText("Reminder Time")).toBeTruthy();
+    });
   });
 
-  it("shows default time when no prompt time is set", () => {
+  it("shows default time when no prompt time is set", async () => {
     renderWithProviders(<SettingsScreen />);
 
-    expect(screen.getByText("Not set")).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText("Not set")).toBeTruthy();
+    });
   });
 
-  it("renders storage section with tier and usage", () => {
+  it("renders storage section with tier and usage", async () => {
     renderWithProviders(<SettingsScreen />);
 
-    // Free tier by default - multiple elements contain "Free" and "Plan"
-    expect(screen.getAllByText(/Free/).length).toBeGreaterThan(0);
+    await waitFor(() => {
+      // Free tier by default - multiple elements contain "Free" and "Plan"
+      expect(screen.getAllByText(/Free/).length).toBeGreaterThan(0);
+    });
     expect(screen.getAllByText(/Plan/).length).toBeGreaterThan(0);
     // 0 bytes used of 500MB limit
     expect(screen.getByText(/0 B/)).toBeTruthy();
@@ -156,40 +200,52 @@ describe("SettingsScreen", () => {
     expect(screen.getByText(/0.*% used/)).toBeTruthy();
   });
 
-  it("shows upgrade prompt on free tier", () => {
+  it("shows upgrade prompt on free tier", async () => {
     renderWithProviders(<SettingsScreen />);
 
-    expect(
-      screen.getByText("Upgrade for more storage and video uploads"),
-    ).toBeTruthy();
+    await waitFor(() => {
+      expect(
+        screen.getByText("Upgrade for more storage and video uploads"),
+      ).toBeTruthy();
+    });
   });
 
-  it("renders export data button", () => {
+  it("renders export data button", async () => {
     renderWithProviders(<SettingsScreen />);
 
-    expect(screen.getByText("Download All Memories")).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText("Download All Memories")).toBeTruthy();
+    });
     expect(screen.getByTestId("export-data-button")).toBeTruthy();
   });
 
-  it("shows export description", () => {
+  it("shows export description", async () => {
     renderWithProviders(<SettingsScreen />);
 
-    expect(
-      screen.getByText(
-        "Export all your entries, milestones, and child data as a JSON file.",
-      ),
-    ).toBeTruthy();
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "Export all your entries, milestones, and child data as a JSON file.",
+        ),
+      ).toBeTruthy();
+    });
   });
 
-  it("renders delete account button", () => {
+  it("renders delete account button", async () => {
     renderWithProviders(<SettingsScreen />);
 
-    expect(screen.getByTestId("delete-account-button")).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByTestId("delete-account-button")).toBeTruthy();
+    });
     expect(screen.getByText("Delete Account")).toBeTruthy();
   });
 
-  it("opens delete account modal when delete button is pressed", () => {
+  it("opens delete account modal when delete button is pressed", async () => {
     renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("delete-account-button")).toBeTruthy();
+    });
 
     fireEvent.press(screen.getByTestId("delete-account-button"));
 
@@ -201,77 +257,85 @@ describe("SettingsScreen", () => {
     expect(screen.getByTestId("confirm-delete-button")).toBeTruthy();
   });
 
-  it("renders child profile section", () => {
+  it("renders child profile section", async () => {
     renderWithProviders(<SettingsScreen />);
 
-    expect(screen.getByText("Child Profile")).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText("Child Profile")).toBeTruthy();
+    });
   });
 
-  it("shows empty state when no child profile exists", () => {
+  it("shows empty state when no child profile exists", async () => {
     renderWithProviders(<SettingsScreen />);
 
-    expect(screen.getByText("No child profile added")).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText("No child profile added")).toBeTruthy();
+    });
   });
 });
 
-// Test wrapper that pre-sets child data
-function ChildSetterWrapper({ children }: { children: React.ReactNode }) {
-  const { setChild } = useChild();
-  React.useEffect(() => {
-    setChild({
+describe("SettingsScreen - Child Profile with Data", () => {
+  beforeEach(() => {
+    clearAllMockData();
+  });
+
+  // Helper to set up test child data via API
+  async function setupTestChild() {
+    await childApi.createChild({
       name: "Emma",
       dateOfBirth: "2024-06-15",
       nickname: "Emmy",
       culturalTradition: "chinese",
     });
-  }, [setChild]);
-  return <>{children}</>;
-}
+  }
 
-function renderWithChild(component: React.ReactElement) {
-  return render(
-    <AuthProvider>
-      <ChildProvider>
-        <EntryProvider>
-          <MilestoneProvider>
-            <NotificationProvider>
-              <FamilyProvider>
-                <UserPreferencesProvider>
-                  <StorageProvider>
-                    <SubscriptionProvider>
-                      <ExportProvider>
-                        <ChildSetterWrapper>{component}</ChildSetterWrapper>
-                      </ExportProvider>
-                    </SubscriptionProvider>
-                  </StorageProvider>
-                </UserPreferencesProvider>
-              </FamilyProvider>
-            </NotificationProvider>
-          </MilestoneProvider>
-        </EntryProvider>
-      </ChildProvider>
-    </AuthProvider>,
-  );
-}
+  it("displays child name when child exists", async () => {
+    await setupTestChild();
+    renderWithProviders(<SettingsScreen />);
 
-describe("SettingsScreen - Child Profile with Data", () => {
-  it("displays child name when child exists", () => {
-    renderWithChild(<SettingsScreen />);
-
-    expect(screen.getByText("Emma")).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText("Emma")).toBeTruthy();
+    });
   });
 
-  it("displays edit button when child exists", () => {
-    renderWithChild(<SettingsScreen />);
+  it("displays edit button when child exists", async () => {
+    await setupTestChild();
+    renderWithProviders(<SettingsScreen />);
 
-    expect(screen.getByTestId("edit-child-button")).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByTestId("edit-child-button")).toBeTruthy();
+    });
   });
 
-  it("opens edit modal when edit button is pressed", () => {
-    renderWithChild(<SettingsScreen />);
+  it("opens edit modal when edit button is pressed", async () => {
+    await setupTestChild();
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("edit-child-button")).toBeTruthy();
+    });
 
     fireEvent.press(screen.getByTestId("edit-child-button"));
 
     expect(screen.getByText("Edit Child Profile")).toBeTruthy();
+  });
+
+  it("displays child nickname when set", async () => {
+    await setupTestChild();
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      // Nickname is rendered with curly quotes: "Emmy"
+      expect(screen.getByText(/Emmy/)).toBeTruthy();
+    });
+  });
+
+  it("displays Chinese tradition when set", async () => {
+    await setupTestChild();
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Chinese tradition")).toBeTruthy();
+    });
   });
 });
