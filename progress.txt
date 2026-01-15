@@ -1056,3 +1056,28 @@
 **Verification:** tsc, lint, test (186 passed), build all pass.
 
 **Next:** Backend API integration, Stripe SDK, or Web Viewer (Phase 2)
+
+## 2026-01-15: Smart Notification Frequency
+
+**PRD ref:** Phase 1 Weeks 10-11, Section 7.3 (Smart Frequency)
+
+**Task:** Implement smart notification frequency that adapts based on user engagement
+
+**Decisions:**
+- PromptFrequency type: "daily" | "every_2_days" | "weekly"
+- Default frequency is "daily" per PRD
+- Tracks consecutiveIgnoredDays counter
+- recordIgnoredPrompt(): increments counter, updates frequency
+- recordEntryPosted(): resets counter to 0, frequency to "daily"
+- Frequency thresholds per PRD: 3+ days → every_2_days, 7+ days → weekly
+- getScheduleInterval(): returns 1 (daily), 2 (every_2_days), or 7 (weekly)
+- Helper functions calculateFrequency() and getIntervalFromFrequency()
+- TDD approach: 5 new tests for smart frequency logic
+
+**Files changed:**
+- contexts/notification-context.tsx - Added PromptFrequency type, state, methods
+- __tests__/contexts/notification-context.test.tsx - Added 5 TDD tests for smart frequency
+
+**Verification:** tsc, lint, test (191 passed), build all pass.
+
+**Next:** Integrate smart frequency with notification scheduling, Backend API, Stripe SDK, or Web Viewer (Phase 2)

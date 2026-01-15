@@ -32,6 +32,9 @@ export interface NotificationSettings {
 
 type PermissionStatus = "granted" | "denied" | "undetermined";
 
+// Smart frequency types (PRD Section 7.3)
+export type PromptFrequency = "daily" | "every_2_days" | "weekly";
+
 interface NotificationContextValue {
   settings: NotificationSettings;
   updateSettings: (updates: Partial<NotificationSettings>) => void;
@@ -40,6 +43,12 @@ interface NotificationContextValue {
   expoPushToken: string | null;
   scheduleDailyPrompt: (time: string) => Promise<void>;
   cancelDailyPrompt: () => Promise<void>;
+  // Smart frequency (PRD Section 7.3)
+  promptFrequency: PromptFrequency;
+  consecutiveIgnoredDays: number;
+  recordIgnoredPrompt: () => void;
+  recordEntryPosted: () => void;
+  getScheduleInterval: () => number;
 }
 
 const NotificationContext = createContext<NotificationContextValue | null>(
@@ -58,12 +67,37 @@ interface NotificationProviderProps {
   children: ReactNode;
 }
 
+// Helper to calculate frequency from ignored days (PRD Section 7.3)
+function calculateFrequency(ignoredDays: number): PromptFrequency {
+  if (ignoredDays >= 7) return "weekly";
+  if (ignoredDays >= 3) return "every_2_days";
+  return "daily";
+}
+
+// Helper to get interval days from frequency
+function getIntervalFromFrequency(frequency: PromptFrequency): number {
+  switch (frequency) {
+    case "weekly":
+      return 7;
+    case "every_2_days":
+      return 2;
+    case "daily":
+    default:
+      return 1;
+  }
+}
+
 export function NotificationProvider({ children }: NotificationProviderProps) {
   const [settings, setSettings] =
     useState<NotificationSettings>(DEFAULT_SETTINGS);
   const [permissionStatus, setPermissionStatus] =
     useState<PermissionStatus>("undetermined");
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
+
+  // Smart frequency state (PRD Section 7.3)
+  const [consecutiveIgnoredDays, setConsecutiveIgnoredDays] = useState(0);
+  const [promptFrequency, setPromptFrequency] =
+    useState<PromptFrequency>("daily");
 
   const notificationListener = useRef<Notifications.EventSubscription | null>(
     null,
@@ -166,6 +200,25 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     await Notifications.cancelAllScheduledNotificationsAsync();
   }, []);
 
+  // Smart frequency methods (PRD Section 7.3)
+  const recordIgnoredPrompt = useCallback(() => {
+    setConsecutiveIgnoredDays((prev) => {
+      const newCount = prev + 1;
+      setPromptFrequency(calculateFrequency(newCount));
+      return newCount;
+    });
+  }, []);
+
+  const recordEntryPosted = useCallback(() => {
+    // Reset to daily when user posts an entry
+    setConsecutiveIgnoredDays(0);
+    setPromptFrequency("daily");
+  }, []);
+
+  const getScheduleInterval = useCallback(() => {
+    return getIntervalFromFrequency(promptFrequency);
+  }, [promptFrequency]);
+
   const value: NotificationContextValue = {
     settings,
     updateSettings,
@@ -174,6 +227,12 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     expoPushToken,
     scheduleDailyPrompt,
     cancelDailyPrompt,
+    // Smart frequency
+    promptFrequency,
+    consecutiveIgnoredDays,
+    recordIgnoredPrompt,
+    recordEntryPosted,
+    getScheduleInterval,
   };
 
   return (

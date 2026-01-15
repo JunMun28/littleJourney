@@ -113,4 +113,91 @@ describe("NotificationContext", () => {
     ).toHaveBeenCalled();
     expect(Notifications.scheduleNotificationAsync).toHaveBeenCalled();
   });
+
+  // Smart Frequency tests (PRD Section 7.3)
+  describe("Smart Frequency", () => {
+    it("provides default frequency state as daily", () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+
+      expect(result.current.promptFrequency).toBe("daily");
+      expect(result.current.consecutiveIgnoredDays).toBe(0);
+    });
+
+    it("resets to daily frequency when user posts entry", async () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+
+      // Simulate frequency was reduced to weekly
+      await act(async () => {
+        result.current.recordIgnoredPrompt(); // Day 1
+        result.current.recordIgnoredPrompt(); // Day 2
+        result.current.recordIgnoredPrompt(); // Day 3 -> every 2 days
+        result.current.recordIgnoredPrompt(); // Day 4
+        result.current.recordIgnoredPrompt(); // Day 5
+        result.current.recordIgnoredPrompt(); // Day 6
+        result.current.recordIgnoredPrompt(); // Day 7 -> weekly
+      });
+
+      expect(result.current.promptFrequency).toBe("weekly");
+
+      // User posts an entry
+      await act(async () => {
+        result.current.recordEntryPosted();
+      });
+
+      expect(result.current.promptFrequency).toBe("daily");
+      expect(result.current.consecutiveIgnoredDays).toBe(0);
+    });
+
+    it("reduces to every 2 days after 3+ ignored days", async () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+
+      await act(async () => {
+        result.current.recordIgnoredPrompt(); // Day 1
+        result.current.recordIgnoredPrompt(); // Day 2
+        result.current.recordIgnoredPrompt(); // Day 3
+      });
+
+      expect(result.current.promptFrequency).toBe("every_2_days");
+      expect(result.current.consecutiveIgnoredDays).toBe(3);
+    });
+
+    it("reduces to weekly after 7+ ignored days", async () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+
+      await act(async () => {
+        for (let i = 0; i < 7; i++) {
+          result.current.recordIgnoredPrompt();
+        }
+      });
+
+      expect(result.current.promptFrequency).toBe("weekly");
+      expect(result.current.consecutiveIgnoredDays).toBe(7);
+    });
+
+    it("getScheduleInterval returns correct repeat interval", () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+
+      // Daily = 1
+      expect(result.current.getScheduleInterval()).toBe(1);
+
+      act(() => {
+        result.current.recordIgnoredPrompt();
+        result.current.recordIgnoredPrompt();
+        result.current.recordIgnoredPrompt();
+      });
+
+      // Every 2 days = 2
+      expect(result.current.getScheduleInterval()).toBe(2);
+
+      act(() => {
+        result.current.recordIgnoredPrompt();
+        result.current.recordIgnoredPrompt();
+        result.current.recordIgnoredPrompt();
+        result.current.recordIgnoredPrompt();
+      });
+
+      // Weekly = 7
+      expect(result.current.getScheduleInterval()).toBe(7);
+    });
+  });
 });
