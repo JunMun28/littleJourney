@@ -2011,3 +2011,35 @@
 **Verification:** tsc, lint, test (382 passed), build all pass.
 
 **Next:** Continue remaining PRD items: backend integration (AUTH, SHARE, VIDEO, PAY), MOBILE-006 (offline), analytics
+
+## 2026-01-16: Offline Handling (MOBILE-006)
+
+**PRD ref:** Phase 1, Section 14 (Mobile Experience), MOBILE-006
+
+**Task:** Implement graceful offline handling with cached data display and offline banner
+
+**Decisions:**
+- Installed @react-native-community/netinfo for cross-platform network status detection
+- Created useNetworkStatus hook to track online/offline state with callbacks
+- Created OfflineBanner component displayed globally when offline
+- Banner shows "You are offline" title + "Viewing cached data" subtitle
+- Banner styled with warning colors (orange bg, dark text) for visibility
+- Uses useSafeAreaInsets for proper positioning below status bar
+- Integrated OfflineBanner in RootLayoutNav for global visibility
+- TanStack Query's cache already provides offline data access (no changes needed)
+- Added react-native-safe-area-context mock to jest.setup.js
+- TDD approach: 7 tests for useNetworkStatus hook, 4 tests for OfflineBanner component
+
+**Files changed:**
+- package.json - Added @react-native-community/netinfo dependency
+- hooks/use-network-status.ts - New hook for network status tracking
+- components/offline-banner.tsx - New component for offline notification banner
+- app/_layout.tsx - Integrated OfflineBanner in root layout
+- jest.setup.js - Added react-native-safe-area-context mock
+- __tests__/hooks/use-network-status.test.ts - 7 TDD tests for hook
+- __tests__/components/offline-banner.test.tsx - 4 TDD tests for banner component
+- prd-items.json - Updated MOBILE-006 to passes: true
+
+**Verification:** tsc, lint, test (393 passed), build all pass.
+
+**Next:** Continue remaining PRD items: backend integration (AUTH, SHARE, VIDEO, PAY), MOBILE-001 (app launch perf), analytics

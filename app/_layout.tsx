@@ -6,9 +6,11 @@ import {
 import { Slot, useSegments, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
+import { View, StyleSheet } from "react-native";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { OfflineBanner } from "@/components/offline-banner";
 import { QueryProvider } from "@/providers/query-provider";
 import { AppStateProvider } from "@/providers/app-state-provider";
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
@@ -51,8 +53,24 @@ function RootLayoutNav() {
     }
   }, [isAuthenticated, isLoading, hasCompletedOnboarding, segments]);
 
-  return <Slot />;
+  return (
+    <View style={styles.container}>
+      <OfflineBanner />
+      <View style={styles.content}>
+        <Slot />
+      </View>
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+  },
+});
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();

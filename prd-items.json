@@ -1298,7 +1298,7 @@
         "Verify appropriate offline message"
       ],
       "acceptanceCriteria": "App handles offline gracefully",
-      "passes": false
+      "passes": true
     },
     {
       "id": "WEBVIEW-001",
