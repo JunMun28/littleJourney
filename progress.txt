@@ -2277,3 +2277,42 @@
 **Verification:** tsc, lint, test (503 passed), build all pass.
 
 **Next:** Continue remaining PRD items: SHARE-002-007 (Web Viewer dependent), SEARCH-002 (AI semantic search), VIDEO-001-002 (Cloudflare Stream), PAY items
+
+## 2026-01-16: Stripe Payment Integration (PAY-002)
+
+**PRD ref:** Phase 1, Section 12 (Subscription), PAY-002 (Credit card via Stripe)
+
+**Task:** Implement Stripe payment sheet integration for subscription purchases
+
+**Decisions:**
+- Created platform-specific files (.native.ts, .web.ts) to handle web bundling
+- Stripe React Native SDK only available on native (iOS/Android)
+- Web stub returns "not supported" error
+- Payment flow: fetch payment intent -> init sheet -> present sheet
+- Mock mode returns simulated payment intents for development
+- Hook provides: processPayment(plan, cycle), isLoading, error, clearError, isAvailable
+- Settings screen integrates payment flow before updating subscription
+- Free plan bypasses payment (returns true immediately)
+- User cancellation returns false without setting error state
+- TDD approach: 17 service tests + 10 hook tests
+
+**Files changed:**
+- services/stripe.ts - Re-export from platform-specific
+- services/stripe.native.ts - Native Stripe SDK implementation
+- services/stripe.web.ts - Web stub (not supported)
+- hooks/use-stripe-payment.ts - Re-export from platform-specific
+- hooks/use-stripe-payment.native.ts - Payment hook with useStripe()
+- hooks/use-stripe-payment.web.ts - Web stub (always unavailable)
+- providers/stripe-provider.tsx - Re-export from platform-specific
+- providers/stripe-provider.native.tsx - StripeProvider wrapper + context
+- providers/stripe-provider.web.tsx - Web stub (pass-through)
+- app/_layout.tsx - Added StripeProvider to provider tree
+- app/(tabs)/settings.tsx - Integrated useStripePayment for subscription flow
+- jest.setup.js - Added @stripe/stripe-react-native global mock
+- __tests__/services/stripe.test.ts - 17 TDD tests for service
+- __tests__/hooks/use-stripe-payment.test.ts - 10 TDD tests for hook
+- prd-items.json - Updated PAY-002 to passes: true
+
+**Verification:** tsc, lint, test (530 passed), build all pass.
+
+**Next:** Continue remaining PRD items: PAY-003 (Apple Pay), PAY-004 (Google Pay), PAY-006 (receipts), PAY-008 (Cloudflare Worker)

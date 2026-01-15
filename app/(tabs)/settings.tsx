@@ -37,6 +37,7 @@ import {
 } from "@/contexts/subscription-context";
 import { useChildFlat } from "@/hooks/use-children";
 import { useFamilyMembersFlat } from "@/hooks/use-family";
+import { useStripePayment } from "@/hooks/use-stripe-payment";
 import { PRIMARY_COLOR, Colors, SemanticColors } from "@/constants/theme";
 
 type ModalState =
@@ -131,6 +132,12 @@ export default function SettingsScreen() {
     restoreSubscription,
     isLoading: isSubscriptionLoading,
   } = useSubscription();
+  const {
+    processPayment,
+    isLoading: isPaymentLoading,
+    error: paymentError,
+    clearError: clearPaymentError,
+  } = useStripePayment();
 
   const [modalState, setModalState] = useState<ModalState>("closed");
   const [selectedTime, setSelectedTime] = useState<Date>(() =>
@@ -247,10 +254,31 @@ export default function SettingsScreen() {
   const isDeleteConfirmValid = deleteConfirmText === "DELETE";
 
   const handleSubscribe = async () => {
+    // Clear any previous payment errors
+    clearPaymentError();
+
+    // Process payment via Stripe (PRD PAY-002)
+    const success = await processPayment(selectedPlan, selectedCycle);
+
+    if (!success) {
+      // If there's a payment error, show alert
+      if (paymentError) {
+        Alert.alert("Payment Error", paymentError);
+      }
+      // User cancelled or error - don't proceed
+      return;
+    }
+
+    // Payment successful - update subscription state
     await subscribe(selectedPlan, selectedCycle);
     // Sync storage tier with subscription
     setTier(selectedPlan);
     setModalState("closed");
+
+    Alert.alert(
+      "Success!",
+      `You are now subscribed to ${PLAN_DETAILS[selectedPlan].name}. Thank you for your support!`,
+    );
   };
 
   const handleCancelSubscription = async () => {
@@ -1521,15 +1549,16 @@ export default function SettingsScreen() {
             <Pressable
               style={[
                 styles.subscribeButton,
-                isSubscriptionLoading && styles.subscribeButtonDisabled,
+                (isSubscriptionLoading || isPaymentLoading) &&
+                  styles.subscribeButtonDisabled,
               ]}
               onPress={handleSubscribe}
-              disabled={isSubscriptionLoading}
+              disabled={isSubscriptionLoading || isPaymentLoading}
               testID="subscribe-button"
             >
               <Text style={styles.subscribeButtonText}>
-                {isSubscriptionLoading
-                  ? "Processing..."
+                {isSubscriptionLoading || isPaymentLoading
+                  ? "Processing payment..."
                   : `Subscribe to ${PLAN_DETAILS[selectedPlan].name}`}
               </Text>
             </Pressable>

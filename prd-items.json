@@ -1149,7 +1149,7 @@
         "Verify storage limit increased"
       ],
       "acceptanceCriteria": "Credit card payment via Stripe works",
-      "passes": false
+      "passes": true
     },
     {
       "id": "PAY-003",

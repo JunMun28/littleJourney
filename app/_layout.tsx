@@ -32,6 +32,7 @@ import { NotificationProvider } from "@/contexts/notification-context";
 import { StorageProvider } from "@/contexts/storage-context";
 import { SubscriptionProvider } from "@/contexts/subscription-context";
 import { UserPreferencesProvider } from "@/contexts/user-preferences-context";
+import { StripeProvider } from "@/providers/stripe-provider";
 
 function RootLayoutNav() {
   const { isAuthenticated, isLoading, hasCompletedOnboarding, user } =
@@ -134,18 +135,20 @@ export default function RootLayout() {
             <NotificationProvider>
               <StorageProvider>
                 <SubscriptionProvider>
-                  <ExportProvider>
-                    <PhotoBookProvider>
-                      <ThemeProvider
-                        value={
-                          colorScheme === "dark" ? DarkTheme : DefaultTheme
-                        }
-                      >
-                        <RootLayoutNav />
-                        <StatusBar style="auto" />
-                      </ThemeProvider>
-                    </PhotoBookProvider>
-                  </ExportProvider>
+                  <StripeProvider>
+                    <ExportProvider>
+                      <PhotoBookProvider>
+                        <ThemeProvider
+                          value={
+                            colorScheme === "dark" ? DarkTheme : DefaultTheme
+                          }
+                        >
+                          <RootLayoutNav />
+                          <StatusBar style="auto" />
+                        </ThemeProvider>
+                      </PhotoBookProvider>
+                    </ExportProvider>
+                  </StripeProvider>
                 </SubscriptionProvider>
               </StorageProvider>
             </NotificationProvider>

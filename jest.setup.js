@@ -25,3 +25,13 @@ jest.mock("react-native-safe-area-context", () => ({
   SafeAreaProvider: ({ children }) => children,
   SafeAreaView: ({ children }) => children,
 }));
+
+// Mock @stripe/stripe-react-native
+jest.mock("@stripe/stripe-react-native", () => ({
+  initStripe: jest.fn().mockResolvedValue(undefined),
+  useStripe: () => ({
+    initPaymentSheet: jest.fn().mockResolvedValue({ error: null }),
+    presentPaymentSheet: jest.fn().mockResolvedValue({ error: null }),
+  }),
+  StripeProvider: ({ children }) => children,
+}));
