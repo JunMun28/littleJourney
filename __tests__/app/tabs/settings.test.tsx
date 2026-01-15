@@ -322,6 +322,42 @@ describe("SettingsScreen - Family Member Management", () => {
       expect(screen.getByText(/Grandmother/)).toBeTruthy();
     });
   });
+
+  // PRD SHARE-007: Last viewed timestamp
+  it("displays last viewed timestamp when family member has viewed entries", async () => {
+    // First create a family member
+    const result = await familyApi.inviteFamilyMember({
+      email: "grandpa@example.com",
+      relationship: "Grandfather",
+      permissionLevel: "view_interact",
+    });
+
+    // Then record a view (simulates family member opening the app)
+    if ("data" in result && result.data) {
+      await familyApi.recordFamilyView(result.data.id);
+    }
+
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("grandpa@example.com")).toBeTruthy();
+    });
+
+    // Should show "Last viewed:" label
+    expect(screen.getByText(/Last viewed:/)).toBeTruthy();
+  });
+
+  it("does not show last viewed when family member has never viewed", async () => {
+    await setupPendingFamilyMember();
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("grandma@example.com")).toBeTruthy();
+    });
+
+    // Should NOT show "Last viewed:" for members who haven't viewed yet
+    expect(screen.queryByText(/Last viewed:/)).toBeNull();
+  });
 });
 
 describe("SettingsScreen - Child Profile with Data", () => {

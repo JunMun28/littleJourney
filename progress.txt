@@ -2348,3 +2348,31 @@
 
 **Next:** Continue remaining PRD items: SHARE-002-004 (magic link Web Viewer), SHARE-007 (family activity), SEARCH-002 (AI semantic search), VIDEO-001-002 (Cloudflare Stream), PAY items
 
+## 2026-01-16: Family Member Last Viewed Timestamp (SHARE-007)
+
+**PRD ref:** Phase 1, Section 6 (Family Sharing), SHARE-007
+
+**Task:** Implement family member view activity tracking showing "Last viewed" timestamp in Settings
+
+**Decisions:**
+- Added lastViewedAt optional field to FamilyMember interface
+- Added familyApi.recordFamilyView(id) method to API client (updates lastViewedAt to current time)
+- Added useRecordFamilyView() TanStack Query hook for mutation
+- Settings screen displays "Last viewed: [formatted date]" below relationship for each family member who has viewed
+- Timestamp formatted in Singapore locale (en-SG) with date and time: "Jan 16, 2026, 10:30 AM"
+- Only displays when lastViewedAt exists (family member has viewed at least once)
+- TDD approach: 3 API tests + 2 Settings UI tests
+
+**Files changed:**
+- contexts/family-context.tsx - Added lastViewedAt?: string field to FamilyMember interface
+- services/api-client.ts - Added recordFamilyView() method to familyApi
+- hooks/use-family.ts - Added useRecordFamilyView hook
+- app/(tabs)/settings.tsx - Added "Last viewed" display in family member row, familyMemberLastViewed style
+- __tests__/services/api-client.test.ts - Added 3 TDD tests for recordFamilyView API
+- __tests__/app/tabs/settings.test.tsx - Added 2 TDD tests for SHARE-007 UI
+- prd-items.json - Updated SHARE-007 to passes: true
+
+**Verification:** tsc, lint, test (565 passed), build all pass.
+
+**Next:** Continue remaining PRD items: SHARE-002-004 (Web Viewer), SEARCH-002 (AI semantic search), VIDEO-001-002 (Cloudflare Stream), PAY-003/004/006/008
+

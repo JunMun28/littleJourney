@@ -705,6 +705,27 @@ export default function SettingsScreen() {
                     {member.relationship} •{" "}
                     {member.status === "pending" ? "Pending" : "Active"}
                   </Text>
+                  {/* PRD SHARE-007: Last viewed timestamp */}
+                  {member.lastViewedAt && (
+                    <Text
+                      style={[
+                        styles.familyMemberLastViewed,
+                        { color: colors.textMuted },
+                      ]}
+                    >
+                      Last viewed:{" "}
+                      {new Date(member.lastViewedAt).toLocaleDateString(
+                        "en-SG",
+                        {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        },
+                      )}
+                    </Text>
+                  )}
                 </View>
                 <View style={styles.familyMemberActions}>
                   {member.status === "pending" && (
@@ -1984,6 +2005,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#666",
     marginTop: 2,
+  },
+  familyMemberLastViewed: {
+    fontSize: 12,
+    marginTop: 4,
   },
   familyMemberActions: {
     flexDirection: "row",

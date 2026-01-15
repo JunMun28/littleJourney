@@ -105,6 +105,28 @@ export function useResendInvite() {
 }
 
 /**
+ * Record family member view activity (PRD SHARE-007)
+ * Called when a family member views entries to update lastViewedAt
+ */
+export function useRecordFamilyView() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string): Promise<FamilyMember> => {
+      const result = await familyApi.recordFamilyView(id);
+      if (isApiError(result)) {
+        throw new Error(result.error.message);
+      }
+      return result.data;
+    },
+    onSuccess: () => {
+      // Invalidate list to show updated lastViewedAt
+      queryClient.invalidateQueries({ queryKey: familyKeys.list() });
+    },
+  });
+}
+
+/**
  * Flattened hook for easy family member consumption in components
  * Returns familyMembers array and mutation helpers
  */

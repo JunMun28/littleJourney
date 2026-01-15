@@ -438,6 +438,33 @@ export const familyApi = {
     return response.json();
   },
 
+  // PRD SHARE-007: Record family member view activity
+  async recordFamilyView(id: string): Promise<ApiResult<FamilyMember>> {
+    await simulateDelay();
+
+    if (API_CONFIG.useMock) {
+      const index = mockFamilyMembers.findIndex((m) => m.id === id);
+      if (index === -1) {
+        return {
+          error: { code: "NOT_FOUND", message: "Family member not found" },
+        };
+      }
+      // Update lastViewedAt to now
+      const updated: FamilyMember = {
+        ...mockFamilyMembers[index],
+        lastViewedAt: new Date().toISOString(),
+      };
+      mockFamilyMembers[index] = updated;
+      return { data: updated };
+    }
+
+    const response = await fetch(`${API_CONFIG.baseUrl}/family/${id}/view`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+    });
+    return response.json();
+  },
+
   // Clear mock data (for testing)
   _clearMockData(): void {
     mockFamilyMembers = [];

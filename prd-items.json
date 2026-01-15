@@ -764,7 +764,7 @@
         "Verify 'Last viewed' timestamp shown"
       ],
       "acceptanceCriteria": "Parents see when family last viewed",
-      "passes": false
+      "passes": true
     },
     {
       "id": "SHARE-008",

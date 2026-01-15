@@ -17,6 +17,7 @@ export interface FamilyMember {
   permissionLevel: PermissionLevel;
   status: InviteStatus;
   invitedAt: string;
+  lastViewedAt?: string; // PRD SHARE-007: Track when family member last viewed entries
 }
 
 interface InviteFamilyMemberParams {

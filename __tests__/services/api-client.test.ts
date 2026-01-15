@@ -195,6 +195,54 @@ describe("API Client", () => {
         expect(list.data).toHaveLength(0);
       }
     });
+
+    it("records family member view activity and updates lastViewedAt", async () => {
+      const invited = await familyApi.inviteFamilyMember({
+        email: "grandma@example.com",
+        relationship: "Grandmother",
+        permissionLevel: "view_interact",
+      });
+      if (isApiError(invited)) throw new Error("Failed to invite");
+
+      // Initially no lastViewedAt
+      expect(invited.data.lastViewedAt).toBeUndefined();
+
+      const result = await familyApi.recordFamilyView(invited.data.id);
+      expect(isApiError(result)).toBe(false);
+      if (!isApiError(result)) {
+        expect(result.data.lastViewedAt).toBeDefined();
+        // Check it's a valid ISO date string
+        expect(new Date(result.data.lastViewedAt!).toISOString()).toBe(
+          result.data.lastViewedAt,
+        );
+      }
+    });
+
+    it("returns updated lastViewedAt when getting family members", async () => {
+      const invited = await familyApi.inviteFamilyMember({
+        email: "grandma@example.com",
+        relationship: "Grandmother",
+        permissionLevel: "view_interact",
+      });
+      if (isApiError(invited)) throw new Error("Failed to invite");
+
+      // Record a view
+      await familyApi.recordFamilyView(invited.data.id);
+
+      const list = await familyApi.getFamilyMembers();
+      expect(isApiError(list)).toBe(false);
+      if (!isApiError(list)) {
+        expect(list.data[0].lastViewedAt).toBeDefined();
+      }
+    });
+
+    it("returns error when recording view for non-existent family member", async () => {
+      const result = await familyApi.recordFamilyView("non-existent");
+      expect(isApiError(result)).toBe(true);
+      if (isApiError(result)) {
+        expect(result.error.code).toBe("NOT_FOUND");
+      }
+    });
   });
 
   describe("milestoneApi", () => {
