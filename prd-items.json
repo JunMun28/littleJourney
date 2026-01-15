@@ -1386,7 +1386,7 @@
         "Verify includes context and stack trace"
       ],
       "acceptanceCriteria": "Errors tracked in Sentry with context",
-      "passes": false
+      "passes": true
     }
   ]
 }

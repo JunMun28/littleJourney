@@ -10,6 +10,12 @@ import { View, StyleSheet } from "react-native";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import {
+  initSentry,
+  setUserContext,
+  clearUserContext,
+  addBreadcrumb,
+} from "@/services/sentry";
 import { OfflineBanner } from "@/components/offline-banner";
 import { QueryProvider } from "@/providers/query-provider";
 import { AppStateProvider } from "@/providers/app-state-provider";
@@ -26,8 +32,33 @@ import { SubscriptionProvider } from "@/contexts/subscription-context";
 import { UserPreferencesProvider } from "@/contexts/user-preferences-context";
 
 function RootLayoutNav() {
-  const { isAuthenticated, isLoading, hasCompletedOnboarding } = useAuth();
+  const { isAuthenticated, isLoading, hasCompletedOnboarding, user } =
+    useAuth();
   const segments = useSegments();
+
+  // Set/clear Sentry user context when auth state changes
+  useEffect(() => {
+    if (user) {
+      setUserContext({
+        id: user.id,
+        email: user.email,
+        username: user.name,
+      });
+    } else {
+      clearUserContext();
+    }
+  }, [user]);
+
+  // Add navigation breadcrumbs for debugging
+  useEffect(() => {
+    if (segments.length > 0) {
+      addBreadcrumb({
+        category: "navigation",
+        message: `Navigated to ${segments.join("/")}`,
+        level: "info",
+      });
+    }
+  }, [segments]);
 
   useEffect(() => {
     if (isLoading) return;
@@ -71,6 +102,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
+
+// Initialize Sentry as early as possible (outside component render)
+initSentry();
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();

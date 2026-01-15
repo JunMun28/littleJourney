@@ -2043,3 +2043,32 @@
 **Verification:** tsc, lint, test (393 passed), build all pass.
 
 **Next:** Continue remaining PRD items: backend integration (AUTH, SHARE, VIDEO, PAY), MOBILE-001 (app launch perf), analytics
+
+## 2026-01-16: Sentry Error Tracking (ANALYTICS-002)
+
+**PRD ref:** Phase 1, Section 18 (Analytics), ANALYTICS-002
+
+**Task:** Implement Sentry error tracking for capturing errors with context and stack traces
+
+**Decisions:**
+- Installed @sentry/react-native for React Native error tracking
+- Created services/sentry.ts with typed API: initSentry, captureError, setUserContext, clearUserContext, addBreadcrumb, captureMessage
+- Sentry DSN loaded from: Constants.expoConfig.extra.sentryDsn OR EXPO_PUBLIC_SENTRY_DSN env var
+- initSentry() called at module level in _layout.tsx (earliest possible)
+- enableInDev option allows testing in development (disabled by default)
+- User context auto-set on auth state change via RootLayoutNav effect
+- Navigation breadcrumbs auto-added when route segments change
+- Added @sentry/react-native/expo plugin to app.json for native integration
+- TDD approach: 13 tests for Sentry service
+
+**Files changed:**
+- package.json - Added @sentry/react-native dependency
+- services/sentry.ts - New: Sentry initialization and error tracking API
+- app/_layout.tsx - Integrated Sentry init, user context sync, navigation breadcrumbs
+- app.json - Added @sentry/react-native/expo plugin with org/project config
+- __tests__/services/sentry.test.ts - New: 13 TDD tests for Sentry service
+- prd-items.json - Updated ANALYTICS-002 to passes: true
+
+**Verification:** tsc, lint, test (406 passed), build all pass.
+
+**Next:** Continue remaining PRD items: ANALYTICS-001 (PostHog events), MOBILE-001 (app launch perf), backend integration

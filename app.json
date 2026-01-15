@@ -57,7 +57,14 @@
           }
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "@sentry/react-native/expo",
+        {
+          "organization": "little-journey",
+          "project": "little-journey-mobile"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
