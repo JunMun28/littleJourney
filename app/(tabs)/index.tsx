@@ -20,6 +20,7 @@ import { router } from "expo-router";
 
 import { extractDateFromExif, type ExifData } from "@/utils/exif-date";
 import { useRateLimit } from "@/hooks/use-rate-limit";
+import { useVideoUpload } from "@/hooks/use-video-upload";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -216,6 +217,11 @@ export default function FeedScreen() {
     rateLimitMessage,
     recordUpload,
   } = useRateLimit();
+  const {
+    uploadState: videoUploadState,
+    uploadVideoFile,
+    resetUploadState: resetVideoUploadState,
+  } = useVideoUpload();
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
   const onThisDayMemories = getOnThisDayEntries();
@@ -225,6 +231,7 @@ export default function FeedScreen() {
   const [selectedType, setSelectedType] = useState<EntryType | null>(null);
   const [selectedMedia, setSelectedMedia] = useState<string[]>([]);
   const [selectedMediaSizes, setSelectedMediaSizes] = useState<number[]>([]);
+  const [videoDuration, setVideoDuration] = useState<number>(0); // For Cloudflare upload
   const [caption, setCaption] = useState("");
   const [entryDate, setEntryDate] = useState<Date>(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -333,11 +340,13 @@ export default function FeedScreen() {
     setSelectedType(null);
     setSelectedMedia([]);
     setSelectedMediaSizes([]);
+    setVideoDuration(0);
     setCaption("");
     setEntryDate(new Date());
     setShowDatePicker(false);
     setTags([]);
     setTagInput("");
+    resetVideoUploadState();
   };
 
   const onRefresh = useCallback(() => {
@@ -460,6 +469,7 @@ export default function FeedScreen() {
 
     setSelectedMedia([video.uri]);
     setSelectedMediaSizes([fileSize]);
+    setVideoDuration(duration); // Store for Cloudflare upload
     setCreateStep("caption");
   };
 
@@ -537,16 +547,46 @@ export default function FeedScreen() {
     setCreateStep("caption");
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!selectedType) return;
 
     // Use entryDate (may be from EXIF or user-selected)
     const dateString = entryDate.toISOString().split("T")[0];
 
+    // For video entries, upload to Cloudflare Stream first (VIDEO-001)
+    let mediaUrisToSave = selectedMedia;
+    let thumbnailUrl: string | undefined;
+
+    if (selectedType === "video" && selectedMedia.length > 0) {
+      const uploadResult = await uploadVideoFile(
+        selectedMedia[0],
+        videoDuration,
+        {
+          childId: child?.id || "",
+          date: dateString,
+        },
+      );
+
+      if (!uploadResult) {
+        // Upload failed - error state is already set by useVideoUpload
+        Alert.alert(
+          "Upload Failed",
+          videoUploadState.error || "Failed to upload video. Please try again.",
+          [{ text: "OK" }],
+        );
+        return;
+      }
+
+      // Use Cloudflare Stream URL instead of local file URI
+      mediaUrisToSave = [uploadResult.streamUrl];
+      thumbnailUrl = uploadResult.thumbnailUrl;
+    }
+
     createEntry.mutate(
       {
         type: selectedType,
-        mediaUris: selectedMedia.length > 0 ? selectedMedia : undefined,
+        mediaUris: mediaUrisToSave.length > 0 ? mediaUrisToSave : undefined,
+        thumbnailUrl, // Store Cloudflare thumbnail URL (VIDEO-002)
         caption: caption.trim() || undefined,
         date: dateString,
         tags: tags.length > 0 ? tags : undefined,
@@ -871,11 +911,36 @@ export default function FeedScreen() {
                 />
               </View>
 
+              {/* Video upload progress indicator (VIDEO-001) */}
+              {videoUploadState.isUploading && (
+                <View style={styles.uploadProgressContainer}>
+                  <View style={styles.uploadProgressBar}>
+                    <View
+                      style={[
+                        styles.uploadProgressFill,
+                        { width: `${videoUploadState.progress}%` },
+                      ]}
+                    />
+                  </View>
+                  <ThemedText style={styles.uploadProgressText}>
+                    Uploading video... {videoUploadState.progress}%
+                  </ThemedText>
+                </View>
+              )}
+
               <TouchableOpacity
-                style={styles.submitButton}
+                style={[
+                  styles.submitButton,
+                  videoUploadState.isUploading && styles.submitButtonDisabled,
+                ]}
                 onPress={handleSubmit}
+                disabled={videoUploadState.isUploading}
               >
-                <ThemedText style={styles.submitButtonText}>Post</ThemedText>
+                {videoUploadState.isUploading ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <ThemedText style={styles.submitButtonText}>Post</ThemedText>
+                )}
               </TouchableOpacity>
             </View>
           )}
@@ -1080,6 +1145,29 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+  },
+  submitButtonDisabled: {
+    opacity: 0.7,
+  },
+  uploadProgressContainer: {
+    marginBottom: 16,
+  },
+  uploadProgressBar: {
+    height: 8,
+    backgroundColor: "#E0E0E0",
+    borderRadius: 4,
+    overflow: "hidden",
+    marginBottom: 8,
+  },
+  uploadProgressFill: {
+    height: "100%",
+    backgroundColor: PRIMARY_COLOR,
+    borderRadius: 4,
+  },
+  uploadProgressText: {
+    textAlign: "center",
+    fontSize: 14,
+    opacity: 0.8,
   },
   onThisDayCard: {
     backgroundColor: SemanticColors.goldLight,

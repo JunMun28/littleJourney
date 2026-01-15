@@ -12,6 +12,7 @@ export interface Entry {
   id: string;
   type: EntryType;
   mediaUris?: string[]; // Photo or video URIs (carousel for photos)
+  thumbnailUrl?: string; // Cloudflare Stream thumbnail URL for videos (VIDEO-002)
   caption?: string;
   date: string; // ISO date string (YYYY-MM-DD)
   tags?: string[];

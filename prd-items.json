@@ -999,7 +999,7 @@
         "Verify video streams (not full download)"
       ],
       "acceptanceCriteria": "Videos uploaded and streamed via Cloudflare",
-      "passes": false
+      "passes": true
     },
     {
       "id": "VIDEO-002",
@@ -1011,7 +1011,7 @@
         "Verify thumbnail displayed (not blank)"
       ],
       "acceptanceCriteria": "Thumbnails auto-generated for videos",
-      "passes": false
+      "passes": true
     },
     {
       "id": "VIDEO-003",
