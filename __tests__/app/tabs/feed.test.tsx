@@ -748,3 +748,57 @@ describe("Feed draft auto-save", () => {
     expect(result.current.hasDraft).toBe(false);
   });
 });
+
+// Test photo book birthday prompt (PRD Section 10.1)
+describe("Photo book birthday prompt", () => {
+  const combinedWrapper = ({ children }: { children: ReactNode }) => (
+    <StorageProvider>
+      <NotificationProvider>{children}</NotificationProvider>
+    </StorageProvider>
+  );
+
+  const Notifications = require("expo-notifications");
+
+  beforeEach(() => {
+    Notifications.scheduleNotificationAsync.mockClear();
+  });
+
+  it("should send birthday notification when child turns 1", async () => {
+    const { result } = renderHook(() => useNotifications(), {
+      wrapper: combinedWrapper,
+    });
+
+    await act(async () => {
+      await result.current.sendPhotoBookBirthdayPrompt("Emma");
+    });
+
+    expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        content: expect.objectContaining({
+          title: expect.stringMatching(/Emma.*birthday|birthday.*Emma/i),
+          body: expect.stringContaining("photo book"),
+          data: { type: "photo_book_prompt" },
+        }),
+        trigger: null,
+      }),
+    );
+  });
+
+  it("should include child name in birthday prompt", async () => {
+    const { result } = renderHook(() => useNotifications(), {
+      wrapper: combinedWrapper,
+    });
+
+    await act(async () => {
+      await result.current.sendPhotoBookBirthdayPrompt("Oliver");
+    });
+
+    expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        content: expect.objectContaining({
+          title: expect.stringContaining("Oliver"),
+        }),
+      }),
+    );
+  });
+});

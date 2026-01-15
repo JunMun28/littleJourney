@@ -55,6 +55,8 @@ interface NotificationContextValue {
   cancelMilestoneReminder: (milestoneId: string) => Promise<void>;
   // Storage warning (PRD Section 7.1 - locked on)
   sendStorageWarningNotification: (usagePercent: number) => Promise<void>;
+  // Photo book birthday prompt (PRD Section 10.1)
+  sendPhotoBookBirthdayPrompt: (childName: string) => Promise<void>;
   // Smart frequency (PRD Section 7.3)
   promptFrequency: PromptFrequency;
   consecutiveIgnoredDays: number;
@@ -344,6 +346,18 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     [],
   );
 
+  // Photo book birthday prompt (PRD Section 10.1 - system prompt at child's first birthday)
+  const sendPhotoBookBirthdayPrompt = useCallback(async (childName: string) => {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: `🎂 ${childName}'s first birthday!`,
+        body: "Create a photo book to celebrate this special milestone and preserve your memories.",
+        data: { type: "photo_book_prompt" },
+      },
+      trigger: null, // Send immediately
+    });
+  }, []);
+
   // Smart frequency methods (PRD Section 7.3)
   const recordIgnoredPrompt = useCallback(() => {
     setConsecutiveIgnoredDays((prev) => {
@@ -378,6 +392,8 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     cancelMilestoneReminder,
     // Storage warning
     sendStorageWarningNotification,
+    // Photo book birthday prompt
+    sendPhotoBookBirthdayPrompt,
     // Smart frequency
     promptFrequency,
     consecutiveIgnoredDays,

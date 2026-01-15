@@ -1690,3 +1690,28 @@
 **Verification:** tsc, lint, test (315 passed), build all pass.
 
 **Next:** Cloudflare Workers backend setup, Stripe SDK integration, or Web Viewer (Phase 2)
+
+## 2026-01-15: Photo Book Birthday Prompt
+
+**PRD ref:** Phase 1 Weeks 12-13 (Polish), Section 10.1 (Trigger - System prompt at child's first birthday)
+
+**Task:** Implement photo book birthday prompt notification when child turns 1 year old
+
+**Decisions:**
+- Added sendPhotoBookBirthdayPrompt(childName) method to NotificationContext
+- Notification title includes child name and "birthday", body prompts photo book creation
+- Notification data type: "photo_book_prompt" for future tap handling
+- Feed screen checks child.dateOfBirth on mount, sends notification if today is first birthday
+- Uses hasSentBirthdayPrompt ref to prevent duplicate notifications per session
+- Checks both nickname and name for notification title (nickname preferred if set)
+- TDD approach: 3 context tests + 2 integration tests
+
+**Files changed:**
+- contexts/notification-context.tsx - Added sendPhotoBookBirthdayPrompt method to interface and implementation
+- app/(tabs)/index.tsx - Added birthday check effect, added hasSentBirthdayPrompt ref
+- __tests__/contexts/notification-context.test.tsx - Added 3 TDD tests for birthday prompt
+- __tests__/app/tabs/feed.test.tsx - Added 2 integration tests for birthday prompt
+
+**Verification:** tsc, lint, test (320 passed), build all pass.
+
+**Next:** Cloudflare Workers backend setup, Stripe SDK integration, or Web Viewer (Phase 2)

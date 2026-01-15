@@ -188,6 +188,7 @@ export default function FeedScreen() {
     recordEntryPosted,
     sendMemoriesNotification,
     sendStorageWarningNotification,
+    sendPhotoBookBirthdayPrompt,
     settings,
   } = useNotifications();
   const {
@@ -213,6 +214,7 @@ export default function FeedScreen() {
   const [tagInput, setTagInput] = useState("");
   const hasShownDraftPrompt = useRef(false);
   const hasSentMemoriesNotification = useRef(false);
+  const hasSentBirthdayPrompt = useRef(false);
 
   // Send "On This Day" memories notification once per session (PRD Section 4.5)
   useEffect(() => {
@@ -225,6 +227,29 @@ export default function FeedScreen() {
       sendMemoriesNotification(onThisDayMemories.length);
     }
   }, [onThisDayMemories.length, settings.memories, sendMemoriesNotification]);
+
+  // Check for child's first birthday and prompt photo book creation (PRD Section 10.1)
+  useEffect(() => {
+    if (hasSentBirthdayPrompt.current || !child?.dateOfBirth) return;
+
+    const birthDate = new Date(child.dateOfBirth);
+    const today = new Date();
+
+    // Calculate first birthday date
+    const firstBirthday = new Date(birthDate);
+    firstBirthday.setFullYear(birthDate.getFullYear() + 1);
+
+    // Check if today is the first birthday
+    const isTodayFirstBirthday =
+      today.getFullYear() === firstBirthday.getFullYear() &&
+      today.getMonth() === firstBirthday.getMonth() &&
+      today.getDate() === firstBirthday.getDate();
+
+    if (isTodayFirstBirthday) {
+      hasSentBirthdayPrompt.current = true;
+      sendPhotoBookBirthdayPrompt(child.nickname || child.name);
+    }
+  }, [child, sendPhotoBookBirthdayPrompt]);
 
   // Show draft resume prompt when draft exists (PRD Section 3.5)
   useEffect(() => {

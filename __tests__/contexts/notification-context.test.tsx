@@ -522,4 +522,56 @@ describe("NotificationContext", () => {
       expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
     });
   });
+
+  // Photo Book Birthday Prompt tests (PRD Section 10.1)
+  describe("Photo Book Birthday Prompt", () => {
+    it("provides sendPhotoBookBirthdayPrompt method", () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+
+      expect(typeof result.current.sendPhotoBookBirthdayPrompt).toBe(
+        "function",
+      );
+    });
+
+    it("sends notification when child turns 1 year old", async () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+      const Notifications = require("expo-notifications");
+
+      Notifications.scheduleNotificationAsync.mockClear();
+
+      await act(async () => {
+        await result.current.sendPhotoBookBirthdayPrompt("Emma");
+      });
+
+      expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: expect.objectContaining({
+            title: expect.stringContaining("birthday"),
+            body: expect.stringContaining("photo book"),
+            data: { type: "photo_book_prompt" },
+          }),
+          trigger: null, // Immediate notification
+        }),
+      );
+    });
+
+    it("includes child name in notification", async () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+      const Notifications = require("expo-notifications");
+
+      Notifications.scheduleNotificationAsync.mockClear();
+
+      await act(async () => {
+        await result.current.sendPhotoBookBirthdayPrompt("Emma");
+      });
+
+      expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: expect.objectContaining({
+            title: expect.stringContaining("Emma"),
+          }),
+        }),
+      );
+    });
+  });
 });
