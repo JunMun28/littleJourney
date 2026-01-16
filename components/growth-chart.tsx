@@ -105,6 +105,50 @@ const SG_WEIGHT_GIRLS: PercentileData[] = [
   { age: 24, p3: 8.8, p15: 10.0, p50: 11.2, p85: 12.7, p97: 14.4 },
 ];
 
+// WHO Head Circumference for Boys 0-24 months (cm)
+const WHO_HEAD_BOYS: PercentileData[] = [
+  { age: 0, p3: 32.1, p15: 33.1, p50: 34.5, p85: 35.8, p97: 36.9 },
+  { age: 3, p3: 38.3, p15: 39.3, p50: 40.5, p85: 41.7, p97: 42.7 },
+  { age: 6, p3: 41.2, p15: 42.2, p50: 43.3, p85: 44.6, p97: 45.6 },
+  { age: 9, p3: 43.0, p15: 44.0, p50: 45.2, p85: 46.4, p97: 47.4 },
+  { age: 12, p3: 44.3, p15: 45.3, p50: 46.5, p85: 47.7, p97: 48.6 },
+  { age: 18, p3: 45.8, p15: 46.8, p50: 48.0, p85: 49.2, p97: 50.2 },
+  { age: 24, p3: 46.9, p15: 47.9, p50: 49.0, p85: 50.2, p97: 51.2 },
+];
+
+// WHO Head Circumference for Girls 0-24 months (cm)
+const WHO_HEAD_GIRLS: PercentileData[] = [
+  { age: 0, p3: 31.5, p15: 32.4, p50: 33.9, p85: 35.1, p97: 36.0 },
+  { age: 3, p3: 37.4, p15: 38.3, p50: 39.5, p85: 40.7, p97: 41.7 },
+  { age: 6, p3: 40.3, p15: 41.2, p50: 42.4, p85: 43.5, p97: 44.4 },
+  { age: 9, p3: 42.0, p15: 42.9, p50: 44.0, p85: 45.2, p97: 46.1 },
+  { age: 12, p3: 43.2, p15: 44.1, p50: 45.4, p85: 46.5, p97: 47.5 },
+  { age: 18, p3: 44.7, p15: 45.6, p50: 46.8, p85: 48.0, p97: 49.0 },
+  { age: 24, p3: 45.8, p15: 46.7, p50: 47.8, p85: 49.0, p97: 50.0 },
+];
+
+// Singapore Head Circumference for Boys 0-24 months (cm)
+const SG_HEAD_BOYS: PercentileData[] = [
+  { age: 0, p3: 31.9, p15: 32.9, p50: 34.3, p85: 35.6, p97: 36.7 },
+  { age: 3, p3: 38.0, p15: 39.0, p50: 40.2, p85: 41.4, p97: 42.4 },
+  { age: 6, p3: 40.9, p15: 41.9, p50: 43.0, p85: 44.3, p97: 45.3 },
+  { age: 9, p3: 42.7, p15: 43.7, p50: 44.9, p85: 46.1, p97: 47.1 },
+  { age: 12, p3: 44.0, p15: 45.0, p50: 46.2, p85: 47.4, p97: 48.3 },
+  { age: 18, p3: 45.5, p15: 46.5, p50: 47.7, p85: 48.9, p97: 49.9 },
+  { age: 24, p3: 46.6, p15: 47.6, p50: 48.7, p85: 49.9, p97: 50.9 },
+];
+
+// Singapore Head Circumference for Girls 0-24 months (cm)
+const SG_HEAD_GIRLS: PercentileData[] = [
+  { age: 0, p3: 31.3, p15: 32.2, p50: 33.7, p85: 34.9, p97: 35.8 },
+  { age: 3, p3: 37.1, p15: 38.0, p50: 39.2, p85: 40.4, p97: 41.4 },
+  { age: 6, p3: 40.0, p15: 40.9, p50: 42.1, p85: 43.2, p97: 44.1 },
+  { age: 9, p3: 41.7, p15: 42.6, p50: 43.7, p85: 44.9, p97: 45.8 },
+  { age: 12, p3: 42.9, p15: 43.8, p50: 45.1, p85: 46.2, p97: 47.2 },
+  { age: 18, p3: 44.4, p15: 45.3, p50: 46.5, p85: 47.7, p97: 48.7 },
+  { age: 24, p3: 45.5, p15: 46.4, p50: 47.5, p85: 48.7, p97: 49.7 },
+];
+
 const CHART_COLORS = {
   p3: "#FFCDD2", // Light red
   p15: "#FFE0B2", // Light orange
@@ -179,6 +223,13 @@ export function GrowthChart({
       }
       return childSex === "male" ? WHO_HEIGHT_BOYS : WHO_HEIGHT_GIRLS;
     }
+    if (measurementType === "head_circumference") {
+      if (useSingapore) {
+        return childSex === "male" ? SG_HEAD_BOYS : SG_HEAD_GIRLS;
+      }
+      return childSex === "male" ? WHO_HEAD_BOYS : WHO_HEAD_GIRLS;
+    }
+    // Default: weight
     if (useSingapore) {
       return childSex === "male" ? SG_WEIGHT_BOYS : SG_WEIGHT_GIRLS;
     }
@@ -248,7 +299,7 @@ export function GrowthChart({
     ? getPercentileRange(latestMeasurement.value, referenceData, latestMeasurement.ageMonths)
     : null;
 
-  const unit = measurementType === "height" ? "cm" : "kg";
+  const unit = measurementType === "weight" ? "kg" : "cm";
 
   // Empty state
   if (filteredMeasurements.length === 0) {
@@ -419,7 +470,7 @@ export function GrowthChart({
           Age (months)
         </Text>
         <Text style={[styles.yAxisLabel, { color: colors.textSecondary }]}>
-          {measurementType === "height" ? "Height (cm)" : "Weight (kg)"}
+          {measurementType === "height" ? "Height (cm)" : measurementType === "weight" ? "Weight (kg)" : "Head (cm)"}
         </Text>
       </View>
 

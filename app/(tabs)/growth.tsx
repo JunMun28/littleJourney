@@ -32,7 +32,7 @@ import {
 
 type ModalState = "closed" | "selectType" | "addHeight" | "addWeight" | "addHead";
 type ViewMode = "list" | "chart";
-type ChartType = "height" | "weight";
+type ChartType = "height" | "weight" | "head";
 
 // Calculate age in months from birthdate to measurement date
 function calculateAgeInMonths(birthDate: string, measurementDate: string): number {
@@ -102,6 +102,10 @@ export default function GrowthScreen() {
     return measurements.filter((m) => m.type === "weight");
   }, [measurements]);
 
+  const headMeasurements = useMemo(() => {
+    return measurements.filter((m) => m.type === "head_circumference");
+  }, [measurements]);
+
   const hasMeasurements = measurements.length > 0;
 
   const handleOpenTypeSelector = () => {
@@ -116,6 +120,10 @@ export default function GrowthScreen() {
 
   const handleSelectWeight = () => {
     setModalState("addWeight");
+  };
+
+  const handleSelectHead = () => {
+    setModalState("addHead");
   };
 
   const handleSaveHeight = () => {
@@ -143,6 +151,23 @@ export default function GrowthScreen() {
 
     addMeasurement({
       type: "weight",
+      value,
+      date: measurementDate.toISOString().split("T")[0],
+      childId: child.id,
+    });
+
+    setModalState("closed");
+    setMeasurementValue("");
+  };
+
+  const handleSaveHead = () => {
+    if (!child?.id || !measurementValue.trim()) return;
+
+    const value = parseFloat(measurementValue);
+    if (isNaN(value) || value <= 0) return;
+
+    addMeasurement({
+      type: "head_circumference",
       value,
       date: measurementDate.toISOString().split("T")[0],
       childId: child.id,
@@ -304,6 +329,22 @@ export default function GrowthScreen() {
           Weight
         </Text>
       </Pressable>
+      <Pressable
+        style={[
+          styles.chartTypeButton,
+          chartType === "head" && styles.chartTypeButtonActive,
+        ]}
+        onPress={() => setChartType("head")}
+      >
+        <Text
+          style={[
+            styles.chartTypeButtonText,
+            { color: chartType === "head" ? PRIMARY_COLOR : colors.textSecondary },
+          ]}
+        >
+          Head
+        </Text>
+      </Pressable>
     </View>
   );
 
@@ -353,6 +394,9 @@ export default function GrowthScreen() {
     </View>
   );
 
+  // Map chart type to measurement type
+  const chartMeasurementType: MeasurementType = chartType === "head" ? "head_circumference" : chartType;
+
   const renderChartView = () => (
     <ScrollView style={styles.scrollView}>
       {renderChartTypeSelector()}
@@ -362,7 +406,7 @@ export default function GrowthScreen() {
           measurements={measurements}
           childBirthDate={child.dateOfBirth}
           childSex={child.sex}
-          measurementType={chartType}
+          measurementType={chartMeasurementType}
           standard={preferredStandard}
         />
       )}
@@ -392,6 +436,14 @@ export default function GrowthScreen() {
             Weight ({weightMeasurements.length})
           </Text>
           {weightMeasurements.map(renderMeasurementCard)}
+        </View>
+      )}
+      {headMeasurements.length > 0 && (
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
+            Head Circumference ({headMeasurements.length})
+          </Text>
+          {headMeasurements.map(renderMeasurementCard)}
         </View>
       )}
     </ScrollView>
@@ -439,6 +491,13 @@ export default function GrowthScreen() {
             >
               <Text style={[styles.typeOptionIcon]}>⚖️</Text>
               <Text style={[styles.typeOptionText, { color: colors.text }]}>Weight</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.typeOption, { borderColor: colors.border }]}
+              onPress={handleSelectHead}
+            >
+              <Text style={[styles.typeOptionIcon]}>📐</Text>
+              <Text style={[styles.typeOptionText, { color: colors.text }]}>Head Circumference</Text>
             </Pressable>
             <Pressable
               style={styles.typeModalCancel}
@@ -596,6 +655,82 @@ export default function GrowthScreen() {
                 !isValidValue && styles.submitButtonDisabled,
               ]}
               onPress={handleSaveWeight}
+              disabled={!isValidValue}
+            >
+              <Text style={styles.submitButtonText}>Save</Text>
+            </Pressable>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Add Head Circumference Modal */}
+      <Modal visible={modalState === "addHead"} animationType="slide">
+        <KeyboardAvoidingView
+          style={[styles.fullModal, { backgroundColor: colors.background }]}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <View
+            style={[
+              styles.fullModalHeader,
+              { borderBottomColor: colors.border },
+            ]}
+          >
+            <Pressable onPress={() => setModalState("closed")}>
+              <Text style={styles.backButton}>Cancel</Text>
+            </Pressable>
+            <ThemedText type="subtitle">Add Head Circumference</ThemedText>
+            <View style={{ width: 60 }} />
+          </View>
+
+          <ScrollView style={styles.formContainer}>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Head Circumference *
+            </Text>
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  borderColor: colors.inputBorder,
+                  backgroundColor: colors.background,
+                  color: colors.text,
+                },
+              ]}
+              value={measurementValue}
+              onChangeText={setMeasurementValue}
+              placeholder="Head circumference in cm"
+              placeholderTextColor={colors.placeholder}
+              keyboardType="decimal-pad"
+              autoFocus
+            />
+
+            <Text style={[styles.label, { color: colors.text }]}>Date</Text>
+            <Pressable
+              style={[styles.dateButton, { borderColor: colors.inputBorder }]}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Text style={[styles.dateButtonText, { color: colors.text }]}>
+                {measurementDate.toLocaleDateString("en-SG")}
+              </Text>
+            </Pressable>
+            {showDatePicker && (
+              <DateTimePicker
+                value={measurementDate}
+                mode="date"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                maximumDate={new Date()}
+                onChange={(_, date) => {
+                  setShowDatePicker(Platform.OS === "ios");
+                  if (date) setMeasurementDate(date);
+                }}
+              />
+            )}
+
+            <Pressable
+              style={[
+                styles.submitButton,
+                !isValidValue && styles.submitButtonDisabled,
+              ]}
+              onPress={handleSaveHead}
               disabled={!isValidValue}
             >
               <Text style={styles.submitButtonText}>Save</Text>

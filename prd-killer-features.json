@@ -581,7 +581,7 @@
         "Include in export report"
       ],
       "acceptanceCriteria": "Track head circumference for infant development",
-      "passes": false
+      "passes": true
     },
     {
       "id": "GROWTH-008",
