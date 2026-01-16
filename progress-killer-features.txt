@@ -1,0 +1,40 @@
+# Little Journey - Killer Features Progress
+
+## Current Session: 2026-01-16
+
+### Task Selection
+Selected: CAPSULE-001 (Create time capsule letter)
+Priority: 1 (Architectural decisions and core abstractions)
+Reasoning: Time Capsule is completely unimplemented. Requires new context, data model, and sealed/unlock pattern that other CAPSULE features will build upon.
+
+### Implementation Complete
+
+**Task:** CAPSULE-001 core architecture
+**PRD Ref:** Time Capsule - CAPSULE-001 through CAPSULE-007
+
+**Key Decisions:**
+- Types defined in context file (follows existing pattern)
+- CapsuleStatus: sealed | unlocked | opened_early
+- UnlockType: age | custom_date
+- Preset ages: 5, 10, 18, 21 (per PRD)
+- Capsules sealed immediately on creation (CAPSULE-004)
+- forceUnlock marks as "opened_early" (CAPSULE-007)
+
+**Files Changed:**
+- NEW: contexts/time-capsule-context.tsx (125 lines)
+- NEW: __tests__/contexts/time-capsule-context.test.tsx (7 tests)
+- NEW: progress-killer-features.txt
+
+**Verification:**
+- tsc --noEmit: PASS
+- npm run lint: PASS
+- npm test (time-capsule): 7/7 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- Context foundation complete. UI screens needed for full CAPSULE-001 pass.
+- Pre-existing flaky test (entry-detail.test.tsx timeout) unrelated to changes.
+- API service deferred - follows same pattern as other contexts.
+
+---
+
