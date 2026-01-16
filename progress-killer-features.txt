@@ -112,3 +112,37 @@ Reasoning: Entry context has getOnThisDayEntries() but no dedicated memory conte
 
 ---
 
+### Task Selection
+Selected: Provider Integration (architectural prerequisite)
+Priority: 1 (Architectural decisions and core abstractions)
+Reasoning: 3 killer feature contexts exist but NOT integrated into app/_layout.tsx. Without provider integration, contexts can't be used in screens. Also missing core providers (EntryProvider, ChildProvider, FamilyProvider, MilestoneProvider) required by killer features.
+
+### Implementation Complete
+
+**Task:** Integrate killer feature providers into root layout
+**PRD Ref:** Enables OTD-001-007, GROWTH-001-008, CAPSULE-001-008
+
+**Key Decisions:**
+- Added 7 missing providers to app/_layout.tsx provider tree
+- Core providers: ChildProvider, EntryProvider, FamilyProvider, MilestoneProvider
+- Killer feature providers: GrowthTrackingProvider, TimeCapsuleProvider, OnThisDayProvider
+- Provider order based on dependencies (OnThisDayProvider needs EntryProvider)
+- Placed after ViewerProvider, before ExportProvider/PhotoBookProvider
+
+**Files Changed:**
+- MODIFIED: app/_layout.tsx (+7 providers, 7 imports)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- tsc --noEmit: PASS
+- npm run lint: PASS
+- npm test: 686/687 PASS (1 pre-existing flaky test)
+- npx expo export --platform web: PASS
+
+**Notes:**
+- Provider tree now complete. Killer feature contexts accessible app-wide.
+- Next: UI screens for On This Day, Growth Tracking, Time Capsule.
+- Pre-existing flaky test (entry-detail.test.tsx timeout) unrelated.
+
+---
+
