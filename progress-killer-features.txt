@@ -38,3 +38,40 @@ Reasoning: Time Capsule is completely unimplemented. Requires new context, data 
 
 ---
 
+### Task Selection
+Selected: GROWTH-001 (Record height measurement) - context/architecture
+Priority: 1 (Architectural decisions and core abstractions)
+Reasoning: Growth Tracking has no context. Foundation needed for GROWTH-001 through GROWTH-008. Includes WHO percentile data, measurement types, and calculation logic.
+
+### Implementation Complete
+
+**Task:** GROWTH-001 through GROWTH-008 core architecture
+**PRD Ref:** Growth Tracking - GROWTH-001 through GROWTH-008
+
+**Key Decisions:**
+- MeasurementType: height | weight | head_circumference
+- PercentileStandard: who | singapore (placeholder for SG data)
+- WHO percentile data for boys/girls 0-24 months (p3, p15, p50, p85, p97)
+- Measurements sorted by date descending (latest first)
+- Percentile ranges: below 3rd/above 97th marked as outside normal range
+- Singapore standards option added per GROWTH-004 (data TBD from HPB)
+
+**Files Changed:**
+- NEW: contexts/growth-tracking-context.tsx (280 lines)
+- NEW: __tests__/contexts/growth-tracking-context.test.tsx (13 tests)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- tsc --noEmit: PASS
+- npm run lint: PASS
+- npm test (growth-tracking): 13/13 PASS
+- npm test (all): 678/679 PASS (1 pre-existing flaky test)
+- npx expo export --platform web: PASS
+
+**Notes:**
+- Context foundation complete. UI screens needed for full GROWTH-001 pass.
+- WHO reference data simplified to key ages (0, 3, 6, 9, 12, 18, 24 months)
+- Singapore HealthHub integration (GROWTH-004, SGLOCAL-004) requires official HPB data
+
+---
+
