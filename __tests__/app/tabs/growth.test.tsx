@@ -109,8 +109,8 @@ describe("GrowthScreen", () => {
     expect(screen.getByText("Add Measurement")).toBeTruthy();
   });
 
-  // GROWTH-001: Tap 'Add Measurement'
-  it("opens add measurement modal when tapping Add Measurement button", async () => {
+  // GROWTH-001: Tap 'Add Measurement' - shows type selector
+  it("opens type selector when tapping Add Measurement button", async () => {
     render(
       <TestWrapper>
         <GrowthScreen />
@@ -122,6 +122,32 @@ describe("GrowthScreen", () => {
     });
 
     fireEvent.press(screen.getByText("Add Measurement"));
+
+    await waitFor(() => {
+      expect(screen.getByText("Height")).toBeTruthy();
+      expect(screen.getByText("Weight")).toBeTruthy();
+    });
+  });
+
+  // GROWTH-001: Select height opens Add Height modal
+  it("opens Add Height modal when selecting Height from type selector", async () => {
+    render(
+      <TestWrapper>
+        <GrowthScreen />
+      </TestWrapper>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Add Measurement")).toBeTruthy();
+    });
+
+    fireEvent.press(screen.getByText("Add Measurement"));
+
+    await waitFor(() => {
+      expect(screen.getByText("Height")).toBeTruthy();
+    });
+
+    fireEvent.press(screen.getByText("Height"));
 
     await waitFor(() => {
       expect(screen.getByText("Add Height")).toBeTruthy();
@@ -141,6 +167,12 @@ describe("GrowthScreen", () => {
     });
 
     fireEvent.press(screen.getByText("Add Measurement"));
+
+    await waitFor(() => {
+      expect(screen.getByText("Height")).toBeTruthy();
+    });
+
+    fireEvent.press(screen.getByText("Height"));
 
     await waitFor(() => {
       expect(screen.getByPlaceholderText("Height in cm")).toBeTruthy();
@@ -164,6 +196,12 @@ describe("GrowthScreen", () => {
     });
 
     fireEvent.press(screen.getByText("Add Measurement"));
+
+    await waitFor(() => {
+      expect(screen.getByText("Height")).toBeTruthy();
+    });
+
+    fireEvent.press(screen.getByText("Height"));
 
     await waitFor(() => {
       expect(screen.getByText("Date")).toBeTruthy();
@@ -190,8 +228,15 @@ describe("GrowthScreen", () => {
       expect(screen.getByText("Add Measurement")).toBeTruthy();
     });
 
-    // Open modal
+    // Open type selector
     fireEvent.press(screen.getByText("Add Measurement"));
+
+    await waitFor(() => {
+      expect(screen.getByText("Height")).toBeTruthy();
+    });
+
+    // Select height
+    fireEvent.press(screen.getByText("Height"));
 
     await waitFor(() => {
       expect(screen.getByPlaceholderText("Height in cm")).toBeTruthy();
@@ -224,6 +269,10 @@ describe("GrowthScreen", () => {
 
     fireEvent.press(screen.getByText("Add Measurement"));
     await waitFor(() => {
+      expect(screen.getByText("Height")).toBeTruthy();
+    });
+    fireEvent.press(screen.getByText("Height"));
+    await waitFor(() => {
       expect(screen.getByPlaceholderText("Height in cm")).toBeTruthy();
     });
     fireEvent.changeText(screen.getByPlaceholderText("Height in cm"), "75.5");
@@ -237,6 +286,15 @@ describe("GrowthScreen", () => {
     // Add second measurement via FAB
     fireEvent.press(screen.getByTestId("add-measurement-fab"));
 
+    // Type selector now has "Add Measurement" title
+    await waitFor(() => {
+      // Use getAllByText since "Height" appears in list header and modal
+      const heightButtons = screen.getAllByText("Height");
+      expect(heightButtons.length).toBeGreaterThan(0);
+    });
+    // Get the Height option from type selector (should be last occurrence)
+    const heightButtons = screen.getAllByText("Height");
+    fireEvent.press(heightButtons[heightButtons.length - 1]);
     await waitFor(() => {
       expect(screen.getByPlaceholderText("Height in cm")).toBeTruthy();
     });
@@ -264,6 +322,12 @@ describe("GrowthScreen", () => {
     fireEvent.press(screen.getByText("Add Measurement"));
 
     await waitFor(() => {
+      expect(screen.getByText("Height")).toBeTruthy();
+    });
+
+    fireEvent.press(screen.getByText("Height"));
+
+    await waitFor(() => {
       expect(screen.getByText("Save")).toBeTruthy();
     });
 
@@ -288,6 +352,10 @@ describe("GrowthScreen", () => {
     // Add first measurement
     fireEvent.press(screen.getByText("Add Measurement"));
     await waitFor(() => {
+      expect(screen.getByText("Height")).toBeTruthy();
+    });
+    fireEvent.press(screen.getByText("Height"));
+    await waitFor(() => {
       expect(screen.getByPlaceholderText("Height in cm")).toBeTruthy();
     });
     fireEvent.changeText(screen.getByPlaceholderText("Height in cm"), "75.5");
@@ -297,7 +365,145 @@ describe("GrowthScreen", () => {
       expect(screen.getByText(/75\.5 cm/)).toBeTruthy();
     });
 
-    // Measurements should be displayed
-    expect(screen.getByText("Height")).toBeTruthy();
+    // Measurements should be displayed with section header
+    expect(screen.getByText(/Height \(1\)/)).toBeTruthy();
+  });
+
+  // GROWTH-002: Record weight measurement tests
+  describe("GROWTH-002: Weight Measurement", () => {
+    // GROWTH-002: Navigate to add weight
+    it("shows weight tab option", async () => {
+      render(
+        <TestWrapper>
+          <GrowthScreen />
+        </TestWrapper>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("Add Measurement")).toBeTruthy();
+      });
+
+      // Press the add measurement button to see type options
+      fireEvent.press(screen.getByText("Add Measurement"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Weight")).toBeTruthy();
+      });
+    });
+
+    // GROWTH-002: Open weight modal
+    it("opens add weight modal when selecting weight type", async () => {
+      render(
+        <TestWrapper>
+          <GrowthScreen />
+        </TestWrapper>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("Add Measurement")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Add Measurement"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Weight")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Weight"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Add Weight")).toBeTruthy();
+      });
+    });
+
+    // GROWTH-002: Enter weight in kg
+    it("allows entering weight value in kg", async () => {
+      render(
+        <TestWrapper>
+          <GrowthScreen />
+        </TestWrapper>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("Add Measurement")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Add Measurement"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Weight")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Weight"));
+
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText("Weight in kg")).toBeTruthy();
+      });
+
+      fireEvent.changeText(screen.getByPlaceholderText("Weight in kg"), "8.5");
+
+      expect(screen.getByDisplayValue("8.5")).toBeTruthy();
+    });
+
+    // GROWTH-002: Save weight and verify in list
+    it("saves weight measurement and displays in list", async () => {
+      render(
+        <TestWrapper>
+          <GrowthScreen />
+        </TestWrapper>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("Add Measurement")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Add Measurement"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Weight")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Weight"));
+
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText("Weight in kg")).toBeTruthy();
+      });
+
+      fireEvent.changeText(screen.getByPlaceholderText("Weight in kg"), "8.5");
+      fireEvent.press(screen.getByText("Save"));
+
+      await waitFor(() => {
+        expect(screen.getByText(/8\.5 kg/)).toBeTruthy();
+      });
+    });
+
+    // GROWTH-002: Weight section shows in measurements list
+    it("displays weight section with count", async () => {
+      render(
+        <TestWrapper>
+          <GrowthScreen />
+        </TestWrapper>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("Add Measurement")).toBeTruthy();
+      });
+
+      // Add weight
+      fireEvent.press(screen.getByText("Add Measurement"));
+      await waitFor(() => {
+        expect(screen.getByText("Weight")).toBeTruthy();
+      });
+      fireEvent.press(screen.getByText("Weight"));
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText("Weight in kg")).toBeTruthy();
+      });
+      fireEvent.changeText(screen.getByPlaceholderText("Weight in kg"), "8.5");
+      fireEvent.press(screen.getByText("Save"));
+
+      await waitFor(() => {
+        expect(screen.getByText(/Weight \(1\)/)).toBeTruthy();
+      });
+    });
   });
 });

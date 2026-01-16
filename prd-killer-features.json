@@ -512,7 +512,7 @@
         "Verify appears in growth chart"
       ],
       "acceptanceCriteria": "Parents can log weight measurements with dates",
-      "passes": false
+      "passes": true
     },
     {
       "id": "GROWTH-003",
