@@ -1,0 +1,1016 @@
+{
+  "project": "Little Journey - Killer Features",
+  "version": "1.0",
+  "platform": "Expo (iOS + Android) + Web Viewer",
+  "lastUpdated": "2025-01-16",
+  "totalItems": 72,
+  "categories": [
+    "Photo Book Export",
+    "Time Capsule",
+    "AI Milestone Detection",
+    "On This Day Memories",
+    "Growth Tracking",
+    "Voice Journal",
+    "Year in Review",
+    "Family Digest",
+    "Photo Enhancement",
+    "Singapore Local",
+    "Gamification",
+    "Community"
+  ],
+  "items": [
+    {
+      "id": "BOOK-001",
+      "category": "Photo Book Export",
+      "description": "Monthly photo book auto-curation by AI",
+      "stepsToVerify": [
+        "Enable monthly book subscription in Settings",
+        "Wait for month-end or trigger manually",
+        "Verify AI selects top 20 photos from month",
+        "Verify selection considers variety (not all same day)",
+        "Verify milestone entries are prioritized",
+        "Verify photos with captions ranked higher",
+        "Review AI selection in preview screen"
+      ],
+      "acceptanceCriteria": "AI automatically curates best 20 photos each month with smart selection algorithm",
+      "passes": false
+    },
+    {
+      "id": "BOOK-002",
+      "category": "Photo Book Export",
+      "description": "Edit AI-curated book selection",
+      "stepsToVerify": [
+        "Open monthly book preview",
+        "Remove photo from selection",
+        "Add different photo from gallery",
+        "Reorder photos via drag-and-drop",
+        "Verify changes saved",
+        "Verify can reset to AI suggestion"
+      ],
+      "acceptanceCriteria": "Parents can modify AI selection before finalizing book",
+      "passes": false
+    },
+    {
+      "id": "BOOK-003",
+      "category": "Photo Book Export",
+      "description": "Book layout templates",
+      "stepsToVerify": [
+        "Open book customization",
+        "View available layout templates (Classic, Modern, Playful)",
+        "Select different template",
+        "Verify preview updates with new layout",
+        "Verify photos reflow appropriately"
+      ],
+      "acceptanceCriteria": "Multiple book layout templates available for selection",
+      "passes": false
+    },
+    {
+      "id": "BOOK-004",
+      "category": "Photo Book Export",
+      "description": "Book cover customization",
+      "stepsToVerify": [
+        "Open book cover editor",
+        "Select cover photo from entries",
+        "Edit title text",
+        "Select cover color theme",
+        "Add child's name and date range",
+        "Preview final cover"
+      ],
+      "acceptanceCriteria": "Parents can customize book cover with photo, title, and theme",
+      "passes": false
+    },
+    {
+      "id": "BOOK-005",
+      "category": "Photo Book Export",
+      "description": "Print-on-demand integration",
+      "stepsToVerify": [
+        "Finalize book layout",
+        "Tap 'Order Print'",
+        "Verify redirects to print partner checkout",
+        "Select book size (A5, A4, Square)",
+        "Select paper type (Matte, Glossy)",
+        "Enter shipping address",
+        "Complete payment",
+        "Verify order confirmation received"
+      ],
+      "acceptanceCriteria": "Users can order physical printed books via integrated print partner",
+      "passes": false
+    },
+    {
+      "id": "BOOK-006",
+      "category": "Photo Book Export",
+      "description": "Monthly book subscription",
+      "stepsToVerify": [
+        "Navigate to subscription settings",
+        "Enable monthly book auto-ship",
+        "Set shipping address",
+        "Set payment method",
+        "Verify monthly reminder before shipping",
+        "Verify can pause/cancel subscription"
+      ],
+      "acceptanceCriteria": "Subscribe & Ship delivers monthly mini-books automatically",
+      "passes": false
+    },
+    {
+      "id": "BOOK-007",
+      "category": "Photo Book Export",
+      "description": "Book pricing tiers",
+      "stepsToVerify": [
+        "View book pricing page",
+        "Verify 20-page mini book price (SGD 15-20)",
+        "Verify 40-page standard book price (SGD 25-35)",
+        "Verify 80-page premium book price (SGD 45-60)",
+        "Verify subscription discount shown (20% off)"
+      ],
+      "acceptanceCriteria": "Clear pricing tiers with subscription discount",
+      "passes": false
+    },
+    {
+      "id": "BOOK-008",
+      "category": "Photo Book Export",
+      "description": "Book order tracking",
+      "stepsToVerify": [
+        "Place book order",
+        "Navigate to order history",
+        "Verify order status shown (Processing, Printing, Shipped)",
+        "Verify tracking number available when shipped",
+        "Tap tracking to view delivery status"
+      ],
+      "acceptanceCriteria": "Users can track book orders from order to delivery",
+      "passes": false
+    },
+    {
+      "id": "BOOK-009",
+      "category": "Photo Book Export",
+      "description": "Gift book to family member",
+      "stepsToVerify": [
+        "Create book",
+        "Select 'Send as Gift' option",
+        "Enter recipient address",
+        "Add gift message",
+        "Complete order",
+        "Verify gift notification sent to recipient email"
+      ],
+      "acceptanceCriteria": "Parents can send printed books as gifts to grandparents",
+      "passes": false
+    },
+    {
+      "id": "CAPSULE-001",
+      "category": "Time Capsule",
+      "description": "Create time capsule letter",
+      "stepsToVerify": [
+        "Navigate to Time Capsule section",
+        "Tap 'Write New Letter'",
+        "Enter letter content",
+        "Attach photos from entries",
+        "Select unlock date/age (5, 10, 18, 21, or custom)",
+        "Save time capsule",
+        "Verify capsule appears in sealed list"
+      ],
+      "acceptanceCriteria": "Parents can write letters to their child for future delivery",
+      "passes": false
+    },
+    {
+      "id": "CAPSULE-002",
+      "category": "Time Capsule",
+      "description": "Voice recording in time capsule",
+      "stepsToVerify": [
+        "Create new time capsule",
+        "Tap 'Add Voice Message'",
+        "Record voice message (up to 5 minutes)",
+        "Preview recording",
+        "Re-record if needed",
+        "Save with capsule"
+      ],
+      "acceptanceCriteria": "Time capsules can include voice recordings from parents",
+      "passes": false
+    },
+    {
+      "id": "CAPSULE-003",
+      "category": "Time Capsule",
+      "description": "Video message in time capsule",
+      "stepsToVerify": [
+        "Create new time capsule",
+        "Tap 'Add Video Message'",
+        "Record or select video (up to 2 minutes)",
+        "Preview video",
+        "Save with capsule"
+      ],
+      "acceptanceCriteria": "Time capsules can include video messages",
+      "passes": false
+    },
+    {
+      "id": "CAPSULE-004",
+      "category": "Time Capsule",
+      "description": "Time capsule sealed state",
+      "stepsToVerify": [
+        "Create and save time capsule",
+        "View in capsule list",
+        "Verify shows sealed icon with unlock date",
+        "Tap to view",
+        "Verify content is hidden/blurred",
+        "Verify cannot edit after sealing"
+      ],
+      "acceptanceCriteria": "Sealed capsules show countdown but hide content until unlock date",
+      "passes": false
+    },
+    {
+      "id": "CAPSULE-005",
+      "category": "Time Capsule",
+      "description": "Time capsule delivery notification",
+      "stepsToVerify": [
+        "Set capsule unlock date",
+        "Wait for unlock date (or simulate)",
+        "Verify push notification sent",
+        "Verify email sent to parent",
+        "Open app and view unlocked capsule"
+      ],
+      "acceptanceCriteria": "Parents notified when time capsule unlocks",
+      "passes": false
+    },
+    {
+      "id": "CAPSULE-006",
+      "category": "Time Capsule",
+      "description": "Child access to time capsules",
+      "stepsToVerify": [
+        "Set up child access (when older)",
+        "Child logs in with own credentials",
+        "Verify only unlocked capsules visible",
+        "Verify can view letter, photos, voice, video",
+        "Verify sealed capsules show countdown only"
+      ],
+      "acceptanceCriteria": "Children can access their unlocked time capsules",
+      "passes": false
+    },
+    {
+      "id": "CAPSULE-007",
+      "category": "Time Capsule",
+      "description": "Emergency capsule unlock",
+      "stepsToVerify": [
+        "Request early unlock as parent",
+        "Verify confirmation warning appears",
+        "Confirm unlock",
+        "Verify capsule unlocks immediately",
+        "Verify marked as 'Opened early'"
+      ],
+      "acceptanceCriteria": "Parents can force-unlock capsules with clear warning",
+      "passes": false
+    },
+    {
+      "id": "CAPSULE-008",
+      "category": "Time Capsule",
+      "description": "Time capsule templates",
+      "stepsToVerify": [
+        "Create new time capsule",
+        "View template suggestions",
+        "Select 'Letter to 18-year-old' template",
+        "Verify pre-filled prompts appear",
+        "Edit prompts with personal content"
+      ],
+      "acceptanceCriteria": "Writing prompts help parents create meaningful letters",
+      "passes": false
+    },
+    {
+      "id": "AIDETECT-001",
+      "category": "AI Milestone Detection",
+      "description": "Auto-detect milestones from photos",
+      "stepsToVerify": [
+        "Upload photo of baby's first steps",
+        "Wait for AI processing (background)",
+        "Verify milestone suggestion appears",
+        "Verify suggests 'First Steps' milestone",
+        "Accept or dismiss suggestion"
+      ],
+      "acceptanceCriteria": "AI automatically suggests milestones based on photo content",
+      "passes": false
+    },
+    {
+      "id": "AIDETECT-002",
+      "category": "AI Milestone Detection",
+      "description": "Milestone detection accuracy",
+      "stepsToVerify": [
+        "Upload photo of baby eating solid food",
+        "Verify suggests 'First Solid Food'",
+        "Upload photo of baby with cake",
+        "Verify suggests 'First Birthday'",
+        "Upload photo at swimming pool",
+        "Verify suggests 'First Swim'"
+      ],
+      "acceptanceCriteria": "AI correctly identifies common milestone events",
+      "passes": false
+    },
+    {
+      "id": "AIDETECT-003",
+      "category": "AI Milestone Detection",
+      "description": "Accept AI milestone suggestion",
+      "stepsToVerify": [
+        "View AI milestone suggestion on entry",
+        "Tap 'Accept' on suggestion",
+        "Verify milestone tag added to entry",
+        "Verify entry appears in Milestones tab",
+        "Verify milestone marked as completed"
+      ],
+      "acceptanceCriteria": "Accepting suggestion links entry to milestone",
+      "passes": false
+    },
+    {
+      "id": "AIDETECT-004",
+      "category": "AI Milestone Detection",
+      "description": "Dismiss AI milestone suggestion",
+      "stepsToVerify": [
+        "View AI milestone suggestion",
+        "Tap 'Dismiss'",
+        "Verify suggestion removed",
+        "Verify entry not linked to milestone",
+        "Create new entry with similar content",
+        "Verify AI learns and adjusts suggestions"
+      ],
+      "acceptanceCriteria": "Users can dismiss incorrect suggestions; AI improves over time",
+      "passes": false
+    },
+    {
+      "id": "AIDETECT-005",
+      "category": "AI Milestone Detection",
+      "description": "Smart photo tagging",
+      "stepsToVerify": [
+        "Upload photo without caption",
+        "Wait for AI processing",
+        "View entry details",
+        "Verify auto-generated tags (e.g., 'outdoors', 'smiling', 'with grandma')",
+        "Verify tags are searchable"
+      ],
+      "acceptanceCriteria": "AI auto-generates descriptive tags for photos",
+      "passes": false
+    },
+    {
+      "id": "AIDETECT-006",
+      "category": "AI Milestone Detection",
+      "description": "Development timeline visualization",
+      "stepsToVerify": [
+        "Navigate to child's Development tab",
+        "View visual timeline of milestones",
+        "Verify milestones plotted on age axis",
+        "Verify AI-detected and manual milestones shown",
+        "Tap milestone to view linked entry"
+      ],
+      "acceptanceCriteria": "Visual timeline shows all milestones with photos",
+      "passes": false
+    },
+    {
+      "id": "AIDETECT-007",
+      "category": "AI Milestone Detection",
+      "description": "Milestone comparison to typical ranges",
+      "stepsToVerify": [
+        "Complete 'First Steps' milestone at 11 months",
+        "View milestone details",
+        "Verify shows typical range (9-15 months)",
+        "Verify indicates child is within normal range",
+        "Verify disclaimer about individual variation"
+      ],
+      "acceptanceCriteria": "Milestones show comparison to typical developmental ranges",
+      "passes": false
+    },
+    {
+      "id": "AIDETECT-008",
+      "category": "AI Milestone Detection",
+      "description": "Background AI processing",
+      "stepsToVerify": [
+        "Upload multiple photos quickly",
+        "Verify uploads complete without waiting for AI",
+        "Continue using app normally",
+        "Verify AI suggestions appear later as notifications",
+        "Verify no impact on app performance"
+      ],
+      "acceptanceCriteria": "AI processing happens in background without blocking UX",
+      "passes": false
+    },
+    {
+      "id": "OTD-001",
+      "category": "On This Day Memories",
+      "description": "On This Day notification",
+      "stepsToVerify": [
+        "Create entry dated exactly 1 year ago",
+        "On anniversary date, verify push notification",
+        "Notification shows '1 year ago today'",
+        "Tap notification to open memory"
+      ],
+      "acceptanceCriteria": "Daily notification for memories from previous years",
+      "passes": false
+    },
+    {
+      "id": "OTD-002",
+      "category": "On This Day Memories",
+      "description": "On This Day card in feed",
+      "stepsToVerify": [
+        "Have entry from 1 year ago",
+        "Open feed on anniversary date",
+        "Verify special 'On This Day' card at top",
+        "Verify shows original photo with '1 year ago' label",
+        "Tap to view full memory experience"
+      ],
+      "acceptanceCriteria": "Memory card surfaces at top of feed on anniversary",
+      "passes": false
+    },
+    {
+      "id": "OTD-003",
+      "category": "On This Day Memories",
+      "description": "Multi-year memories",
+      "stepsToVerify": [
+        "Have entries from 1, 2, and 3 years ago",
+        "On anniversary date, view memories",
+        "Verify all years shown in carousel",
+        "Swipe through years",
+        "Verify correct year label on each"
+      ],
+      "acceptanceCriteria": "Multiple years of memories shown together",
+      "passes": false
+    },
+    {
+      "id": "OTD-004",
+      "category": "On This Day Memories",
+      "description": "Then vs Now comparison",
+      "stepsToVerify": [
+        "View On This Day memory",
+        "Tap 'Create Then vs Now'",
+        "Take or select current photo",
+        "Verify side-by-side comparison generated",
+        "Add caption",
+        "Save as new entry with comparison"
+      ],
+      "acceptanceCriteria": "Create side-by-side growth comparisons from memories",
+      "passes": false
+    },
+    {
+      "id": "OTD-005",
+      "category": "On This Day Memories",
+      "description": "Share memory to family",
+      "stepsToVerify": [
+        "View On This Day memory",
+        "Tap 'Share with Family'",
+        "Verify sends notification to family members",
+        "Family members can view in web viewer",
+        "Verify memory highlighted in their feed"
+      ],
+      "acceptanceCriteria": "Parents can share memories directly to family",
+      "passes": false
+    },
+    {
+      "id": "OTD-006",
+      "category": "On This Day Memories",
+      "description": "Memory slideshow",
+      "stepsToVerify": [
+        "View On This Day with multiple photos",
+        "Tap play slideshow",
+        "Verify photos transition automatically",
+        "Verify background music plays",
+        "Tap to pause/resume",
+        "Exit slideshow"
+      ],
+      "acceptanceCriteria": "Auto-playing slideshow for memory viewing",
+      "passes": false
+    },
+    {
+      "id": "OTD-007",
+      "category": "On This Day Memories",
+      "description": "Save memory to camera roll",
+      "stepsToVerify": [
+        "View Then vs Now comparison",
+        "Tap 'Save to Photos'",
+        "Grant camera roll permission if needed",
+        "Verify image saved to device",
+        "Verify Little Journey watermark optional"
+      ],
+      "acceptanceCriteria": "Save memory images to device for external sharing",
+      "passes": false
+    },
+    {
+      "id": "GROWTH-001",
+      "category": "Growth Tracking",
+      "description": "Record height measurement",
+      "stepsToVerify": [
+        "Navigate to Growth Tracker",
+        "Tap 'Add Measurement'",
+        "Enter height in cm",
+        "Select measurement date",
+        "Optionally attach photo",
+        "Save measurement",
+        "Verify appears in growth chart"
+      ],
+      "acceptanceCriteria": "Parents can log height measurements with dates",
+      "passes": false
+    },
+    {
+      "id": "GROWTH-002",
+      "category": "Growth Tracking",
+      "description": "Record weight measurement",
+      "stepsToVerify": [
+        "Navigate to Growth Tracker",
+        "Tap 'Add Measurement'",
+        "Enter weight in kg",
+        "Select measurement date",
+        "Save measurement",
+        "Verify appears in growth chart"
+      ],
+      "acceptanceCriteria": "Parents can log weight measurements with dates",
+      "passes": false
+    },
+    {
+      "id": "GROWTH-003",
+      "category": "Growth Tracking",
+      "description": "Growth percentile chart",
+      "stepsToVerify": [
+        "Add multiple height/weight measurements",
+        "View growth chart",
+        "Verify WHO percentile curves displayed",
+        "Verify child's data points plotted",
+        "Verify current percentile shown"
+      ],
+      "acceptanceCriteria": "Visual chart shows growth against WHO percentiles",
+      "passes": false
+    },
+    {
+      "id": "GROWTH-004",
+      "category": "Growth Tracking",
+      "description": "Singapore growth standards",
+      "stepsToVerify": [
+        "View growth chart settings",
+        "Select 'Singapore Standards' option",
+        "Verify chart updates with SG-specific curves",
+        "Verify percentiles recalculated"
+      ],
+      "acceptanceCriteria": "Option to use Singapore-specific growth standards",
+      "passes": false
+    },
+    {
+      "id": "GROWTH-005",
+      "category": "Growth Tracking",
+      "description": "AI height estimation from photos",
+      "stepsToVerify": [
+        "Upload photo with reference object (door, chair)",
+        "AI suggests estimated height",
+        "View confidence level of estimate",
+        "Accept or manually correct",
+        "Verify logged to growth chart"
+      ],
+      "acceptanceCriteria": "AI can estimate height from photos with reference objects",
+      "passes": false
+    },
+    {
+      "id": "GROWTH-006",
+      "category": "Growth Tracking",
+      "description": "Export growth report for pediatrician",
+      "stepsToVerify": [
+        "Navigate to Growth Tracker",
+        "Tap 'Export Report'",
+        "Select date range",
+        "Generate PDF report",
+        "Verify includes chart, measurements, percentiles",
+        "Share via email or AirDrop"
+      ],
+      "acceptanceCriteria": "Generate printable growth reports for doctor visits",
+      "passes": false
+    },
+    {
+      "id": "GROWTH-007",
+      "category": "Growth Tracking",
+      "description": "Head circumference tracking",
+      "stepsToVerify": [
+        "Add head circumference measurement",
+        "View in separate chart tab",
+        "Verify percentile shown",
+        "Include in export report"
+      ],
+      "acceptanceCriteria": "Track head circumference for infant development",
+      "passes": false
+    },
+    {
+      "id": "GROWTH-008",
+      "category": "Growth Tracking",
+      "description": "Growth milestone alerts",
+      "stepsToVerify": [
+        "Set growth tracking active",
+        "Child crosses percentile threshold",
+        "Verify notification sent",
+        "View suggested action (consult pediatrician)",
+        "Verify not alarmist, informational only"
+      ],
+      "acceptanceCriteria": "Alert parents to significant percentile changes",
+      "passes": false
+    },
+    {
+      "id": "VOICE-001",
+      "category": "Voice Journal",
+      "description": "Create voice journal entry",
+      "stepsToVerify": [
+        "Tap '+' button",
+        "Select 'Voice Note' option",
+        "Start recording",
+        "Speak journal entry",
+        "Stop recording",
+        "Preview playback",
+        "Save entry"
+      ],
+      "acceptanceCriteria": "Parents can create entries via voice recording",
+      "passes": false
+    },
+    {
+      "id": "VOICE-002",
+      "category": "Voice Journal",
+      "description": "Voice to text transcription",
+      "stepsToVerify": [
+        "Create voice journal entry",
+        "Wait for AI transcription",
+        "Verify text transcript appears",
+        "Edit transcript if needed",
+        "Verify transcript is searchable"
+      ],
+      "acceptanceCriteria": "Voice entries auto-transcribed for search and display",
+      "passes": false
+    },
+    {
+      "id": "VOICE-003",
+      "category": "Voice Journal",
+      "description": "Voice entry with photo attachment",
+      "stepsToVerify": [
+        "Start voice recording",
+        "Record while viewing photo gallery",
+        "Attach photo to voice entry",
+        "Save entry",
+        "Verify entry shows photo with voice playback"
+      ],
+      "acceptanceCriteria": "Combine voice recording with photo in single entry",
+      "passes": false
+    },
+    {
+      "id": "VOICE-004",
+      "category": "Voice Journal",
+      "description": "Quick voice capture widget",
+      "stepsToVerify": [
+        "Add Little Journey widget to home screen",
+        "Tap voice button on widget",
+        "Record without opening app",
+        "Stop recording",
+        "Verify entry created in app"
+      ],
+      "acceptanceCriteria": "iOS/Android widget for instant voice capture",
+      "passes": false
+    },
+    {
+      "id": "YIR-001",
+      "category": "Year in Review",
+      "description": "Auto-generate year in review video",
+      "stepsToVerify": [
+        "Reach child's birthday or year end",
+        "Receive prompt to generate Year in Review",
+        "Tap to start generation",
+        "Wait for AI processing",
+        "Preview generated video",
+        "Verify includes highlights from past year"
+      ],
+      "acceptanceCriteria": "AI creates video compilation of year's highlights",
+      "passes": false
+    },
+    {
+      "id": "YIR-002",
+      "category": "Year in Review",
+      "description": "Year in review customization",
+      "stepsToVerify": [
+        "View generated year in review",
+        "Add/remove clips",
+        "Change music track",
+        "Adjust transition style",
+        "Re-generate preview",
+        "Save final version"
+      ],
+      "acceptanceCriteria": "Parents can customize auto-generated video",
+      "passes": false
+    },
+    {
+      "id": "YIR-003",
+      "category": "Year in Review",
+      "description": "Year in review music library",
+      "stepsToVerify": [
+        "Open music selection in Year in Review editor",
+        "View available royalty-free tracks",
+        "Preview different tracks",
+        "Select track",
+        "Verify video regenerates with new music"
+      ],
+      "acceptanceCriteria": "Licensed music library for video soundtracks",
+      "passes": false
+    },
+    {
+      "id": "YIR-004",
+      "category": "Year in Review",
+      "description": "Export year in review video",
+      "stepsToVerify": [
+        "Finalize year in review",
+        "Tap 'Export'",
+        "Select quality (720p, 1080p)",
+        "Wait for rendering",
+        "Save to camera roll",
+        "Verify shareable to WhatsApp/social"
+      ],
+      "acceptanceCriteria": "Export high-quality video for sharing",
+      "passes": false
+    },
+    {
+      "id": "YIR-005",
+      "category": "Year in Review",
+      "description": "Monthly recap video (shorter)",
+      "stepsToVerify": [
+        "At month end, receive monthly recap prompt",
+        "Generate 30-second monthly video",
+        "Preview and save",
+        "Verify includes that month's highlights only"
+      ],
+      "acceptanceCriteria": "Shorter monthly video recaps available",
+      "passes": false
+    },
+    {
+      "id": "DIGEST-001",
+      "category": "Family Digest",
+      "description": "Weekly email digest for family",
+      "stepsToVerify": [
+        "Enable digest in family member settings",
+        "Set digest frequency (weekly)",
+        "Wait for digest day",
+        "Verify family member receives email",
+        "Email contains week's photos and entries",
+        "Tap link to view full details"
+      ],
+      "acceptanceCriteria": "Family members receive weekly email summaries",
+      "passes": false
+    },
+    {
+      "id": "DIGEST-002",
+      "category": "Family Digest",
+      "description": "Digest frequency options",
+      "stepsToVerify": [
+        "Configure family member digest",
+        "Select daily, weekly, or monthly",
+        "Verify digest arrives at selected frequency",
+        "Verify content covers appropriate time period"
+      ],
+      "acceptanceCriteria": "Configurable digest frequency per family member",
+      "passes": false
+    },
+    {
+      "id": "DIGEST-003",
+      "category": "Family Digest",
+      "description": "Digest includes new milestones",
+      "stepsToVerify": [
+        "Complete milestone during digest period",
+        "Wait for digest email",
+        "Verify milestone highlighted in email",
+        "Verify celebratory formatting"
+      ],
+      "acceptanceCriteria": "Milestones featured prominently in digests",
+      "passes": false
+    },
+    {
+      "id": "DIGEST-004",
+      "category": "Family Digest",
+      "description": "WhatsApp digest option",
+      "stepsToVerify": [
+        "Enable WhatsApp digest for family member",
+        "Enter their WhatsApp number",
+        "Wait for digest time",
+        "Verify WhatsApp message received",
+        "Verify includes preview images"
+      ],
+      "acceptanceCriteria": "Send digests via WhatsApp for non-email users",
+      "passes": false
+    },
+    {
+      "id": "ENHANCE-001",
+      "category": "Photo Enhancement",
+      "description": "AI photo enhancement",
+      "stepsToVerify": [
+        "View photo in entry",
+        "Tap 'Enhance' button",
+        "Wait for AI processing",
+        "View before/after comparison",
+        "Accept or reject enhancement",
+        "Verify enhanced version saved"
+      ],
+      "acceptanceCriteria": "AI improves photo quality (lighting, sharpness, color)",
+      "passes": false
+    },
+    {
+      "id": "ENHANCE-002",
+      "category": "Photo Enhancement",
+      "description": "Background blur (portrait mode)",
+      "stepsToVerify": [
+        "Select photo without portrait mode",
+        "Tap 'Add Blur' effect",
+        "AI detects subject and blurs background",
+        "Adjust blur intensity",
+        "Save enhanced photo"
+      ],
+      "acceptanceCriteria": "Add portrait-mode blur to regular photos",
+      "passes": false
+    },
+    {
+      "id": "ENHANCE-003",
+      "category": "Photo Enhancement",
+      "description": "Auto red-eye removal",
+      "stepsToVerify": [
+        "Upload photo with red-eye",
+        "Verify auto-detected and corrected",
+        "View correction",
+        "Option to revert"
+      ],
+      "acceptanceCriteria": "Automatic red-eye correction on upload",
+      "passes": false
+    },
+    {
+      "id": "ENHANCE-004",
+      "category": "Photo Enhancement",
+      "description": "Batch enhancement",
+      "stepsToVerify": [
+        "Select multiple photos in gallery",
+        "Tap 'Enhance All'",
+        "Confirm batch processing",
+        "Wait for completion",
+        "Review enhanced photos",
+        "Accept all or individually"
+      ],
+      "acceptanceCriteria": "Enhance multiple photos at once",
+      "passes": false
+    },
+    {
+      "id": "SGLOCAL-001",
+      "category": "Singapore Local",
+      "description": "Red packet tracker",
+      "stepsToVerify": [
+        "Navigate to CNY section during CNY period",
+        "Tap 'Track Ang Bao'",
+        "Enter amount and giver name",
+        "Save record",
+        "View total collected",
+        "Verify private (not shared with family)"
+      ],
+      "acceptanceCriteria": "Private tracking of CNY red packet amounts",
+      "passes": false
+    },
+    {
+      "id": "SGLOCAL-002",
+      "category": "Singapore Local",
+      "description": "Bilingual first words",
+      "stepsToVerify": [
+        "Record 'First Words' milestone",
+        "Select language (English, Mandarin, Malay, Tamil)",
+        "Enter the word in original language",
+        "Enter romanization if applicable",
+        "Save milestone",
+        "View in timeline with language tag"
+      ],
+      "acceptanceCriteria": "Track first words in multiple languages",
+      "passes": false
+    },
+    {
+      "id": "SGLOCAL-003",
+      "category": "Singapore Local",
+      "description": "Local milestone suggestions",
+      "stepsToVerify": [
+        "View milestone suggestions",
+        "Verify SG-specific milestones appear",
+        "Check 'First Hawker Food' milestone",
+        "Check 'First MRT Ride' milestone",
+        "Check 'First Zoo Visit' milestone"
+      ],
+      "acceptanceCriteria": "Singapore-specific milestone templates available",
+      "passes": false
+    },
+    {
+      "id": "SGLOCAL-004",
+      "category": "Singapore Local",
+      "description": "HealthHub integration",
+      "stepsToVerify": [
+        "Navigate to Settings > Integrations",
+        "Tap 'Connect HealthHub'",
+        "Authenticate via SingPass",
+        "Grant data access",
+        "Verify vaccination records imported",
+        "Verify health screening data imported"
+      ],
+      "acceptanceCriteria": "Sync with SG HealthHub for health records",
+      "passes": false
+    },
+    {
+      "id": "SGLOCAL-005",
+      "category": "Singapore Local",
+      "description": "Baby Bonus tracker",
+      "stepsToVerify": [
+        "Enable Baby Bonus tracking",
+        "Connect via SingPass",
+        "View CDA balance",
+        "View disbursement schedule",
+        "Set reminders for upcoming deposits"
+      ],
+      "acceptanceCriteria": "Track Baby Bonus and CDA via government integration",
+      "passes": false
+    },
+    {
+      "id": "GAME-001",
+      "category": "Gamification",
+      "description": "Milestone achievement badges",
+      "stepsToVerify": [
+        "Complete a milestone",
+        "Verify badge unlocked notification",
+        "View badge in collection",
+        "View badge design (unique per milestone)",
+        "Share badge to social media"
+      ],
+      "acceptanceCriteria": "Earn collectible badges for completing milestones",
+      "passes": false
+    },
+    {
+      "id": "GAME-002",
+      "category": "Gamification",
+      "description": "Journaling streak",
+      "stepsToVerify": [
+        "Create entry today",
+        "Verify streak counter shows 1",
+        "Create entry tomorrow",
+        "Verify streak shows 2",
+        "Skip a day",
+        "Verify streak resets"
+      ],
+      "acceptanceCriteria": "Track consecutive days of journaling",
+      "passes": false
+    },
+    {
+      "id": "GAME-003",
+      "category": "Gamification",
+      "description": "Monthly entry goals",
+      "stepsToVerify": [
+        "View monthly goal progress",
+        "Verify default goal (e.g., 10 entries/month)",
+        "Create entries toward goal",
+        "Reach goal",
+        "Verify celebration animation",
+        "Verify badge awarded"
+      ],
+      "acceptanceCriteria": "Monthly entry goals with rewards",
+      "passes": false
+    },
+    {
+      "id": "GAME-004",
+      "category": "Gamification",
+      "description": "First year completion reward",
+      "stepsToVerify": [
+        "Use app for full first year",
+        "On child's first birthday",
+        "Verify special achievement unlocked",
+        "View commemorative badge",
+        "Receive discount on first photo book"
+      ],
+      "acceptanceCriteria": "Special reward for completing first year journey",
+      "passes": false
+    },
+    {
+      "id": "COMMUNITY-001",
+      "category": "Community",
+      "description": "Anonymous milestone questions",
+      "stepsToVerify": [
+        "Navigate to Community section",
+        "Tap 'Ask Community'",
+        "Write question about milestone",
+        "Submit anonymously",
+        "View responses from other parents"
+      ],
+      "acceptanceCriteria": "Ask anonymous questions to parent community",
+      "passes": false
+    },
+    {
+      "id": "COMMUNITY-002",
+      "category": "Community",
+      "description": "Milestone statistics (is this normal)",
+      "stepsToVerify": [
+        "Complete 'First Steps' at 14 months",
+        "View community statistics",
+        "Verify shows distribution of when others completed",
+        "Verify shows 'You're in the normal range'",
+        "Verify no identifiable data shown"
+      ],
+      "acceptanceCriteria": "See anonymized statistics for milestone timing",
+      "passes": false
+    },
+    {
+      "id": "COMMUNITY-003",
+      "category": "Community",
+      "description": "Opt-in to community features",
+      "stepsToVerify": [
+        "Navigate to Settings > Privacy",
+        "Find community data sharing toggle",
+        "Verify default is OFF",
+        "Enable community sharing",
+        "Verify explanation of what is shared"
+      ],
+      "acceptanceCriteria": "Community features require explicit opt-in",
+      "passes": false
+    }
+  ]
+}
