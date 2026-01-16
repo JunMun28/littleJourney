@@ -52,6 +52,17 @@ jest.mock("expo-image-picker", () => ({
   },
 }));
 
+// Mock expo-print for export functionality
+jest.mock("expo-print", () => ({
+  printToFileAsync: jest.fn().mockResolvedValue({ uri: "file:///test-report.pdf" }),
+}));
+
+// Mock expo-sharing for export functionality
+jest.mock("expo-sharing", () => ({
+  isAvailableAsync: jest.fn().mockResolvedValue(true),
+  shareAsync: jest.fn().mockResolvedValue(undefined),
+}));
+
 // Mock react-native-svg for GrowthChart component
 jest.mock("react-native-svg", () => {
   const React = require("react");
@@ -1111,6 +1122,245 @@ describe("GrowthScreen", () => {
       // Should show growth chart
       await waitFor(() => {
         expect(screen.getByTestId("growth-chart-container")).toBeTruthy();
+      });
+    });
+  });
+
+  // GROWTH-006: Export growth report for pediatrician
+  describe("GROWTH-006: Export Growth Report", () => {
+    // GROWTH-006: Shows export button when measurements exist
+    it("shows export button when measurements exist", async () => {
+      render(
+        <TestWrapper>
+          <GrowthScreen />
+        </TestWrapper>
+      );
+
+      // Add measurement first
+      await waitFor(() => {
+        expect(screen.getByText("Add Measurement")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Add Measurement"));
+      await waitFor(() => {
+        expect(screen.getByText("Height")).toBeTruthy();
+      });
+      fireEvent.press(screen.getByText("Height"));
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText("Height in cm")).toBeTruthy();
+      });
+      fireEvent.changeText(screen.getByPlaceholderText("Height in cm"), "75.5");
+      fireEvent.press(screen.getByText("Save"));
+
+      await waitFor(() => {
+        expect(screen.getByText(/75\.5 cm/)).toBeTruthy();
+      });
+
+      // Should show export button
+      await waitFor(() => {
+        expect(screen.getByTestId("export-report-button")).toBeTruthy();
+      });
+    });
+
+    // GROWTH-006: Opens export modal when tapping export button
+    it("opens export modal when tapping export button", async () => {
+      render(
+        <TestWrapper>
+          <GrowthScreen />
+        </TestWrapper>
+      );
+
+      // Add measurement first
+      await waitFor(() => {
+        expect(screen.getByText("Add Measurement")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Add Measurement"));
+      await waitFor(() => {
+        expect(screen.getByText("Height")).toBeTruthy();
+      });
+      fireEvent.press(screen.getByText("Height"));
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText("Height in cm")).toBeTruthy();
+      });
+      fireEvent.changeText(screen.getByPlaceholderText("Height in cm"), "75.5");
+      fireEvent.press(screen.getByText("Save"));
+
+      await waitFor(() => {
+        expect(screen.getByText(/75\.5 cm/)).toBeTruthy();
+      });
+
+      // Tap export button
+      fireEvent.press(screen.getByTestId("export-report-button"));
+
+      // Export modal should appear
+      await waitFor(() => {
+        expect(screen.getByText("Export Growth Report")).toBeTruthy();
+      });
+    });
+
+    // GROWTH-006: Export modal shows date range selection
+    it("shows date range selection in export modal", async () => {
+      render(
+        <TestWrapper>
+          <GrowthScreen />
+        </TestWrapper>
+      );
+
+      // Add measurement first
+      await waitFor(() => {
+        expect(screen.getByText("Add Measurement")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Add Measurement"));
+      await waitFor(() => {
+        expect(screen.getByText("Height")).toBeTruthy();
+      });
+      fireEvent.press(screen.getByText("Height"));
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText("Height in cm")).toBeTruthy();
+      });
+      fireEvent.changeText(screen.getByPlaceholderText("Height in cm"), "75.5");
+      fireEvent.press(screen.getByText("Save"));
+
+      await waitFor(() => {
+        expect(screen.getByText(/75\.5 cm/)).toBeTruthy();
+      });
+
+      // Tap export button
+      fireEvent.press(screen.getByTestId("export-report-button"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Export Growth Report")).toBeTruthy();
+      });
+
+      // Should show date range fields
+      expect(screen.getByText("From:")).toBeTruthy();
+      expect(screen.getByText("To:")).toBeTruthy();
+      expect(screen.getByTestId("export-start-date")).toBeTruthy();
+      expect(screen.getByTestId("export-end-date")).toBeTruthy();
+    });
+
+    // GROWTH-006: Export modal shows generate button
+    it("shows generate button in export modal", async () => {
+      render(
+        <TestWrapper>
+          <GrowthScreen />
+        </TestWrapper>
+      );
+
+      // Add measurement first
+      await waitFor(() => {
+        expect(screen.getByText("Add Measurement")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Add Measurement"));
+      await waitFor(() => {
+        expect(screen.getByText("Height")).toBeTruthy();
+      });
+      fireEvent.press(screen.getByText("Height"));
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText("Height in cm")).toBeTruthy();
+      });
+      fireEvent.changeText(screen.getByPlaceholderText("Height in cm"), "75.5");
+      fireEvent.press(screen.getByText("Save"));
+
+      await waitFor(() => {
+        expect(screen.getByText(/75\.5 cm/)).toBeTruthy();
+      });
+
+      // Tap export button
+      fireEvent.press(screen.getByTestId("export-report-button"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Export Growth Report")).toBeTruthy();
+      });
+
+      // Should show generate button
+      expect(screen.getByTestId("export-generate-button")).toBeTruthy();
+      expect(screen.getByText("Generate & Share")).toBeTruthy();
+    });
+
+    // GROWTH-006: Export modal shows current growth standard
+    it("shows current growth standard in export modal", async () => {
+      render(
+        <TestWrapper>
+          <GrowthScreen />
+        </TestWrapper>
+      );
+
+      // Add measurement first
+      await waitFor(() => {
+        expect(screen.getByText("Add Measurement")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Add Measurement"));
+      await waitFor(() => {
+        expect(screen.getByText("Height")).toBeTruthy();
+      });
+      fireEvent.press(screen.getByText("Height"));
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText("Height in cm")).toBeTruthy();
+      });
+      fireEvent.changeText(screen.getByPlaceholderText("Height in cm"), "75.5");
+      fireEvent.press(screen.getByText("Save"));
+
+      await waitFor(() => {
+        expect(screen.getByText(/75\.5 cm/)).toBeTruthy();
+      });
+
+      // Tap export button
+      fireEvent.press(screen.getByTestId("export-report-button"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Export Growth Report")).toBeTruthy();
+      });
+
+      // Should show WHO standard (default)
+      expect(screen.getByText(/WHO growth standards/)).toBeTruthy();
+    });
+
+    // GROWTH-006: Can cancel export modal
+    it("closes export modal when tapping cancel", async () => {
+      render(
+        <TestWrapper>
+          <GrowthScreen />
+        </TestWrapper>
+      );
+
+      // Add measurement first
+      await waitFor(() => {
+        expect(screen.getByText("Add Measurement")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Add Measurement"));
+      await waitFor(() => {
+        expect(screen.getByText("Height")).toBeTruthy();
+      });
+      fireEvent.press(screen.getByText("Height"));
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText("Height in cm")).toBeTruthy();
+      });
+      fireEvent.changeText(screen.getByPlaceholderText("Height in cm"), "75.5");
+      fireEvent.press(screen.getByText("Save"));
+
+      await waitFor(() => {
+        expect(screen.getByText(/75\.5 cm/)).toBeTruthy();
+      });
+
+      // Tap export button
+      fireEvent.press(screen.getByTestId("export-report-button"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Export Growth Report")).toBeTruthy();
+      });
+
+      // Tap cancel
+      fireEvent.press(screen.getByText("Cancel"));
+
+      // Modal should close
+      await waitFor(() => {
+        expect(screen.queryByText("Export Growth Report")).toBeNull();
       });
     });
   });
