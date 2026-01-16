@@ -14,6 +14,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { GrowthChart } from "@/components/growth-chart";
 import {
   useGrowthTracking,
   type GrowthMeasurement,
@@ -30,6 +31,8 @@ import {
 } from "@/constants/theme";
 
 type ModalState = "closed" | "selectType" | "addHeight" | "addWeight" | "addHead";
+type ViewMode = "list" | "chart";
+type ChartType = "height" | "weight";
 
 // Calculate age in months from birthdate to measurement date
 function calculateAgeInMonths(birthDate: string, measurementDate: string): number {
@@ -80,6 +83,8 @@ export default function GrowthScreen() {
   const [measurementValue, setMeasurementValue] = useState("");
   const [measurementDate, setMeasurementDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
+  const [chartType, setChartType] = useState<ChartType>("height");
 
   // Get measurements for current child
   const measurements = useMemo(() => {
@@ -224,29 +229,133 @@ export default function GrowthScreen() {
     !isNaN(parseFloat(measurementValue)) &&
     parseFloat(measurementValue) > 0;
 
+  const renderViewModeToggle = () => (
+    <View testID="view-mode-toggle" style={styles.viewModeToggle}>
+      <Pressable
+        style={[
+          styles.viewModeButton,
+          viewMode === "list" && styles.viewModeButtonActive,
+          { borderColor: colors.border },
+        ]}
+        onPress={() => setViewMode("list")}
+      >
+        <Text
+          style={[
+            styles.viewModeButtonText,
+            { color: viewMode === "list" ? "#fff" : colors.text },
+          ]}
+        >
+          List
+        </Text>
+      </Pressable>
+      <Pressable
+        style={[
+          styles.viewModeButton,
+          viewMode === "chart" && styles.viewModeButtonActive,
+          { borderColor: colors.border },
+        ]}
+        onPress={() => setViewMode("chart")}
+      >
+        <Text
+          style={[
+            styles.viewModeButtonText,
+            { color: viewMode === "chart" ? "#fff" : colors.text },
+          ]}
+        >
+          Chart
+        </Text>
+      </Pressable>
+    </View>
+  );
+
+  const renderChartTypeSelector = () => (
+    <View testID="chart-type-selector" style={styles.chartTypeSelector}>
+      <Pressable
+        style={[
+          styles.chartTypeButton,
+          chartType === "height" && styles.chartTypeButtonActive,
+        ]}
+        onPress={() => setChartType("height")}
+      >
+        <Text
+          style={[
+            styles.chartTypeButtonText,
+            { color: chartType === "height" ? PRIMARY_COLOR : colors.textSecondary },
+          ]}
+        >
+          Height
+        </Text>
+      </Pressable>
+      <Pressable
+        style={[
+          styles.chartTypeButton,
+          chartType === "weight" && styles.chartTypeButtonActive,
+        ]}
+        onPress={() => setChartType("weight")}
+      >
+        <Text
+          style={[
+            styles.chartTypeButtonText,
+            { color: chartType === "weight" ? PRIMARY_COLOR : colors.textSecondary },
+          ]}
+        >
+          Weight
+        </Text>
+      </Pressable>
+    </View>
+  );
+
+  const renderChartView = () => (
+    <ScrollView style={styles.scrollView}>
+      {renderChartTypeSelector()}
+      {child?.dateOfBirth && child?.sex && (
+        <GrowthChart
+          measurements={measurements}
+          childBirthDate={child.dateOfBirth}
+          childSex={child.sex}
+          measurementType={chartType}
+        />
+      )}
+      {(!child?.dateOfBirth || !child?.sex) && (
+        <View style={styles.chartError}>
+          <Text style={[styles.chartErrorText, { color: colors.textSecondary }]}>
+            Child birth date and sex are required to display growth chart.
+          </Text>
+        </View>
+      )}
+    </ScrollView>
+  );
+
+  const renderListView = () => (
+    <ScrollView style={styles.scrollView}>
+      {heightMeasurements.length > 0 && (
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
+            Height ({heightMeasurements.length})
+          </Text>
+          {heightMeasurements.map(renderMeasurementCard)}
+        </View>
+      )}
+      {weightMeasurements.length > 0 && (
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
+            Weight ({weightMeasurements.length})
+          </Text>
+          {weightMeasurements.map(renderMeasurementCard)}
+        </View>
+      )}
+    </ScrollView>
+  );
+
   return (
     <ThemedView style={styles.container}>
       {!hasMeasurements ? (
         renderEmptyState()
       ) : (
-        <ScrollView style={styles.scrollView}>
-          {heightMeasurements.length > 0 && (
-            <View style={styles.section}>
-              <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
-                Height ({heightMeasurements.length})
-              </Text>
-              {heightMeasurements.map(renderMeasurementCard)}
-            </View>
-          )}
-          {weightMeasurements.length > 0 && (
-            <View style={styles.section}>
-              <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
-                Weight ({weightMeasurements.length})
-              </Text>
-              {weightMeasurements.map(renderMeasurementCard)}
-            </View>
-          )}
-        </ScrollView>
+        <>
+          {renderViewModeToggle()}
+          {viewMode === "list" ? renderListView() : renderChartView()}
+        </>
       )}
 
       {/* FAB to add measurement */}
@@ -626,5 +735,53 @@ const styles = StyleSheet.create({
   },
   typeModalCancelText: {
     fontSize: 16,
+  },
+  viewModeToggle: {
+    flexDirection: "row",
+    justifyContent: "center",
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.sm,
+  },
+  viewModeButton: {
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.sm,
+    borderWidth: 1,
+    borderRadius: 8,
+    marginHorizontal: 4,
+  },
+  viewModeButtonActive: {
+    backgroundColor: PRIMARY_COLOR,
+    borderColor: PRIMARY_COLOR,
+  },
+  viewModeButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  chartTypeSelector: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginBottom: Spacing.lg,
+  },
+  chartTypeButton: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    marginHorizontal: 4,
+  },
+  chartTypeButtonActive: {
+    borderBottomWidth: 2,
+    borderBottomColor: PRIMARY_COLOR,
+  },
+  chartTypeButtonText: {
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  chartError: {
+    padding: Spacing.xl,
+    alignItems: "center",
+  },
+  chartErrorText: {
+    fontSize: 14,
+    textAlign: "center",
   },
 });

@@ -526,7 +526,7 @@
         "Verify current percentile shown"
       ],
       "acceptanceCriteria": "Visual chart shows growth against WHO percentiles",
-      "passes": false
+      "passes": true
     },
     {
       "id": "GROWTH-004",

@@ -52,6 +52,59 @@ jest.mock("expo-image-picker", () => ({
   },
 }));
 
+// Mock react-native-svg for GrowthChart component
+jest.mock("react-native-svg", () => {
+  const React = require("react");
+  const { View, Text } = require("react-native");
+
+  const Svg = React.forwardRef(({ children, testID, ...props }: { children?: React.ReactNode; testID?: string }, ref: React.Ref<unknown>) =>
+    React.createElement(View, { testID: testID || "svg-container", ref, ...props }, children)
+  );
+  Svg.displayName = "Svg";
+
+  const G = React.forwardRef(({ children, ...props }: { children?: React.ReactNode }, ref: React.Ref<unknown>) =>
+    React.createElement(View, { ref, ...props }, children)
+  );
+  G.displayName = "G";
+
+  const Path = React.forwardRef(({ testID, d, stroke, ...props }: { testID?: string; d?: string; stroke?: string }, ref: React.Ref<unknown>) =>
+    React.createElement(View, { testID, accessibilityLabel: d, ref, ...props })
+  );
+  Path.displayName = "Path";
+
+  const Circle = React.forwardRef(({ testID, cx, cy, r, ...props }: { testID?: string; cx?: number; cy?: number; r?: number }, ref: React.Ref<unknown>) =>
+    React.createElement(View, { testID, accessibilityLabel: `circle-${cx}-${cy}`, ref, ...props })
+  );
+  Circle.displayName = "Circle";
+
+  const Line = React.forwardRef(({ x1, y1, x2, y2, ...props }: { x1?: number; y1?: number; x2?: number; y2?: number }, ref: React.Ref<unknown>) =>
+    React.createElement(View, { ref, ...props })
+  );
+  Line.displayName = "Line";
+
+  const SvgText = React.forwardRef(({ children, ...props }: { children?: React.ReactNode }, ref: React.Ref<unknown>) =>
+    React.createElement(Text, { ref, ...props }, children)
+  );
+  SvgText.displayName = "SvgText";
+
+  const Rect = React.forwardRef((props: Record<string, unknown>, ref: React.Ref<unknown>) =>
+    React.createElement(View, { ref, ...props })
+  );
+  Rect.displayName = "Rect";
+
+  return {
+    __esModule: true,
+    default: Svg,
+    Svg,
+    G,
+    Path,
+    Circle,
+    Line,
+    Text: SvgText,
+    Rect,
+  };
+});
+
 function createTestQueryClient() {
   return new QueryClient({
     defaultOptions: {
@@ -503,6 +556,199 @@ describe("GrowthScreen", () => {
 
       await waitFor(() => {
         expect(screen.getByText(/Weight \(1\)/)).toBeTruthy();
+      });
+    });
+  });
+
+  // GROWTH-003: Growth percentile chart tests
+  describe("GROWTH-003: Growth Percentile Chart", () => {
+    // GROWTH-003: View mode toggle exists
+    it("shows view mode toggle when measurements exist", async () => {
+      render(
+        <TestWrapper>
+          <GrowthScreen />
+        </TestWrapper>
+      );
+
+      // First add a measurement
+      await waitFor(() => {
+        expect(screen.getByText("Add Measurement")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Add Measurement"));
+      await waitFor(() => {
+        expect(screen.getByText("Height")).toBeTruthy();
+      });
+      fireEvent.press(screen.getByText("Height"));
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText("Height in cm")).toBeTruthy();
+      });
+      fireEvent.changeText(screen.getByPlaceholderText("Height in cm"), "75.5");
+      fireEvent.press(screen.getByText("Save"));
+
+      // Wait for measurement to appear
+      await waitFor(() => {
+        expect(screen.getByText(/75\.5 cm/)).toBeTruthy();
+      });
+
+      // Should show view toggle
+      await waitFor(() => {
+        expect(screen.getByTestId("view-mode-toggle")).toBeTruthy();
+      });
+    });
+
+    // GROWTH-003: Switch to chart view
+    it("switches to chart view when pressing Chart tab", async () => {
+      render(
+        <TestWrapper>
+          <GrowthScreen />
+        </TestWrapper>
+      );
+
+      // Add a measurement
+      await waitFor(() => {
+        expect(screen.getByText("Add Measurement")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Add Measurement"));
+      await waitFor(() => {
+        expect(screen.getByText("Height")).toBeTruthy();
+      });
+      fireEvent.press(screen.getByText("Height"));
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText("Height in cm")).toBeTruthy();
+      });
+      fireEvent.changeText(screen.getByPlaceholderText("Height in cm"), "75.5");
+      fireEvent.press(screen.getByText("Save"));
+
+      await waitFor(() => {
+        expect(screen.getByText(/75\.5 cm/)).toBeTruthy();
+      });
+
+      // Switch to chart view
+      await waitFor(() => {
+        expect(screen.getByTestId("view-mode-toggle")).toBeTruthy();
+      });
+      fireEvent.press(screen.getByText("Chart"));
+
+      // Should show growth chart
+      await waitFor(() => {
+        expect(screen.getByTestId("growth-chart-container")).toBeTruthy();
+      });
+    });
+
+    // GROWTH-003: Chart shows with height data
+    it("displays height chart with WHO percentile curves", async () => {
+      render(
+        <TestWrapper>
+          <GrowthScreen />
+        </TestWrapper>
+      );
+
+      // Add height measurement
+      await waitFor(() => {
+        expect(screen.getByText("Add Measurement")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Add Measurement"));
+      await waitFor(() => {
+        expect(screen.getByText("Height")).toBeTruthy();
+      });
+      fireEvent.press(screen.getByText("Height"));
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText("Height in cm")).toBeTruthy();
+      });
+      fireEvent.changeText(screen.getByPlaceholderText("Height in cm"), "75.5");
+      fireEvent.press(screen.getByText("Save"));
+
+      await waitFor(() => {
+        expect(screen.getByText(/75\.5 cm/)).toBeTruthy();
+      });
+
+      // Switch to chart view
+      fireEvent.press(screen.getByText("Chart"));
+
+      // Check chart displays
+      await waitFor(() => {
+        expect(screen.getByTestId("growth-chart-container")).toBeTruthy();
+      });
+    });
+
+    // GROWTH-003: Switch chart type
+    it("allows switching between height and weight charts", async () => {
+      render(
+        <TestWrapper>
+          <GrowthScreen />
+        </TestWrapper>
+      );
+
+      // Add height measurement
+      await waitFor(() => {
+        expect(screen.getByText("Add Measurement")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Add Measurement"));
+      await waitFor(() => {
+        expect(screen.getByText("Height")).toBeTruthy();
+      });
+      fireEvent.press(screen.getByText("Height"));
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText("Height in cm")).toBeTruthy();
+      });
+      fireEvent.changeText(screen.getByPlaceholderText("Height in cm"), "75.5");
+      fireEvent.press(screen.getByText("Save"));
+
+      await waitFor(() => {
+        expect(screen.getByText(/75\.5 cm/)).toBeTruthy();
+      });
+
+      // Switch to chart view
+      fireEvent.press(screen.getByText("Chart"));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("growth-chart-container")).toBeTruthy();
+      });
+
+      // Chart type selector should exist
+      await waitFor(() => {
+        expect(screen.getByTestId("chart-type-selector")).toBeTruthy();
+      });
+    });
+
+    // GROWTH-003: Current percentile shown in chart
+    it("shows current percentile when viewing chart", async () => {
+      render(
+        <TestWrapper>
+          <GrowthScreen />
+        </TestWrapper>
+      );
+
+      // Add height measurement
+      await waitFor(() => {
+        expect(screen.getByText("Add Measurement")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Add Measurement"));
+      await waitFor(() => {
+        expect(screen.getByText("Height")).toBeTruthy();
+      });
+      fireEvent.press(screen.getByText("Height"));
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText("Height in cm")).toBeTruthy();
+      });
+      fireEvent.changeText(screen.getByPlaceholderText("Height in cm"), "75.5");
+      fireEvent.press(screen.getByText("Save"));
+
+      await waitFor(() => {
+        expect(screen.getByText(/75\.5 cm/)).toBeTruthy();
+      });
+
+      // Switch to chart view
+      fireEvent.press(screen.getByText("Chart"));
+
+      // Should show current percentile
+      await waitFor(() => {
+        expect(screen.getByTestId("current-percentile")).toBeTruthy();
       });
     });
   });

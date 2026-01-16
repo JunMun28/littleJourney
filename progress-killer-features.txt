@@ -222,3 +222,47 @@ Reasoning: Builds on GROWTH-001. Same modal pattern. Context supports weight. Ju
 
 ---
 
+### Task Selection
+Selected: GROWTH-003 (Growth percentile chart) - UI implementation
+Priority: 4 (Standard features and implementation)
+Reasoning: Builds on GROWTH-001/002. Percentile calculation exists. Just needs chart visualization.
+
+### Implementation Complete
+
+**Task:** GROWTH-003 Growth percentile chart visualization
+**PRD Ref:** Growth Tracking - GROWTH-003
+
+**Key Decisions:**
+- Installed react-native-svg for SVG chart rendering
+- Created GrowthChart component with WHO percentile curves (p3, p15, p50, p85, p97)
+- Chart shows child's data points plotted against reference curves
+- View mode toggle: List/Chart views in growth screen
+- Chart type selector: Switch between height/weight charts
+- Current percentile displayed prominently above chart
+- Responsive to child sex (male/female reference data)
+- Empty state for no measurements
+- Chart legend explaining percentile curves
+
+**Files Changed:**
+- NEW: components/growth-chart.tsx (SVG chart with percentile curves, 302 lines)
+- NEW: __tests__/components/growth-chart.test.tsx (10 tests)
+- MODIFIED: app/(tabs)/growth.tsx (+chart view mode, +chart type selector)
+- MODIFIED: __tests__/app/tabs/growth.test.tsx (+5 GROWTH-003 tests)
+- MODIFIED: package.json (+react-native-svg)
+- MODIFIED: prd-killer-features.json (GROWTH-003 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- npx tsc --noEmit: PASS
+- npm run lint: PASS
+- npm test: 716/716 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- GROWTH-003 complete: Chart displays WHO percentile curves for height/weight
+- Requires child birth date and sex to display chart (shows error message if missing)
+- WHO data for 0-24 months embedded in component
+- Singapore standards (GROWTH-004) ready for implementation with same pattern
+
+---
+
