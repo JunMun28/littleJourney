@@ -168,7 +168,7 @@
         "Verify capsule appears in sealed list"
       ],
       "acceptanceCriteria": "Parents can write letters to their child for future delivery",
-      "passes": false
+      "passes": true
     },
     {
       "id": "CAPSULE-002",
