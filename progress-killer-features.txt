@@ -146,3 +146,43 @@ Reasoning: 3 killer feature contexts exist but NOT integrated into app/_layout.t
 
 ---
 
+### Task Selection
+Selected: GROWTH-001 (Record height measurement) - UI implementation
+Priority: 4 (Standard features and implementation)
+Reasoning: Growth Tracking context exists. UI screen needed for user to add/view measurements. Foundation for GROWTH-002 through GROWTH-008.
+
+### Implementation Complete
+
+**Task:** GROWTH-001 Record height measurement UI
+**PRD Ref:** Growth Tracking - GROWTH-001
+
+**Key Decisions:**
+- Added new Growth tab to tab layout (5th tab with chart icon)
+- Screen shows empty state when no measurements
+- Modal form for adding height with value (cm) and date
+- Measurements displayed in list with date and child age at measurement
+- Percentile range shown if child sex is available
+- Added sex field to Child interface for percentile calculations
+- Long-press on card to delete measurement
+
+**Files Changed:**
+- NEW: app/(tabs)/growth.tsx (Growth Tracker screen, 302 lines)
+- NEW: __tests__/app/tabs/growth.test.tsx (8 tests)
+- MODIFIED: app/(tabs)/_layout.tsx (added Growth tab)
+- MODIFIED: contexts/child-context.tsx (added sex field)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- npx expo lint: PASS
+- npm test (growth): 21/21 PASS
+- npm test (all): 55/55 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- GROWTH-001 UI complete: Can navigate, add height, select date, save, view in list
+- Photo attachment (optional) not implemented in this iteration
+- Growth chart visualization (GROWTH-003) needs separate implementation
+- Weight (GROWTH-002) and head circumference (GROWTH-007) share same modal pattern
+
+---
+

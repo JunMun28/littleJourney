@@ -7,6 +7,7 @@ import {
 } from "react";
 
 export type CulturalTradition = "chinese" | "malay" | "indian" | "none";
+export type ChildSex = "male" | "female";
 
 export interface Child {
   id?: string; // Generated when saved to backend
@@ -15,6 +16,7 @@ export interface Child {
   nickname?: string;
   photoUri?: string;
   culturalTradition?: CulturalTradition;
+  sex?: ChildSex; // For growth percentile calculations (GROWTH-003)
 }
 
 interface ChildContextValue {
