@@ -75,3 +75,40 @@ Reasoning: Growth Tracking has no context. Foundation needed for GROWTH-001 thro
 
 ---
 
+### Task Selection
+Selected: OTD-001 through OTD-007 (On This Day Memories) - context/architecture
+Priority: 1 (Architectural decisions and core abstractions)
+Reasoning: Entry context has getOnThisDayEntries() but no dedicated memory context. Memories are core emotional feature. Multiple features depend on proper architecture for grouping, comparisons, notifications.
+
+### Implementation Complete
+
+**Task:** OTD-001 through OTD-007 core architecture
+**PRD Ref:** On This Day Memories - OTD-001 through OTD-007
+
+**Key Decisions:**
+- Memory type wraps Entry with yearsAgo calculation
+- Memories sorted by yearsAgo (most recent first)
+- getMemoriesByYear() groups by year for OTD-003 multi-year carousel
+- ThenVsNow type for OTD-004 side-by-side comparisons
+- dismissMemory() tracks dismissed memories for session (not persisted)
+- yearsWithMemories() returns years sorted descending
+
+**Files Changed:**
+- NEW: contexts/on-this-day-context.tsx (165 lines)
+- NEW: __tests__/contexts/on-this-day-context.test.tsx (8 tests)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- npm run lint: PASS
+- npm test (on-this-day): 8/8 PASS
+- npm test (all): 687/687 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- Context foundation complete. UI screens needed for full OTD-001 pass.
+- Builds on existing getOnThisDayEntries() from entry-context.
+- Notification integration (OTD-001) deferred to notification-context.
+- Share to family (OTD-005) will use existing family-context.
+
+---
+
