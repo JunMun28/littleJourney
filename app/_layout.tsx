@@ -34,6 +34,13 @@ import { SubscriptionProvider } from "@/contexts/subscription-context";
 import { UserPreferencesProvider } from "@/contexts/user-preferences-context";
 import { StripeProvider } from "@/providers/stripe-provider";
 import { ViewerProvider } from "@/contexts/viewer-context";
+import { ChildProvider } from "@/contexts/child-context";
+import { EntryProvider } from "@/contexts/entry-context";
+import { FamilyProvider } from "@/contexts/family-context";
+import { MilestoneProvider } from "@/contexts/milestone-context";
+import { GrowthTrackingProvider } from "@/contexts/growth-tracking-context";
+import { TimeCapsuleProvider } from "@/contexts/time-capsule-context";
+import { OnThisDayProvider } from "@/contexts/on-this-day-context";
 
 function RootLayoutNav() {
   const { isAuthenticated, isLoading, hasCompletedOnboarding, user } =
@@ -138,18 +145,34 @@ export default function RootLayout() {
                 <SubscriptionProvider>
                   <StripeProvider>
                     <ViewerProvider>
-                      <ExportProvider>
-                        <PhotoBookProvider>
-                          <ThemeProvider
-                            value={
-                              colorScheme === "dark" ? DarkTheme : DefaultTheme
-                            }
-                          >
-                            <RootLayoutNav />
-                            <StatusBar style="auto" />
-                          </ThemeProvider>
-                        </PhotoBookProvider>
-                      </ExportProvider>
+                      <ChildProvider>
+                        <EntryProvider>
+                          <FamilyProvider>
+                            <MilestoneProvider>
+                              <GrowthTrackingProvider>
+                                <TimeCapsuleProvider>
+                                  <OnThisDayProvider>
+                                    <ExportProvider>
+                                      <PhotoBookProvider>
+                                        <ThemeProvider
+                                          value={
+                                            colorScheme === "dark"
+                                              ? DarkTheme
+                                              : DefaultTheme
+                                          }
+                                        >
+                                          <RootLayoutNav />
+                                          <StatusBar style="auto" />
+                                        </ThemeProvider>
+                                      </PhotoBookProvider>
+                                    </ExportProvider>
+                                  </OnThisDayProvider>
+                                </TimeCapsuleProvider>
+                              </GrowthTrackingProvider>
+                            </MilestoneProvider>
+                          </FamilyProvider>
+                        </EntryProvider>
+                      </ChildProvider>
                     </ViewerProvider>
                   </StripeProvider>
                 </SubscriptionProvider>
