@@ -7,6 +7,52 @@ import {
   type PercentileStandard,
 } from "@/contexts/growth-tracking-context";
 
+// Extended test consumer for Singapore standards tests
+function TestConsumerWithSingapore() {
+  const {
+    measurements,
+    preferredStandard,
+    setPreferredStandard,
+    addMeasurement,
+    calculatePercentile,
+  } = useGrowthTracking();
+
+  // Calculate percentile for first measurement using current standard
+  let sgPercentileResult = null;
+  if (measurements.length > 0 && measurements[0].type === "height") {
+    sgPercentileResult = calculatePercentile(measurements[0], 12, "male");
+  }
+
+  return (
+    <>
+      <Text testID="count">{measurements.length}</Text>
+      <Text testID="preferred-standard">{preferredStandard}</Text>
+      <Text testID="sg-percentile-desc">
+        {sgPercentileResult?.rangeDescription ?? "none"}
+      </Text>
+      <Text
+        testID="set-singapore"
+        onPress={() => setPreferredStandard("singapore")}
+      >
+        Set Singapore
+      </Text>
+      <Text
+        testID="add-sg-height"
+        onPress={() =>
+          addMeasurement({
+            type: "height",
+            value: 75.5,
+            date: "2024-06-15",
+            childId: "child-1",
+          })
+        }
+      >
+        Add SG Height
+      </Text>
+    </>
+  );
+}
+
 function TestConsumer() {
   const {
     measurements,
@@ -405,5 +451,67 @@ describe("GrowthTrackingContext", () => {
     );
 
     consoleSpy.mockRestore();
+  });
+
+  // GROWTH-004: Singapore growth standards tests
+  describe("GROWTH-004: Singapore Standards", () => {
+    it("defaults to WHO standard", () => {
+      render(
+        <GrowthTrackingProvider>
+          <TestConsumer />
+        </GrowthTrackingProvider>
+      );
+
+      expect(screen.getByTestId("preferred-standard")).toHaveTextContent("who");
+    });
+
+    it("can switch to Singapore standard", async () => {
+      render(
+        <GrowthTrackingProvider>
+          <TestConsumer />
+        </GrowthTrackingProvider>
+      );
+
+      await act(async () => {
+        screen.getByTestId("set-singapore").props.onPress();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId("preferred-standard")).toHaveTextContent(
+          "singapore"
+        );
+      });
+    });
+
+    it("calculates percentile using Singapore standard when selected", async () => {
+      render(
+        <GrowthTrackingProvider>
+          <TestConsumerWithSingapore />
+        </GrowthTrackingProvider>
+      );
+
+      // Switch to Singapore standard
+      await act(async () => {
+        screen.getByTestId("set-singapore").props.onPress();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId("preferred-standard")).toHaveTextContent(
+          "singapore"
+        );
+      });
+
+      // Add a height measurement
+      await act(async () => {
+        screen.getByTestId("add-sg-height").props.onPress();
+      });
+
+      // Check that Singapore percentile was calculated
+      await waitFor(() => {
+        expect(screen.getByTestId("sg-percentile-desc")).not.toHaveTextContent(
+          "none"
+        );
+      });
+    });
   });
 });

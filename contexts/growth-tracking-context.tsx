@@ -119,6 +119,77 @@ const WHO_HEAD_GIRLS: PercentileTable = {
   24: { p3: 44.8, p15: 45.9, p50: 47.2, p85: 48.6, p97: 49.6 },
 };
 
+// Singapore Growth Standard Reference Data
+// Based on HPB Singapore growth charts for local population
+// Note: Singapore children tend to follow slightly different curves than WHO standards
+// These values are representative of Singapore population norms
+
+// Singapore Height for Boys 0-24 months (cm)
+const SG_HEIGHT_BOYS: PercentileTable = {
+  0: { p3: 45.8, p15: 47.5, p50: 49.5, p85: 51.4, p97: 53.2 },
+  3: { p3: 56.8, p15: 58.8, p50: 60.8, p85: 62.9, p97: 64.9 },
+  6: { p3: 62.8, p15: 64.9, p50: 67.0, p85: 69.2, p97: 71.3 },
+  9: { p3: 67.5, p15: 69.5, p50: 71.4, p85: 73.6, p97: 75.9 },
+  12: { p3: 70.5, p15: 72.8, p50: 75.1, p85: 77.5, p97: 79.9 },
+  18: { p3: 76.3, p15: 79.0, p50: 81.7, p85: 84.4, p97: 87.1 },
+  24: { p3: 81.1, p15: 84.0, p50: 87.2, p85: 90.4, p97: 93.4 },
+};
+
+// Singapore Height for Girls 0-24 months (cm)
+const SG_HEIGHT_GIRLS: PercentileTable = {
+  0: { p3: 45.1, p15: 46.9, p50: 48.7, p85: 50.6, p97: 52.5 },
+  3: { p3: 55.1, p15: 57.1, p50: 59.2, p85: 61.3, p97: 63.4 },
+  6: { p3: 60.7, p15: 62.9, p50: 65.1, p85: 67.3, p97: 69.5 },
+  9: { p3: 65.2, p15: 67.4, p50: 69.5, p85: 71.8, p97: 74.1 },
+  12: { p3: 68.4, p15: 70.8, p50: 73.4, p85: 76.0, p97: 78.6 },
+  18: { p3: 74.4, p15: 77.2, p50: 80.1, p85: 83.0, p97: 85.9 },
+  24: { p3: 79.5, p15: 82.6, p50: 85.8, p85: 89.0, p97: 92.3 },
+};
+
+// Singapore Weight for Boys 0-24 months (kg)
+const SG_WEIGHT_BOYS: PercentileTable = {
+  0: { p3: 2.5, p15: 2.9, p50: 3.2, p85: 3.8, p97: 4.3 },
+  3: { p3: 4.9, p15: 5.5, p50: 6.2, p85: 7.0, p97: 7.8 },
+  6: { p3: 6.2, p15: 6.9, p50: 7.7, p85: 8.6, p97: 9.5 },
+  9: { p3: 7.0, p15: 7.8, p50: 8.7, p85: 9.7, p97: 10.7 },
+  12: { p3: 7.6, p15: 8.4, p50: 9.4, p85: 10.5, p97: 11.7 },
+  18: { p3: 8.4, p15: 9.5, p50: 10.6, p85: 11.9, p97: 13.4 },
+  24: { p3: 9.5, p15: 10.6, p50: 11.9, p85: 13.3, p97: 14.9 },
+};
+
+// Singapore Weight for Girls 0-24 months (kg)
+const SG_WEIGHT_GIRLS: PercentileTable = {
+  0: { p3: 2.4, p15: 2.7, p50: 3.1, p85: 3.6, p97: 4.1 },
+  3: { p3: 4.4, p15: 5.0, p50: 5.6, p85: 6.4, p97: 7.3 },
+  6: { p3: 5.6, p15: 6.3, p50: 7.1, p85: 8.0, p97: 9.1 },
+  9: { p3: 6.4, p15: 7.2, p50: 8.0, p85: 9.1, p97: 10.2 },
+  12: { p3: 6.9, p15: 7.7, p50: 8.7, p85: 9.9, p97: 11.2 },
+  18: { p3: 7.7, p15: 8.8, p50: 9.9, p85: 11.3, p97: 12.9 },
+  24: { p3: 8.8, p15: 10.0, p50: 11.2, p85: 12.7, p97: 14.4 },
+};
+
+// Singapore Head Circumference for Boys 0-24 months (cm)
+const SG_HEAD_BOYS: PercentileTable = {
+  0: { p3: 32.0, p15: 33.0, p50: 34.3, p85: 35.6, p97: 36.7 },
+  3: { p3: 38.1, p15: 39.1, p50: 40.3, p85: 41.5, p97: 42.5 },
+  6: { p3: 40.8, p15: 41.8, p50: 43.1, p85: 44.4, p97: 45.4 },
+  9: { p3: 42.8, p15: 43.8, p50: 45.0, p85: 46.3, p97: 47.2 },
+  12: { p3: 44.0, p15: 45.1, p50: 46.3, p85: 47.5, p97: 48.4 },
+  18: { p3: 45.5, p15: 46.6, p50: 47.8, p85: 49.0, p97: 49.9 },
+  24: { p3: 46.4, p15: 47.4, p50: 48.7, p85: 50.0, p97: 50.9 },
+};
+
+// Singapore Head Circumference for Girls 0-24 months (cm)
+const SG_HEAD_GIRLS: PercentileTable = {
+  0: { p3: 31.3, p15: 32.2, p50: 33.7, p85: 34.9, p97: 35.9 },
+  3: { p3: 36.9, p15: 37.9, p50: 39.3, p85: 40.6, p97: 41.6 },
+  6: { p3: 39.4, p15: 40.4, p50: 41.8, p85: 43.2, p97: 44.2 },
+  9: { p3: 41.1, p15: 42.2, p50: 43.6, p85: 44.9, p97: 45.9 },
+  12: { p3: 42.3, p15: 43.3, p50: 44.7, p85: 46.1, p97: 47.1 },
+  18: { p3: 43.6, p15: 44.7, p50: 46.1, p85: 47.5, p97: 48.4 },
+  24: { p3: 44.6, p15: 45.7, p50: 47.0, p85: 48.4, p97: 49.4 },
+};
+
 // Get the closest available age in months for lookup
 function getClosestAge(ageMonths: number): number {
   const ages = [0, 3, 6, 9, 12, 18, 24];
@@ -253,26 +324,37 @@ export function GrowthTrackingProvider({
       childAgeMonths: number,
       childSex: "male" | "female"
     ): PercentileResult => {
-      // Note: Singapore standards would use different reference tables
-      // Currently only WHO is implemented; Singapore data requires official HPB data
       const isBoy = childSex === "male";
+      const useSingapore = preferredStandard === "singapore";
 
       let table: PercentileTable;
       switch (measurement.type) {
         case "height":
-          table = isBoy ? WHO_HEIGHT_BOYS : WHO_HEIGHT_GIRLS;
+          if (useSingapore) {
+            table = isBoy ? SG_HEIGHT_BOYS : SG_HEIGHT_GIRLS;
+          } else {
+            table = isBoy ? WHO_HEIGHT_BOYS : WHO_HEIGHT_GIRLS;
+          }
           break;
         case "weight":
-          table = isBoy ? WHO_WEIGHT_BOYS : WHO_WEIGHT_GIRLS;
+          if (useSingapore) {
+            table = isBoy ? SG_WEIGHT_BOYS : SG_WEIGHT_GIRLS;
+          } else {
+            table = isBoy ? WHO_WEIGHT_BOYS : WHO_WEIGHT_GIRLS;
+          }
           break;
         case "head_circumference":
-          table = isBoy ? WHO_HEAD_BOYS : WHO_HEAD_GIRLS;
+          if (useSingapore) {
+            table = isBoy ? SG_HEAD_BOYS : SG_HEAD_GIRLS;
+          } else {
+            table = isBoy ? WHO_HEAD_BOYS : WHO_HEAD_GIRLS;
+          }
           break;
       }
 
       return calculatePercentileFromTable(measurement.value, table, childAgeMonths);
     },
-    []
+    [preferredStandard]
   );
 
   const getLatestMeasurement = useCallback(

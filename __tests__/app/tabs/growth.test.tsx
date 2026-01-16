@@ -752,4 +752,129 @@ describe("GrowthScreen", () => {
       });
     });
   });
+
+  // GROWTH-004: Singapore growth standards tests
+  describe("GROWTH-004: Singapore Standards", () => {
+    // GROWTH-004: View growth chart settings
+    it("shows standards selector in chart view", async () => {
+      render(
+        <TestWrapper>
+          <GrowthScreen />
+        </TestWrapper>
+      );
+
+      // Add measurement first
+      await waitFor(() => {
+        expect(screen.getByText("Add Measurement")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Add Measurement"));
+      await waitFor(() => {
+        expect(screen.getByText("Height")).toBeTruthy();
+      });
+      fireEvent.press(screen.getByText("Height"));
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText("Height in cm")).toBeTruthy();
+      });
+      fireEvent.changeText(screen.getByPlaceholderText("Height in cm"), "75.5");
+      fireEvent.press(screen.getByText("Save"));
+
+      await waitFor(() => {
+        expect(screen.getByText(/75\.5 cm/)).toBeTruthy();
+      });
+
+      // Switch to chart view
+      fireEvent.press(screen.getByText("Chart"));
+
+      // Should show standards selector
+      await waitFor(() => {
+        expect(screen.getByTestId("standards-selector")).toBeTruthy();
+      });
+    });
+
+    // GROWTH-004: Select Singapore Standards option
+    it("allows selecting Singapore Standards", async () => {
+      render(
+        <TestWrapper>
+          <GrowthScreen />
+        </TestWrapper>
+      );
+
+      // Add measurement first
+      await waitFor(() => {
+        expect(screen.getByText("Add Measurement")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Add Measurement"));
+      await waitFor(() => {
+        expect(screen.getByText("Height")).toBeTruthy();
+      });
+      fireEvent.press(screen.getByText("Height"));
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText("Height in cm")).toBeTruthy();
+      });
+      fireEvent.changeText(screen.getByPlaceholderText("Height in cm"), "75.5");
+      fireEvent.press(screen.getByText("Save"));
+
+      await waitFor(() => {
+        expect(screen.getByText(/75\.5 cm/)).toBeTruthy();
+      });
+
+      // Switch to chart view
+      fireEvent.press(screen.getByText("Chart"));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("standards-selector")).toBeTruthy();
+      });
+
+      // Find Singapore option
+      await waitFor(() => {
+        expect(screen.getByText("Singapore")).toBeTruthy();
+      });
+    });
+
+    // GROWTH-004: Switch to Singapore standards
+    it("switches to Singapore standards when selected", async () => {
+      render(
+        <TestWrapper>
+          <GrowthScreen />
+        </TestWrapper>
+      );
+
+      // Add measurement first
+      await waitFor(() => {
+        expect(screen.getByText("Add Measurement")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Add Measurement"));
+      await waitFor(() => {
+        expect(screen.getByText("Height")).toBeTruthy();
+      });
+      fireEvent.press(screen.getByText("Height"));
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText("Height in cm")).toBeTruthy();
+      });
+      fireEvent.changeText(screen.getByPlaceholderText("Height in cm"), "75.5");
+      fireEvent.press(screen.getByText("Save"));
+
+      await waitFor(() => {
+        expect(screen.getByText(/75\.5 cm/)).toBeTruthy();
+      });
+
+      // Switch to chart view
+      fireEvent.press(screen.getByText("Chart"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Singapore")).toBeTruthy();
+      });
+
+      // Press Singapore option
+      fireEvent.press(screen.getByText("Singapore"));
+
+      // Singapore should now be active (check styling changes)
+      await waitFor(() => {
+        expect(screen.getByTestId("standard-singapore")).toBeTruthy();
+      });
+    });
+  });
 });
