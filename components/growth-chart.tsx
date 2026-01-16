@@ -4,7 +4,7 @@ import Svg, { Path, Circle, Line, G, Text as SvgText, Rect } from "react-native-
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { Colors, PRIMARY_COLOR, SemanticColors, Spacing } from "@/constants/theme";
-import type { GrowthMeasurement, MeasurementType } from "@/contexts/growth-tracking-context";
+import type { GrowthMeasurement, MeasurementType, PercentileStandard } from "@/contexts/growth-tracking-context";
 
 // WHO Growth Standard Reference Data (percentile boundaries)
 // Values represent measurement at given percentile for age in months
@@ -61,6 +61,50 @@ const WHO_WEIGHT_GIRLS: PercentileData[] = [
   { age: 24, p3: 9.0, p15: 10.2, p50: 11.5, p85: 13.0, p97: 14.8 },
 ];
 
+// Singapore Height for Boys 0-24 months (cm)
+const SG_HEIGHT_BOYS: PercentileData[] = [
+  { age: 0, p3: 45.8, p15: 47.5, p50: 49.5, p85: 51.4, p97: 53.2 },
+  { age: 3, p3: 56.8, p15: 58.8, p50: 60.8, p85: 62.9, p97: 64.9 },
+  { age: 6, p3: 62.8, p15: 64.9, p50: 67.0, p85: 69.2, p97: 71.3 },
+  { age: 9, p3: 67.5, p15: 69.5, p50: 71.4, p85: 73.6, p97: 75.9 },
+  { age: 12, p3: 70.5, p15: 72.8, p50: 75.1, p85: 77.5, p97: 79.9 },
+  { age: 18, p3: 76.3, p15: 79.0, p50: 81.7, p85: 84.4, p97: 87.1 },
+  { age: 24, p3: 81.1, p15: 84.0, p50: 87.2, p85: 90.4, p97: 93.4 },
+];
+
+// Singapore Height for Girls 0-24 months (cm)
+const SG_HEIGHT_GIRLS: PercentileData[] = [
+  { age: 0, p3: 45.1, p15: 46.9, p50: 48.7, p85: 50.6, p97: 52.5 },
+  { age: 3, p3: 55.1, p15: 57.1, p50: 59.2, p85: 61.3, p97: 63.4 },
+  { age: 6, p3: 60.7, p15: 62.9, p50: 65.1, p85: 67.3, p97: 69.5 },
+  { age: 9, p3: 65.2, p15: 67.4, p50: 69.5, p85: 71.8, p97: 74.1 },
+  { age: 12, p3: 68.4, p15: 70.8, p50: 73.4, p85: 76.0, p97: 78.6 },
+  { age: 18, p3: 74.4, p15: 77.2, p50: 80.1, p85: 83.0, p97: 85.9 },
+  { age: 24, p3: 79.5, p15: 82.6, p50: 85.8, p85: 89.0, p97: 92.3 },
+];
+
+// Singapore Weight for Boys 0-24 months (kg)
+const SG_WEIGHT_BOYS: PercentileData[] = [
+  { age: 0, p3: 2.5, p15: 2.9, p50: 3.2, p85: 3.8, p97: 4.3 },
+  { age: 3, p3: 4.9, p15: 5.5, p50: 6.2, p85: 7.0, p97: 7.8 },
+  { age: 6, p3: 6.2, p15: 6.9, p50: 7.7, p85: 8.6, p97: 9.5 },
+  { age: 9, p3: 7.0, p15: 7.8, p50: 8.7, p85: 9.7, p97: 10.7 },
+  { age: 12, p3: 7.6, p15: 8.4, p50: 9.4, p85: 10.5, p97: 11.7 },
+  { age: 18, p3: 8.4, p15: 9.5, p50: 10.6, p85: 11.9, p97: 13.4 },
+  { age: 24, p3: 9.5, p15: 10.6, p50: 11.9, p85: 13.3, p97: 14.9 },
+];
+
+// Singapore Weight for Girls 0-24 months (kg)
+const SG_WEIGHT_GIRLS: PercentileData[] = [
+  { age: 0, p3: 2.4, p15: 2.7, p50: 3.1, p85: 3.6, p97: 4.1 },
+  { age: 3, p3: 4.4, p15: 5.0, p50: 5.6, p85: 6.4, p97: 7.3 },
+  { age: 6, p3: 5.6, p15: 6.3, p50: 7.1, p85: 8.0, p97: 9.1 },
+  { age: 9, p3: 6.4, p15: 7.2, p50: 8.0, p85: 9.1, p97: 10.2 },
+  { age: 12, p3: 6.9, p15: 7.7, p50: 8.7, p85: 9.9, p97: 11.2 },
+  { age: 18, p3: 7.7, p15: 8.8, p50: 9.9, p85: 11.3, p97: 12.9 },
+  { age: 24, p3: 8.8, p15: 10.0, p50: 11.2, p85: 12.7, p97: 14.4 },
+];
+
 const CHART_COLORS = {
   p3: "#FFCDD2", // Light red
   p15: "#FFE0B2", // Light orange
@@ -78,6 +122,7 @@ interface GrowthChartProps {
   childBirthDate: string;
   childSex: "male" | "female";
   measurementType: MeasurementType;
+  standard?: PercentileStandard;
 }
 
 // Calculate age in months from birthdate to measurement date
@@ -114,6 +159,7 @@ export function GrowthChart({
   childBirthDate,
   childSex,
   measurementType,
+  standard = "who",
 }: GrowthChartProps) {
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
@@ -124,13 +170,20 @@ export function GrowthChart({
     [measurements, measurementType]
   );
 
-  // Get reference data based on sex and measurement type
+  // Get reference data based on sex, measurement type, and standard
   const referenceData = useMemo(() => {
+    const useSingapore = standard === "singapore";
     if (measurementType === "height") {
+      if (useSingapore) {
+        return childSex === "male" ? SG_HEIGHT_BOYS : SG_HEIGHT_GIRLS;
+      }
       return childSex === "male" ? WHO_HEIGHT_BOYS : WHO_HEIGHT_GIRLS;
     }
+    if (useSingapore) {
+      return childSex === "male" ? SG_WEIGHT_BOYS : SG_WEIGHT_GIRLS;
+    }
     return childSex === "male" ? WHO_WEIGHT_BOYS : WHO_WEIGHT_GIRLS;
-  }, [childSex, measurementType]);
+  }, [childSex, measurementType, standard]);
 
   // Calculate chart dimensions
   const screenWidth = Dimensions.get("window").width;

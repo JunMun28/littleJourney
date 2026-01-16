@@ -77,6 +77,8 @@ export default function GrowthScreen() {
     getMeasurements,
     deleteMeasurement,
     calculatePercentile,
+    preferredStandard,
+    setPreferredStandard,
   } = useGrowthTracking();
 
   const [modalState, setModalState] = useState<ModalState>("closed");
@@ -305,15 +307,63 @@ export default function GrowthScreen() {
     </View>
   );
 
+  const renderStandardsSelector = () => (
+    <View testID="standards-selector" style={styles.standardsSelector}>
+      <Text style={[styles.standardsLabel, { color: colors.textSecondary }]}>
+        Growth Standard:
+      </Text>
+      <View style={styles.standardsButtons}>
+        <Pressable
+          testID="standard-who"
+          style={[
+            styles.standardButton,
+            preferredStandard === "who" && styles.standardButtonActive,
+            { borderColor: colors.border },
+          ]}
+          onPress={() => setPreferredStandard("who")}
+        >
+          <Text
+            style={[
+              styles.standardButtonText,
+              { color: preferredStandard === "who" ? "#fff" : colors.text },
+            ]}
+          >
+            WHO
+          </Text>
+        </Pressable>
+        <Pressable
+          testID="standard-singapore"
+          style={[
+            styles.standardButton,
+            preferredStandard === "singapore" && styles.standardButtonActive,
+            { borderColor: colors.border },
+          ]}
+          onPress={() => setPreferredStandard("singapore")}
+        >
+          <Text
+            style={[
+              styles.standardButtonText,
+              { color: preferredStandard === "singapore" ? "#fff" : colors.text },
+            ]}
+          >
+            Singapore
+          </Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+
   const renderChartView = () => (
     <ScrollView style={styles.scrollView}>
       {renderChartTypeSelector()}
+      {renderStandardsSelector()}
       {child?.dateOfBirth && child?.sex && (
         <GrowthChart
           measurements={measurements}
           childBirthDate={child.dateOfBirth}
           childSex={child.sex}
           measurementType={chartType}
+          standard={preferredStandard}
         />
       )}
       {(!child?.dateOfBirth || !child?.sex) && (
@@ -783,5 +833,34 @@ const styles = StyleSheet.create({
   chartErrorText: {
     fontSize: 14,
     textAlign: "center",
+  },
+  standardsSelector: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: Spacing.lg,
+    gap: Spacing.md,
+  },
+  standardsLabel: {
+    fontSize: 13,
+    fontWeight: "500",
+  },
+  standardsButtons: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+  },
+  standardButton: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  standardButtonActive: {
+    backgroundColor: PRIMARY_COLOR,
+    borderColor: PRIMARY_COLOR,
+  },
+  standardButtonText: {
+    fontSize: 13,
+    fontWeight: "500",
   },
 });

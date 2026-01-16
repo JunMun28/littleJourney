@@ -539,7 +539,7 @@
         "Verify percentiles recalculated"
       ],
       "acceptanceCriteria": "Option to use Singapore-specific growth standards",
-      "passes": false
+      "passes": true
     },
     {
       "id": "GROWTH-005",
