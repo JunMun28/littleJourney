@@ -186,3 +186,39 @@ Reasoning: Growth Tracking context exists. UI screen needed for user to add/view
 
 ---
 
+### Task Selection
+Selected: GROWTH-002 (Record weight measurement) - UI implementation
+Priority: 4 (Standard features and implementation)
+Reasoning: Builds on GROWTH-001. Same modal pattern. Context supports weight. Just needs UI.
+
+### Implementation Complete
+
+**Task:** GROWTH-002 Record weight measurement UI
+**PRD Ref:** Growth Tracking - GROWTH-002
+
+**Key Decisions:**
+- Changed flow: Add Measurement -> Type Selector (Height/Weight) -> Modal
+- Type selector modal shows Height and Weight options with icons
+- Weight modal mirrors Height modal (value in kg, date picker, save)
+- Measurements displayed in separate sections (Height/Weight) with counts
+- Updated existing GROWTH-001 tests to account for new type selector flow
+
+**Files Changed:**
+- MODIFIED: app/(tabs)/growth.tsx (+weight modal, +type selector, +styles)
+- MODIFIED: __tests__/app/tabs/growth.test.tsx (+5 weight tests, updated height tests)
+- MODIFIED: progress-killer-features.txt
+- MODIFIED: prd-killer-features.json (GROWTH-002 passes: true)
+
+**Verification:**
+- npx expo lint: PASS
+- npm test (growth): 27/27 PASS
+- npm test (all): 701/701 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- GROWTH-002 complete: Can add weight in kg, displays in Weight section
+- Type selector allows future expansion for head circumference (GROWTH-007)
+- Photo attachment not implemented in this iteration
+
+---
+
