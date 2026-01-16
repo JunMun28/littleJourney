@@ -877,4 +877,241 @@ describe("GrowthScreen", () => {
       });
     });
   });
+
+  // GROWTH-007: Head Circumference Tracking tests
+  describe("GROWTH-007: Head Circumference Tracking", () => {
+    // GROWTH-007: Shows head circumference option in type selector
+    it("shows head circumference option in type selector", async () => {
+      render(
+        <TestWrapper>
+          <GrowthScreen />
+        </TestWrapper>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("Add Measurement")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Add Measurement"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Head Circumference")).toBeTruthy();
+      });
+    });
+
+    // GROWTH-007: Opens add head circumference modal
+    it("opens add head circumference modal when selecting head circumference type", async () => {
+      render(
+        <TestWrapper>
+          <GrowthScreen />
+        </TestWrapper>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("Add Measurement")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Add Measurement"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Head Circumference")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Head Circumference"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Add Head Circumference")).toBeTruthy();
+      });
+    });
+
+    // GROWTH-007: Allows entering head circumference value in cm
+    it("allows entering head circumference value in cm", async () => {
+      render(
+        <TestWrapper>
+          <GrowthScreen />
+        </TestWrapper>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("Add Measurement")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Add Measurement"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Head Circumference")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Head Circumference"));
+
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText("Head circumference in cm")).toBeTruthy();
+      });
+
+      fireEvent.changeText(
+        screen.getByPlaceholderText("Head circumference in cm"),
+        "45.5"
+      );
+
+      expect(screen.getByDisplayValue("45.5")).toBeTruthy();
+    });
+
+    // GROWTH-007: Saves head circumference measurement and displays in list
+    it("saves head circumference measurement and displays in list", async () => {
+      render(
+        <TestWrapper>
+          <GrowthScreen />
+        </TestWrapper>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("Add Measurement")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Add Measurement"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Head Circumference")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Head Circumference"));
+
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText("Head circumference in cm")).toBeTruthy();
+      });
+
+      fireEvent.changeText(
+        screen.getByPlaceholderText("Head circumference in cm"),
+        "45.5"
+      );
+      fireEvent.press(screen.getByText("Save"));
+
+      await waitFor(() => {
+        expect(screen.getByText(/45\.5 cm/)).toBeTruthy();
+      });
+    });
+
+    // GROWTH-007: Displays head circumference section with count
+    it("displays head circumference section with count", async () => {
+      render(
+        <TestWrapper>
+          <GrowthScreen />
+        </TestWrapper>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("Add Measurement")).toBeTruthy();
+      });
+
+      // Add head circumference
+      fireEvent.press(screen.getByText("Add Measurement"));
+      await waitFor(() => {
+        expect(screen.getByText("Head Circumference")).toBeTruthy();
+      });
+      fireEvent.press(screen.getByText("Head Circumference"));
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText("Head circumference in cm")).toBeTruthy();
+      });
+      fireEvent.changeText(
+        screen.getByPlaceholderText("Head circumference in cm"),
+        "45.5"
+      );
+      fireEvent.press(screen.getByText("Save"));
+
+      await waitFor(() => {
+        expect(screen.getByText(/Head Circumference \(1\)/)).toBeTruthy();
+      });
+    });
+
+    // GROWTH-007: Shows head chart option in chart type selector
+    it("shows head chart option in chart type selector", async () => {
+      render(
+        <TestWrapper>
+          <GrowthScreen />
+        </TestWrapper>
+      );
+
+      // Add measurement first
+      await waitFor(() => {
+        expect(screen.getByText("Add Measurement")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Add Measurement"));
+      await waitFor(() => {
+        expect(screen.getByText("Head Circumference")).toBeTruthy();
+      });
+      fireEvent.press(screen.getByText("Head Circumference"));
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText("Head circumference in cm")).toBeTruthy();
+      });
+      fireEvent.changeText(
+        screen.getByPlaceholderText("Head circumference in cm"),
+        "45.5"
+      );
+      fireEvent.press(screen.getByText("Save"));
+
+      await waitFor(() => {
+        expect(screen.getByText(/45\.5 cm/)).toBeTruthy();
+      });
+
+      // Switch to chart view
+      fireEvent.press(screen.getByText("Chart"));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("chart-type-selector")).toBeTruthy();
+      });
+
+      // Should show Head option in chart type selector
+      await waitFor(() => {
+        expect(screen.getByText("Head")).toBeTruthy();
+      });
+    });
+
+    // GROWTH-007: Switches to head circumference chart view
+    it("switches to head circumference chart when Head tab is selected", async () => {
+      render(
+        <TestWrapper>
+          <GrowthScreen />
+        </TestWrapper>
+      );
+
+      // Add head circumference measurement
+      await waitFor(() => {
+        expect(screen.getByText("Add Measurement")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Add Measurement"));
+      await waitFor(() => {
+        expect(screen.getByText("Head Circumference")).toBeTruthy();
+      });
+      fireEvent.press(screen.getByText("Head Circumference"));
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText("Head circumference in cm")).toBeTruthy();
+      });
+      fireEvent.changeText(
+        screen.getByPlaceholderText("Head circumference in cm"),
+        "45.5"
+      );
+      fireEvent.press(screen.getByText("Save"));
+
+      await waitFor(() => {
+        expect(screen.getByText(/45\.5 cm/)).toBeTruthy();
+      });
+
+      // Switch to chart view
+      fireEvent.press(screen.getByText("Chart"));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("chart-type-selector")).toBeTruthy();
+      });
+
+      // Select Head chart type
+      fireEvent.press(screen.getByText("Head"));
+
+      // Should show growth chart
+      await waitFor(() => {
+        expect(screen.getByTestId("growth-chart-container")).toBeTruthy();
+      });
+    });
+  });
 });
