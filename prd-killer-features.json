@@ -568,7 +568,7 @@
         "Share via email or AirDrop"
       ],
       "acceptanceCriteria": "Generate printable growth reports for doctor visits",
-      "passes": false
+      "passes": true
     },
     {
       "id": "GROWTH-007",

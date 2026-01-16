@@ -9,6 +9,8 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
@@ -29,10 +31,15 @@ import {
   Shadows,
   Spacing,
 } from "@/constants/theme";
+import {
+  generateAndShareGrowthReport,
+  type GrowthReportData,
+} from "@/services/growth-report-service";
 
-type ModalState = "closed" | "selectType" | "addHeight" | "addWeight" | "addHead";
+type ModalState = "closed" | "selectType" | "addHeight" | "addWeight" | "addHead" | "exportReport";
 type ViewMode = "list" | "chart";
 type ChartType = "height" | "weight" | "head";
+type ExportDateField = "start" | "end" | null;
 
 // Calculate age in months from birthdate to measurement date
 function calculateAgeInMonths(birthDate: string, measurementDate: string): number {
@@ -87,6 +94,16 @@ export default function GrowthScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [chartType, setChartType] = useState<ChartType>("height");
+
+  // Export report state
+  const [exportStartDate, setExportStartDate] = useState(() => {
+    const date = new Date();
+    date.setMonth(date.getMonth() - 6); // Default to 6 months ago
+    return date;
+  });
+  const [exportEndDate, setExportEndDate] = useState(new Date());
+  const [showExportDatePicker, setShowExportDatePicker] = useState<ExportDateField>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Get measurements for current child
   const measurements = useMemo(() => {
@@ -181,6 +198,49 @@ export default function GrowthScreen() {
     deleteMeasurement(id);
   };
 
+  const handleOpenExportModal = () => {
+    setModalState("exportReport");
+  };
+
+  const handleExportReport = async () => {
+    if (!child) return;
+
+    setIsExporting(true);
+
+    // Build percentile data for all measurements
+    const percentileData: Record<string, { percentile: number; isWithinNormalRange: boolean; rangeDescription: string }> = {};
+    measurements.forEach((m) => {
+      if (child.sex && child.dateOfBirth) {
+        const ageMonths = calculateAgeInMonths(child.dateOfBirth, m.date);
+        const result = calculatePercentile(m, ageMonths, child.sex);
+        percentileData[m.id] = result;
+      }
+    });
+
+    const reportData: GrowthReportData = {
+      child: {
+        id: child.id,
+        name: child.name,
+        dateOfBirth: child.dateOfBirth ?? "",
+        sex: child.sex,
+      },
+      measurements,
+      percentileData,
+      standard: preferredStandard,
+      startDate: exportStartDate.toISOString().split("T")[0],
+      endDate: exportEndDate.toISOString().split("T")[0],
+    };
+
+    const result = await generateAndShareGrowthReport(reportData);
+
+    setIsExporting(false);
+    setModalState("closed");
+
+    if (!result.success) {
+      Alert.alert("Export Failed", result.error ?? "Unable to generate report");
+    }
+  };
+
   const renderMeasurementCard = (measurement: GrowthMeasurement) => {
     const ageMonths = child?.dateOfBirth
       ? calculateAgeInMonths(child.dateOfBirth, measurement.date)
@@ -257,39 +317,50 @@ export default function GrowthScreen() {
     parseFloat(measurementValue) > 0;
 
   const renderViewModeToggle = () => (
-    <View testID="view-mode-toggle" style={styles.viewModeToggle}>
-      <Pressable
-        style={[
-          styles.viewModeButton,
-          viewMode === "list" && styles.viewModeButtonActive,
-          { borderColor: colors.border },
-        ]}
-        onPress={() => setViewMode("list")}
-      >
-        <Text
+    <View testID="view-mode-toggle" style={styles.viewModeContainer}>
+      <View style={styles.viewModeToggle}>
+        <Pressable
           style={[
-            styles.viewModeButtonText,
-            { color: viewMode === "list" ? "#fff" : colors.text },
+            styles.viewModeButton,
+            viewMode === "list" && styles.viewModeButtonActive,
+            { borderColor: colors.border },
           ]}
+          onPress={() => setViewMode("list")}
         >
-          List
-        </Text>
-      </Pressable>
-      <Pressable
-        style={[
-          styles.viewModeButton,
-          viewMode === "chart" && styles.viewModeButtonActive,
-          { borderColor: colors.border },
-        ]}
-        onPress={() => setViewMode("chart")}
-      >
-        <Text
+          <Text
+            style={[
+              styles.viewModeButtonText,
+              { color: viewMode === "list" ? "#fff" : colors.text },
+            ]}
+          >
+            List
+          </Text>
+        </Pressable>
+        <Pressable
           style={[
-            styles.viewModeButtonText,
-            { color: viewMode === "chart" ? "#fff" : colors.text },
+            styles.viewModeButton,
+            viewMode === "chart" && styles.viewModeButtonActive,
+            { borderColor: colors.border },
           ]}
+          onPress={() => setViewMode("chart")}
         >
-          Chart
+          <Text
+            style={[
+              styles.viewModeButtonText,
+              { color: viewMode === "chart" ? "#fff" : colors.text },
+            ]}
+          >
+            Chart
+          </Text>
+        </Pressable>
+      </View>
+      <Pressable
+        testID="export-report-button"
+        style={[styles.exportButton, { borderColor: colors.border }]}
+        onPress={handleOpenExportModal}
+      >
+        <Text style={[styles.exportButtonText, { color: PRIMARY_COLOR }]}>
+          Export
         </Text>
       </Pressable>
     </View>
@@ -738,6 +809,109 @@ export default function GrowthScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* Export Report Modal */}
+      <Modal visible={modalState === "exportReport"} animationType="slide" transparent>
+        <View style={styles.typeModalOverlay}>
+          <View style={[styles.exportModalContent, { backgroundColor: colors.card }]}>
+            <ThemedText type="subtitle" style={styles.typeModalTitle}>
+              Export Growth Report
+            </ThemedText>
+            <Text style={[styles.exportModalDescription, { color: colors.textSecondary }]}>
+              Generate a PDF report for your pediatrician with growth measurements and percentiles.
+            </Text>
+
+            <View style={styles.exportDateRow}>
+              <Text style={[styles.exportDateLabel, { color: colors.text }]}>From:</Text>
+              <Pressable
+                testID="export-start-date"
+                style={[styles.exportDateButton, { borderColor: colors.inputBorder }]}
+                onPress={() => setShowExportDatePicker("start")}
+              >
+                <Text style={[styles.exportDateButtonText, { color: colors.text }]}>
+                  {exportStartDate.toLocaleDateString("en-SG")}
+                </Text>
+              </Pressable>
+            </View>
+
+            <View style={styles.exportDateRow}>
+              <Text style={[styles.exportDateLabel, { color: colors.text }]}>To:</Text>
+              <Pressable
+                testID="export-end-date"
+                style={[styles.exportDateButton, { borderColor: colors.inputBorder }]}
+                onPress={() => setShowExportDatePicker("end")}
+              >
+                <Text style={[styles.exportDateButtonText, { color: colors.text }]}>
+                  {exportEndDate.toLocaleDateString("en-SG")}
+                </Text>
+              </Pressable>
+            </View>
+
+            {showExportDatePicker && (
+              <DateTimePicker
+                testID="export-date-picker"
+                value={showExportDatePicker === "start" ? exportStartDate : exportEndDate}
+                mode="date"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                maximumDate={showExportDatePicker === "start" ? exportEndDate : new Date()}
+                minimumDate={showExportDatePicker === "end" ? exportStartDate : undefined}
+                onChange={(_, date) => {
+                  if (Platform.OS !== "ios") {
+                    setShowExportDatePicker(null);
+                  }
+                  if (date) {
+                    if (showExportDatePicker === "start") {
+                      setExportStartDate(date);
+                    } else {
+                      setExportEndDate(date);
+                    }
+                  }
+                }}
+              />
+            )}
+
+            {Platform.OS === "ios" && showExportDatePicker && (
+              <Pressable
+                style={styles.exportDateDone}
+                onPress={() => setShowExportDatePicker(null)}
+              >
+                <Text style={[styles.exportDateDoneText, { color: PRIMARY_COLOR }]}>Done</Text>
+              </Pressable>
+            )}
+
+            <View style={styles.exportStandardInfo}>
+              <Text style={[styles.exportStandardLabel, { color: colors.textSecondary }]}>
+                Using {preferredStandard === "who" ? "WHO" : "Singapore"} growth standards
+              </Text>
+            </View>
+
+            <Pressable
+              testID="export-generate-button"
+              style={[styles.exportGenerateButton, isExporting && styles.submitButtonDisabled]}
+              onPress={handleExportReport}
+              disabled={isExporting}
+            >
+              {isExporting ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text style={styles.submitButtonText}>Generate & Share</Text>
+              )}
+            </Pressable>
+
+            <Pressable
+              style={styles.typeModalCancel}
+              onPress={() => {
+                setModalState("closed");
+                setShowExportDatePicker(null);
+              }}
+            >
+              <Text style={[styles.typeModalCancelText, { color: colors.textSecondary }]}>
+                Cancel
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </ThemedView>
   );
 }
@@ -921,12 +1095,16 @@ const styles = StyleSheet.create({
   typeModalCancelText: {
     fontSize: 16,
   },
-  viewModeToggle: {
+  viewModeContainer: {
     flexDirection: "row",
-    justifyContent: "center",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.sm,
+  },
+  viewModeToggle: {
+    flexDirection: "row",
   },
   viewModeButton: {
     paddingHorizontal: Spacing.xl,
@@ -997,5 +1175,67 @@ const styles = StyleSheet.create({
   standardButtonText: {
     fontSize: 13,
     fontWeight: "500",
+  },
+  exportButton: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderWidth: 1,
+    borderRadius: 8,
+  },
+  exportButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  exportModalContent: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: Spacing.xl,
+  },
+  exportModalDescription: {
+    textAlign: "center",
+    marginBottom: Spacing.xl,
+    fontSize: 14,
+  },
+  exportDateRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
+  exportDateLabel: {
+    fontSize: 14,
+    fontWeight: "500",
+    width: 50,
+  },
+  exportDateButton: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: Spacing.md,
+  },
+  exportDateButtonText: {
+    fontSize: 16,
+  },
+  exportDateDone: {
+    alignItems: "center",
+    padding: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  exportDateDoneText: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  exportStandardInfo: {
+    alignItems: "center",
+    marginVertical: Spacing.md,
+  },
+  exportStandardLabel: {
+    fontSize: 13,
+  },
+  exportGenerateButton: {
+    backgroundColor: PRIMARY_COLOR,
+    padding: Spacing.lg,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: Spacing.md,
   },
 });

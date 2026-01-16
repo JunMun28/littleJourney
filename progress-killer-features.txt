@@ -347,3 +347,46 @@ Reasoning: Extends existing GROWTH-001/002 pattern. Context already supports hea
 
 ---
 
+### Task Selection
+Selected: GROWTH-006 (Export growth report for pediatrician) - Full implementation
+Priority: 4 (Standard features and implementation)
+Reasoning: Builds on existing growth tracking. Provides doctor-ready PDF export. Uses expo-print and expo-sharing already in dependencies.
+
+### Implementation Complete
+
+**Task:** GROWTH-006 Export growth report for pediatrician
+**PRD Ref:** Growth Tracking - GROWTH-006
+
+**Key Decisions:**
+- Created growth-report-service.ts with HTML generation and PDF export
+- Export button in header bar alongside view mode toggle
+- Date range picker modal with start/end dates (default 6 months back)
+- PDF includes child info, measurement tables, percentile data
+- Singapore date format (DD/MM/YYYY) throughout
+- Shows current growth standard (WHO/Singapore) in export
+- Uses expo-print for PDF generation, expo-sharing for share sheet
+- Professional HTML styling with Little Journey branding
+
+**Files Changed:**
+- NEW: services/growth-report-service.ts (export service with HTML/PDF generation)
+- NEW: __tests__/services/growth-report-service.test.ts (8 tests)
+- MODIFIED: app/(tabs)/growth.tsx (+export button, +export modal, +date range state, +styles)
+- MODIFIED: __tests__/app/tabs/growth.test.tsx (+6 GROWTH-006 tests, +expo-print/sharing mocks)
+- MODIFIED: prd-killer-features.json (GROWTH-006 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- npx tsc --noEmit: PASS
+- npm run lint: PASS
+- npm test: 742/743 PASS (1 pre-existing flaky test)
+- npx expo export --platform web: PASS
+
+**Notes:**
+- GROWTH-006 complete: Navigate to Growth Tracker, tap Export, select date range, generate PDF, share
+- PDF includes all measurement types (height, weight, head circumference) with percentiles
+- Report shows which growth standard is used for percentile calculations
+- PDF accessible via native share sheet (email, AirDrop, etc.)
+- Pre-existing flaky test (entry-detail.test.tsx timeout) unrelated
+
+---
+
