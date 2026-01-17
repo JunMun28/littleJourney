@@ -35,6 +35,7 @@ import { useStorage, TIER_LIMITS } from "@/contexts/storage-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useDraft } from "@/hooks/use-draft";
 import { useNotifications } from "@/contexts/notification-context";
+import { useOnThisDay, type Memory } from "@/contexts/on-this-day-context";
 import {
   PRIMARY_COLOR,
   Colors,
@@ -67,30 +68,40 @@ function LoadingFooter({ isLoading }: { isLoading: boolean }) {
 }
 
 interface OnThisDayCardProps {
-  memories: Entry[];
-  onPress: (entry: Entry) => void;
+  memories: Memory[];
+  onPress: (memory: Memory) => void;
+  onDismiss: (memoryId: string) => void;
 }
 
-function OnThisDayCard({ memories, onPress }: OnThisDayCardProps) {
+function OnThisDayCard({ memories, onPress, onDismiss }: OnThisDayCardProps) {
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
 
   if (memories.length === 0) return null;
 
-  const yearsAgo = (date: string) => {
-    const entryYear = new Date(date).getFullYear();
-    const currentYear = new Date().getFullYear();
-    const diff = currentYear - entryYear;
-    return diff === 1 ? "1 year ago" : `${diff} years ago`;
+  const yearsAgoText = (yearsAgo: number) => {
+    return yearsAgo === 1 ? "1 year ago" : `${yearsAgo} years ago`;
   };
 
   return (
-    <View style={styles.onThisDayCard}>
+    <View style={styles.onThisDayCard} testID="on-this-day-card">
       <View style={styles.onThisDayHeader}>
-        <ThemedText style={styles.onThisDayIcon}>✨</ThemedText>
-        <ThemedText type="subtitle" style={styles.onThisDayTitle}>
-          On This Day
-        </ThemedText>
+        <View style={styles.onThisDayTitleRow}>
+          <ThemedText style={styles.onThisDayIcon}>✨</ThemedText>
+          <ThemedText type="subtitle" style={styles.onThisDayTitle}>
+            On This Day
+          </ThemedText>
+        </View>
+        <Pressable
+          testID="dismiss-all-memories"
+          style={styles.onThisDayDismiss}
+          onPress={() => memories.forEach((m) => onDismiss(m.id))}
+          hitSlop={12}
+        >
+          <ThemedText style={[styles.onThisDayDismissText, { color: colors.textMuted }]}>
+            Dismiss
+          </ThemedText>
+        </Pressable>
       </View>
       <ThemedText style={styles.onThisDaySubtitle}>
         {memories.length === 1
@@ -103,10 +114,11 @@ function OnThisDayCard({ memories, onPress }: OnThisDayCardProps) {
             key={memory.id}
             style={styles.onThisDayMemory}
             onPress={() => onPress(memory)}
+            testID={`memory-item-${memory.id}`}
           >
-            {memory.mediaUris && memory.mediaUris.length > 0 ? (
+            {memory.entry.mediaUris && memory.entry.mediaUris.length > 0 ? (
               <Image
-                source={{ uri: memory.mediaUris[0] }}
+                source={{ uri: memory.entry.mediaUris[0] }}
                 style={styles.onThisDayImage}
               />
             ) : (
@@ -122,7 +134,7 @@ function OnThisDayCard({ memories, onPress }: OnThisDayCardProps) {
               </View>
             )}
             <ThemedText style={styles.onThisDayYears}>
-              {yearsAgo(memory.date)}
+              {yearsAgoText(memory.yearsAgo)}
             </ThemedText>
           </Pressable>
         ))}
@@ -189,7 +201,6 @@ export default function FeedScreen() {
   const { user } = useAuth();
   const {
     entries,
-    getOnThisDayEntries,
     refetch,
     isFetching,
     fetchNextPage,
@@ -206,6 +217,10 @@ export default function FeedScreen() {
     sendPhotoBookBirthdayPrompt,
     settings,
   } = useNotifications();
+  const {
+    memories: onThisDayMemories,
+    dismissMemory,
+  } = useOnThisDay();
   const {
     draft,
     hasDraft,
@@ -231,7 +246,6 @@ export default function FeedScreen() {
   } = useImageAnalysis();
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
-  const onThisDayMemories = getOnThisDayEntries();
 
   const [isCreating, setIsCreating] = useState(false);
   const [createStep, setCreateStep] = useState<CreateStep>("type");
@@ -669,7 +683,8 @@ export default function FeedScreen() {
         ListHeaderComponent={
           <OnThisDayCard
             memories={onThisDayMemories}
-            onPress={(entry) => router.push(`/entry/${entry.id}`)}
+            onPress={(memory) => router.push(`/memory/${memory.id}`)}
+            onDismiss={dismissMemory}
           />
         }
         ListEmptyComponent={EmptyState}
@@ -1220,7 +1235,19 @@ const styles = StyleSheet.create({
   onThisDayHeader: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 4,
+  },
+  onThisDayTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  onThisDayDismiss: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  onThisDayDismissText: {
+    fontSize: 14,
   },
   onThisDayIcon: {
     fontSize: 20,

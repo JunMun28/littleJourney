@@ -409,7 +409,7 @@
         "Tap to view full memory experience"
       ],
       "acceptanceCriteria": "Memory card surfaces at top of feed on anniversary",
-      "passes": false
+      "passes": true
     },
     {
       "id": "OTD-003",
