@@ -5,6 +5,7 @@ import {
   useOnThisDay,
   type Memory,
   type ThenVsNow,
+  type SharedMemory,
 } from "@/contexts/on-this-day-context";
 
 // Mock entries provider
@@ -68,6 +69,9 @@ function TestConsumer() {
     createThenVsNow,
     thenVsNowComparisons,
     yearsWithMemories,
+    shareMemoryWithFamily,
+    sharedMemories,
+    isMemoryShared,
   } = useOnThisDay();
 
   const memoryGroups = getMemoriesByYear();
@@ -90,6 +94,10 @@ function TestConsumer() {
       <Text testID="first-comparison-caption">
         {thenVsNowComparisons[0]?.caption ?? "none"}
       </Text>
+      <Text testID="shared-memory-count">{sharedMemories.length}</Text>
+      <Text testID="first-memory-shared">
+        {memories[0] ? (isMemoryShared(memories[0].id) ? "yes" : "no") : "none"}
+      </Text>
       <Text
         testID="dismiss-first"
         onPress={() => memories[0] && dismissMemory(memories[0].id)}
@@ -108,6 +116,18 @@ function TestConsumer() {
         }
       >
         Create Comparison
+      </Text>
+      <Text
+        testID="share-memory"
+        onPress={() =>
+          memories[0] &&
+          shareMemoryWithFamily({
+            memoryId: memories[0].id,
+            familyMemberIds: ["family-1", "family-2"],
+          })
+        }
+      >
+        Share Memory
       </Text>
     </>
   );
@@ -246,5 +266,125 @@ describe("OnThisDayContext", () => {
     );
 
     consoleSpy.mockRestore();
+  });
+
+  // OTD-005: Share memory with family tests
+  it("shares a memory with family members (OTD-005)", async () => {
+    render(
+      <OnThisDayProvider>
+        <TestConsumer />
+      </OnThisDayProvider>,
+    );
+
+    // Initially no shared memories
+    expect(screen.getByTestId("shared-memory-count")).toHaveTextContent("0");
+    expect(screen.getByTestId("first-memory-shared")).toHaveTextContent("no");
+
+    await act(async () => {
+      screen.getByTestId("share-memory").props.onPress();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("shared-memory-count")).toHaveTextContent("1");
+    });
+    expect(screen.getByTestId("first-memory-shared")).toHaveTextContent("yes");
+  });
+
+  it("tracks shared family member IDs correctly", async () => {
+    // Use object to allow mutation tracking across closure
+    const result: { sharedMemory: SharedMemory | null } = {
+      sharedMemory: null,
+    };
+
+    function ShareTracker() {
+      const { memories, shareMemoryWithFamily, sharedMemories } =
+        useOnThisDay();
+
+      return (
+        <>
+          <Text testID="shared-count">{sharedMemories.length}</Text>
+          <Text testID="shared-member-ids">
+            {sharedMemories[0]?.sharedWithIds.join(",") ?? "none"}
+          </Text>
+          <Text
+            testID="share-btn"
+            onPress={() => {
+              if (memories[0]) {
+                result.sharedMemory = shareMemoryWithFamily({
+                  memoryId: memories[0].id,
+                  familyMemberIds: ["grandma-1", "grandpa-2", "aunt-3"],
+                });
+              }
+            }}
+          >
+            Share
+          </Text>
+        </>
+      );
+    }
+
+    render(
+      <OnThisDayProvider>
+        <ShareTracker />
+      </OnThisDayProvider>,
+    );
+
+    await act(async () => {
+      screen.getByTestId("share-btn").props.onPress();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("shared-count")).toHaveTextContent("1");
+    });
+    expect(screen.getByTestId("shared-member-ids")).toHaveTextContent(
+      "grandma-1,grandpa-2,aunt-3",
+    );
+    expect(result.sharedMemory).not.toBeNull();
+    expect(result.sharedMemory?.sharedWithIds).toHaveLength(3);
+  });
+
+  it("sets sharedAt timestamp when sharing a memory", async () => {
+    const result: { sharedMemory: SharedMemory | null } = {
+      sharedMemory: null,
+    };
+
+    function TimestampTracker() {
+      const { memories, shareMemoryWithFamily } = useOnThisDay();
+
+      return (
+        <Text
+          testID="share-btn"
+          onPress={() => {
+            if (memories[0]) {
+              result.sharedMemory = shareMemoryWithFamily({
+                memoryId: memories[0].id,
+                familyMemberIds: ["family-1"],
+              });
+            }
+          }}
+        >
+          Share
+        </Text>
+      );
+    }
+
+    render(
+      <OnThisDayProvider>
+        <TimestampTracker />
+      </OnThisDayProvider>,
+    );
+
+    await act(async () => {
+      screen.getByTestId("share-btn").props.onPress();
+    });
+
+    expect(result.sharedMemory).not.toBeNull();
+    expect(result.sharedMemory?.sharedAt).toBeDefined();
+    // Should be a valid ISO date string
+    if (result.sharedMemory) {
+      expect(new Date(result.sharedMemory.sharedAt).toISOString()).toBe(
+        result.sharedMemory.sharedAt,
+      );
+    }
   });
 });

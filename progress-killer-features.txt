@@ -589,3 +589,44 @@ Reasoning: Builds on OTD-002/003. Context already has ThenVsNow type and createT
 
 ---
 
+### Task Selection
+Selected: OTD-005 (Share memory to family) - UI implementation
+Priority: 4 (Standard features and implementation)
+Reasoning: Builds on OTD-002 memory detail screen. Family context exists. Completes more of On This Day category.
+
+### Implementation Complete
+
+**Task:** OTD-005 Share memory to family
+**PRD Ref:** On This Day Memories - OTD-005
+
+**Key Decisions:**
+- Added shareMemoryWithFamily() to OnThisDayContext
+- SharedMemory type tracks: memoryId, sharedAt timestamp, sharedWithIds array
+- Share modal shows only accepted family members (filters pending)
+- Multi-select family members with visual checkbox UI
+- Already-shared memories show disabled "Shared with Family" state
+- isMemoryShared() helper to check share status
+- Share button has distinct blue color (#4A90D9) to differentiate from other actions
+
+**Files Changed:**
+- MODIFIED: contexts/on-this-day-context.tsx (+shareMemoryWithFamily, +SharedMemory type, +isMemoryShared)
+- MODIFIED: app/memory/[id].tsx (+share button, +share modal, +family member selection, +styles)
+- MODIFIED: __tests__/contexts/on-this-day-context.test.tsx (+3 OTD-005 tests)
+- MODIFIED: __tests__/app/memory/memory-detail.test.tsx (+9 OTD-005 tests, +family context mock)
+- MODIFIED: prd-killer-features.json (OTD-005 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- npx tsc --noEmit: PASS
+- npm run lint: PASS (pre-existing expo-blur issue)
+- npm test (on-this-day, memory): 51/51 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- OTD-005 complete: View memory, tap Share with Family, select members, confirm, success message
+- Notification to family members marked as TODO (requires API integration)
+- Web viewer integration (steps 4-5) is external to mobile app scope
+- Family members filtered to only show "accepted" status
+
+---
+

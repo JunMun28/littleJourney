@@ -41,6 +41,20 @@ export interface CreateThenVsNowInput {
   caption?: string;
 }
 
+/**
+ * Record of a memory shared with family members (OTD-005).
+ */
+export interface SharedMemory {
+  memoryId: string;
+  sharedAt: string;
+  sharedWithIds: string[]; // Family member IDs
+}
+
+export interface ShareMemoryInput {
+  memoryId: string;
+  familyMemberIds: string[];
+}
+
 interface MemoryGroup {
   year: number;
   yearsAgo: number;
@@ -64,6 +78,12 @@ interface OnThisDayContextValue {
   yearsWithMemories: () => number[];
   /** Get a specific memory by ID */
   getMemory: (memoryId: string) => Memory | undefined;
+  /** Share a memory with family members (OTD-005) */
+  shareMemoryWithFamily: (input: ShareMemoryInput) => SharedMemory;
+  /** All shared memories */
+  sharedMemories: SharedMemory[];
+  /** Check if a memory has been shared */
+  isMemoryShared: (memoryId: string) => boolean;
 }
 
 const OnThisDayContext = createContext<OnThisDayContextValue | null>(null);
@@ -83,6 +103,10 @@ export function OnThisDayProvider({ children }: OnThisDayProviderProps) {
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
   // Track created Then vs Now comparisons
   const [comparisons, setComparisons] = useState<ThenVsNow[]>([]);
+  // Track shared memories (OTD-005)
+  const [sharedMemoriesState, setSharedMemoriesState] = useState<
+    SharedMemory[]
+  >([]);
 
   // Build memories from entries, calculating years ago for each
   const allMemories = useMemo(() => {
@@ -182,6 +206,40 @@ export function OnThisDayProvider({ children }: OnThisDayProviderProps) {
     [getMemory],
   );
 
+  // Share a memory with family members (OTD-005)
+  const shareMemoryWithFamily = useCallback(
+    (input: ShareMemoryInput): SharedMemory => {
+      const memory = getMemory(input.memoryId);
+
+      if (!memory) {
+        throw new Error(`Memory not found: ${input.memoryId}`);
+      }
+
+      if (input.familyMemberIds.length === 0) {
+        throw new Error("At least one family member must be selected");
+      }
+
+      const sharedMemory: SharedMemory = {
+        memoryId: input.memoryId,
+        sharedAt: new Date().toISOString(),
+        sharedWithIds: input.familyMemberIds,
+      };
+
+      // TODO: Send notification to family members via API
+      setSharedMemoriesState((prev) => [...prev, sharedMemory]);
+      return sharedMemory;
+    },
+    [getMemory],
+  );
+
+  // Check if a memory has been shared
+  const isMemoryShared = useCallback(
+    (memoryId: string): boolean => {
+      return sharedMemoriesState.some((sm) => sm.memoryId === memoryId);
+    },
+    [sharedMemoriesState],
+  );
+
   const value: OnThisDayContextValue = {
     memories,
     hasMemoriesToday,
@@ -191,6 +249,9 @@ export function OnThisDayProvider({ children }: OnThisDayProviderProps) {
     thenVsNowComparisons: comparisons,
     yearsWithMemories,
     getMemory,
+    shareMemoryWithFamily,
+    sharedMemories: sharedMemoriesState,
+    isMemoryShared,
   };
 
   return (

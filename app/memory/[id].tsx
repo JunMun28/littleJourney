@@ -19,6 +19,7 @@ import * as ImagePicker from "expo-image-picker";
 import { ThemedText } from "@/components/themed-text";
 import { VideoPlayer } from "@/components/video-player";
 import { useOnThisDay } from "@/contexts/on-this-day-context";
+import { useFamily } from "@/contexts/family-context";
 import {
   PRIMARY_COLOR,
   SemanticColors,
@@ -35,7 +36,14 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
  */
 export default function MemoryDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getMemory, dismissMemory, createThenVsNow } = useOnThisDay();
+  const {
+    getMemory,
+    dismissMemory,
+    createThenVsNow,
+    shareMemoryWithFamily,
+    isMemoryShared,
+  } = useOnThisDay();
+  const { familyMembers } = useFamily();
 
   const memory = id ? getMemory(id) : undefined;
 
@@ -47,6 +55,13 @@ export default function MemoryDetailScreen() {
   const [showComparison, setShowComparison] = useState(false);
   const [caption, setCaption] = useState("");
   const [showSavedMessage, setShowSavedMessage] = useState(false);
+
+  // OTD-005: Share with family state
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [selectedFamilyIds, setSelectedFamilyIds] = useState<Set<string>>(
+    new Set(),
+  );
+  const [showShareSuccess, setShowShareSuccess] = useState(false);
 
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -152,6 +167,52 @@ export default function MemoryDetailScreen() {
       setCaption("");
     }, 2000);
   }, [id, currentPhotoUri, caption, createThenVsNow]);
+
+  // OTD-005: Share with family handlers
+  const handleShareWithFamily = useCallback(() => {
+    setShowShareModal(true);
+  }, []);
+
+  const handleCancelShare = useCallback(() => {
+    setShowShareModal(false);
+    setSelectedFamilyIds(new Set());
+  }, []);
+
+  const handleToggleFamilyMember = useCallback((memberId: string) => {
+    setSelectedFamilyIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(memberId)) {
+        newSet.delete(memberId);
+      } else {
+        newSet.add(memberId);
+      }
+      return newSet;
+    });
+  }, []);
+
+  const handleConfirmShare = useCallback(() => {
+    if (!id || selectedFamilyIds.size === 0) return;
+
+    shareMemoryWithFamily({
+      memoryId: id,
+      familyMemberIds: Array.from(selectedFamilyIds),
+    });
+
+    setShowShareSuccess(true);
+    setTimeout(() => {
+      setShowShareSuccess(false);
+      setShowShareModal(false);
+      setSelectedFamilyIds(new Set());
+    }, 2000);
+  }, [id, selectedFamilyIds, shareMemoryWithFamily]);
+
+  // Filter to only accepted family members
+  const acceptedFamilyMembers = familyMembers.filter(
+    (m) => m.status === "accepted",
+  );
+
+  // Check if memory is already shared
+  const alreadyShared = id ? isMemoryShared(id) : false;
 
   // Not found state
   if (!memory) {
@@ -294,6 +355,28 @@ export default function MemoryDetailScreen() {
                 </ThemedText>
               </Pressable>
             )}
+
+            {/* OTD-005: Share with Family button */}
+            <Pressable
+              testID="share-with-family-button"
+              style={[
+                styles.shareButton,
+                alreadyShared && styles.shareButtonDisabled,
+              ]}
+              onPress={handleShareWithFamily}
+              disabled={alreadyShared}
+            >
+              <ThemedText
+                style={[
+                  styles.shareButtonText,
+                  alreadyShared && styles.shareButtonTextDisabled,
+                ]}
+              >
+                {alreadyShared
+                  ? "✓ Shared with Family"
+                  : "👪 Share with Family"}
+              </ThemedText>
+            </Pressable>
           </View>
         </View>
       </View>
@@ -427,6 +510,103 @@ export default function MemoryDetailScreen() {
               </ThemedText>
             </Pressable>
           )}
+        </View>
+      </Modal>
+
+      {/* OTD-005: Share with Family Modal */}
+      <Modal
+        visible={showShareModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={handleCancelShare}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.shareModal} testID="share-modal">
+            <ThemedText style={styles.shareModalTitle}>
+              Share with Family
+            </ThemedText>
+            <ThemedText style={styles.shareModalSubtitle}>
+              Select family members to share this memory with
+            </ThemedText>
+
+            {acceptedFamilyMembers.length === 0 ? (
+              <View style={styles.noFamilyContainer}>
+                <ThemedText style={styles.noFamilyText}>
+                  No family members yet. Invite family members from the Family
+                  tab to share memories with them.
+                </ThemedText>
+              </View>
+            ) : (
+              <View style={styles.familyList}>
+                {acceptedFamilyMembers.map((member) => (
+                  <Pressable
+                    key={member.id}
+                    testID={`family-member-${member.id}`}
+                    style={[
+                      styles.familyMemberItem,
+                      selectedFamilyIds.has(member.id) &&
+                        styles.familyMemberSelected,
+                    ]}
+                    onPress={() => handleToggleFamilyMember(member.id)}
+                  >
+                    <View style={styles.familyMemberInfo}>
+                      <ThemedText style={styles.familyMemberRelation}>
+                        {member.relationship}
+                      </ThemedText>
+                      <ThemedText style={styles.familyMemberEmail}>
+                        {member.email}
+                      </ThemedText>
+                    </View>
+                    <View
+                      style={[
+                        styles.checkbox,
+                        selectedFamilyIds.has(member.id) &&
+                          styles.checkboxSelected,
+                      ]}
+                    >
+                      {selectedFamilyIds.has(member.id) && (
+                        <ThemedText style={styles.checkboxIcon}>✓</ThemedText>
+                      )}
+                    </View>
+                  </Pressable>
+                ))}
+              </View>
+            )}
+
+            {showShareSuccess ? (
+              <View style={styles.shareSuccessMessage}>
+                <ThemedText style={styles.shareSuccessText}>
+                  ✓ Memory shared!
+                </ThemedText>
+              </View>
+            ) : (
+              <View style={styles.shareModalButtons}>
+                <Pressable
+                  testID="cancel-share-button"
+                  style={styles.cancelShareButton}
+                  onPress={handleCancelShare}
+                >
+                  <ThemedText style={styles.cancelShareButtonText}>
+                    Cancel
+                  </ThemedText>
+                </Pressable>
+                <Pressable
+                  testID="confirm-share-button"
+                  style={[
+                    styles.confirmShareButton,
+                    selectedFamilyIds.size === 0 &&
+                      styles.confirmShareButtonDisabled,
+                  ]}
+                  onPress={handleConfirmShare}
+                  disabled={selectedFamilyIds.size === 0}
+                >
+                  <ThemedText style={styles.confirmShareButtonText}>
+                    Share
+                  </ThemedText>
+                </Pressable>
+              </View>
+            )}
+          </View>
         </View>
       </Modal>
     </View>
@@ -743,6 +923,149 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   savedMessageText: {
+    color: SemanticColors.success,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  // OTD-005: Share with Family styles
+  shareButton: {
+    backgroundColor: "#4A90D9",
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: Spacing.sm,
+    alignItems: "center",
+  },
+  shareButtonDisabled: {
+    backgroundColor: "#6B9DC9",
+  },
+  shareButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  shareButtonTextDisabled: {
+    opacity: 0.8,
+  },
+  shareModal: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: Spacing.xl,
+    paddingBottom: 40,
+    maxHeight: "70%",
+  },
+  shareModalTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#333",
+    textAlign: "center",
+    marginBottom: Spacing.sm,
+  },
+  shareModalSubtitle: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: Spacing.xl,
+  },
+  noFamilyContainer: {
+    paddingVertical: Spacing.xl,
+    alignItems: "center",
+  },
+  noFamilyText: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+    lineHeight: 22,
+  },
+  familyList: {
+    gap: Spacing.sm,
+    marginBottom: Spacing.lg,
+  },
+  familyMemberItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: Spacing.md,
+    backgroundColor: "#f5f5f5",
+    borderRadius: Spacing.md,
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  familyMemberSelected: {
+    borderColor: PRIMARY_COLOR,
+    backgroundColor: "#E8F4FF",
+  },
+  familyMemberInfo: {
+    flex: 1,
+  },
+  familyMemberRelation: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#333",
+    textTransform: "capitalize",
+  },
+  familyMemberEmail: {
+    fontSize: 13,
+    color: "#666",
+    marginTop: 2,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#ccc",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  checkboxSelected: {
+    backgroundColor: PRIMARY_COLOR,
+    borderColor: PRIMARY_COLOR,
+  },
+  checkboxIcon: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  shareModalButtons: {
+    flexDirection: "row",
+    gap: Spacing.md,
+    marginTop: Spacing.md,
+  },
+  cancelShareButton: {
+    flex: 1,
+    padding: Spacing.md,
+    alignItems: "center",
+    borderRadius: Spacing.sm,
+    backgroundColor: "#f0f0f0",
+  },
+  cancelShareButtonText: {
+    fontSize: 16,
+    color: "#666",
+  },
+  confirmShareButton: {
+    flex: 1,
+    padding: Spacing.md,
+    alignItems: "center",
+    borderRadius: Spacing.sm,
+    backgroundColor: PRIMARY_COLOR,
+  },
+  confirmShareButtonDisabled: {
+    backgroundColor: "#ccc",
+  },
+  confirmShareButtonText: {
+    fontSize: 16,
+    color: "#fff",
+    fontWeight: "600",
+  },
+  shareSuccessMessage: {
+    backgroundColor: SemanticColors.successLight,
+    paddingVertical: Spacing.md,
+    borderRadius: Spacing.sm,
+    alignItems: "center",
+    marginTop: Spacing.md,
+  },
+  shareSuccessText: {
     color: SemanticColors.success,
     fontSize: 16,
     fontWeight: "600",

@@ -37,6 +37,8 @@ jest.mock("expo-image-picker", () => ({
 const mockDismissMemory = jest.fn();
 const mockGetMemory = jest.fn();
 const mockCreateThenVsNow = jest.fn();
+const mockShareMemoryWithFamily = jest.fn();
+const mockIsMemoryShared = jest.fn();
 
 jest.mock("@/contexts/on-this-day-context", () => ({
   useOnThisDay: () => ({
@@ -45,6 +47,46 @@ jest.mock("@/contexts/on-this-day-context", () => ({
     createThenVsNow: mockCreateThenVsNow,
     thenVsNowComparisons: [],
     memories: [],
+    shareMemoryWithFamily: mockShareMemoryWithFamily,
+    sharedMemories: [],
+    isMemoryShared: mockIsMemoryShared,
+  }),
+}));
+
+// Mock FamilyContext
+const mockFamilyMembers = [
+  {
+    id: "grandma-1",
+    email: "grandma@example.com",
+    relationship: "Grandmother",
+    permissionLevel: "view_interact" as const,
+    status: "accepted" as const,
+    invitedAt: "2025-01-01T00:00:00Z",
+  },
+  {
+    id: "grandpa-2",
+    email: "grandpa@example.com",
+    relationship: "Grandfather",
+    permissionLevel: "view_only" as const,
+    status: "accepted" as const,
+    invitedAt: "2025-01-01T00:00:00Z",
+  },
+  {
+    id: "pending-aunt",
+    email: "aunt@example.com",
+    relationship: "Aunt",
+    permissionLevel: "view_only" as const,
+    status: "pending" as const,
+    invitedAt: "2025-01-01T00:00:00Z",
+  },
+];
+
+jest.mock("@/contexts/family-context", () => ({
+  useFamily: () => ({
+    familyMembers: mockFamilyMembers,
+    hasPendingInvites: true,
+    inviteFamilyMember: jest.fn(),
+    removeFamilyMember: jest.fn(),
   }),
 }));
 
@@ -77,6 +119,7 @@ describe("MemoryDetailScreen (OTD-002)", () => {
       id: "memory_entry-1",
     });
     mockGetMemory.mockReturnValue(mockMemory);
+    mockIsMemoryShared.mockReturnValue(false);
   });
 
   it("renders memory detail screen with banner", () => {
@@ -195,6 +238,7 @@ describe("MemoryDetailScreen - OTD-004: Then vs Now", () => {
       id: "memory_entry-1",
     });
     mockGetMemory.mockReturnValue(mockMemory);
+    mockIsMemoryShared.mockReturnValue(false);
     mockCreateThenVsNow.mockReturnValue({
       id: "otd_123",
       memoryId: "memory_entry-1",
@@ -413,5 +457,133 @@ describe("MemoryDetailScreen - OTD-004: Then vs Now", () => {
     await waitFor(() => {
       expect(screen.queryByTestId("then-vs-now-preview")).toBeNull();
     });
+  });
+});
+
+describe("MemoryDetailScreen - OTD-005: Share with Family", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (useLocalSearchParams as jest.Mock).mockReturnValue({
+      id: "memory_entry-1",
+    });
+    mockGetMemory.mockReturnValue(mockMemory);
+    mockIsMemoryShared.mockReturnValue(false);
+    mockShareMemoryWithFamily.mockReturnValue({
+      memoryId: "memory_entry-1",
+      sharedAt: "2026-01-16T10:00:00Z",
+      sharedWithIds: ["grandma-1", "grandpa-2"],
+    });
+  });
+
+  it("shows Share with Family button", () => {
+    render(<MemoryDetailScreen />);
+
+    expect(screen.getByTestId("share-with-family-button")).toBeTruthy();
+    expect(screen.getByText(/Share with Family/)).toBeTruthy();
+  });
+
+  it("opens share modal when Share with Family is pressed", () => {
+    render(<MemoryDetailScreen />);
+
+    fireEvent.press(screen.getByTestId("share-with-family-button"));
+
+    expect(screen.getByTestId("share-modal")).toBeTruthy();
+    expect(screen.getByText("Share with Family")).toBeTruthy();
+    expect(
+      screen.getByText("Select family members to share this memory with"),
+    ).toBeTruthy();
+  });
+
+  it("shows accepted family members in share modal", () => {
+    render(<MemoryDetailScreen />);
+
+    fireEvent.press(screen.getByTestId("share-with-family-button"));
+
+    // Should show grandmother and grandfather (accepted status)
+    expect(screen.getByText("Grandmother")).toBeTruthy();
+    expect(screen.getByText("grandma@example.com")).toBeTruthy();
+    expect(screen.getByText("Grandfather")).toBeTruthy();
+    expect(screen.getByText("grandpa@example.com")).toBeTruthy();
+
+    // Should NOT show aunt (pending status)
+    expect(screen.queryByText("Aunt")).toBeNull();
+  });
+
+  it("allows selecting family members", () => {
+    render(<MemoryDetailScreen />);
+
+    fireEvent.press(screen.getByTestId("share-with-family-button"));
+
+    fireEvent.press(screen.getByTestId("family-member-grandma-1"));
+
+    // Check if member is selected (checkmark visible)
+    expect(screen.getByTestId("family-member-grandma-1")).toBeTruthy();
+  });
+
+  it("disables Share button when no family members selected", () => {
+    render(<MemoryDetailScreen />);
+
+    fireEvent.press(screen.getByTestId("share-with-family-button"));
+
+    const confirmButton = screen.getByTestId("confirm-share-button");
+    expect(confirmButton.props.accessibilityState?.disabled).toBe(true);
+  });
+
+  it("shares memory with selected family members", async () => {
+    render(<MemoryDetailScreen />);
+
+    fireEvent.press(screen.getByTestId("share-with-family-button"));
+
+    // Select two family members
+    fireEvent.press(screen.getByTestId("family-member-grandma-1"));
+    fireEvent.press(screen.getByTestId("family-member-grandpa-2"));
+
+    // Confirm share
+    await act(async () => {
+      fireEvent.press(screen.getByTestId("confirm-share-button"));
+    });
+
+    expect(mockShareMemoryWithFamily).toHaveBeenCalledWith({
+      memoryId: "memory_entry-1",
+      familyMemberIds: expect.arrayContaining(["grandma-1", "grandpa-2"]),
+    });
+  });
+
+  it("shows success message after sharing", async () => {
+    render(<MemoryDetailScreen />);
+
+    fireEvent.press(screen.getByTestId("share-with-family-button"));
+
+    fireEvent.press(screen.getByTestId("family-member-grandma-1"));
+
+    await act(async () => {
+      fireEvent.press(screen.getByTestId("confirm-share-button"));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Memory shared/)).toBeTruthy();
+    });
+  });
+
+  it("can cancel share modal", () => {
+    render(<MemoryDetailScreen />);
+
+    fireEvent.press(screen.getByTestId("share-with-family-button"));
+
+    expect(screen.getByTestId("share-modal")).toBeTruthy();
+
+    fireEvent.press(screen.getByTestId("cancel-share-button"));
+
+    expect(screen.queryByTestId("share-modal")).toBeNull();
+  });
+
+  it("shows already shared state when memory was shared", () => {
+    mockIsMemoryShared.mockReturnValue(true);
+
+    render(<MemoryDetailScreen />);
+
+    expect(screen.getByText(/Shared with Family/)).toBeTruthy();
+    const shareButton = screen.getByTestId("share-with-family-button");
+    expect(shareButton.props.accessibilityState?.disabled).toBe(true);
   });
 });

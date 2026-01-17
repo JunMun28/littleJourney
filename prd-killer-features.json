@@ -452,7 +452,7 @@
         "Verify memory highlighted in their feed"
       ],
       "acceptanceCriteria": "Parents can share memories directly to family",
-      "passes": false
+      "passes": true
     },
     {
       "id": "OTD-006",
