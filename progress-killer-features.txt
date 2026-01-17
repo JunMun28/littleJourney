@@ -838,3 +838,44 @@ Reasoning: Integrates voice recording (from VOICE-001) with time capsule creatio
 
 ---
 
+### Task Selection
+Selected: CAPSULE-003 (Video message in time capsule) - Full implementation
+Priority: 2 (Integration points between modules)
+Reasoning: Integrates video recording/selection with time capsule creation. Follows CAPSULE-002 voice pattern but uses expo-image-picker for video capture/selection and Video component for playback.
+
+### Implementation Complete
+
+**Task:** CAPSULE-003 Video message in time capsule
+**PRD Ref:** Time Capsule - CAPSULE-003
+
+**Key Decisions:**
+- Built video directly in time-capsule.tsx (follows CAPSULE-002 pattern)
+- expo-image-picker for record or select video (launchCameraAsync/launchImageLibraryAsync)
+- expo-av Video component for playback preview
+- Max 2 minutes (MAX_VIDEO_DURATION_SEC = 120)
+- Video source modal: record new or choose from library
+- Video preview modal: shows video player, duration, play/pause, save/change options
+- Video attached indicator shows duration and remove button
+- Video URI stored in videoMessageUri on capsule create
+
+**Files Changed:**
+- MODIFIED: app/(tabs)/time-capsule.tsx (+video state, +video modals, +video handlers, +styles)
+- MODIFIED: __tests__/app/tabs/time-capsule.test.tsx (+8 CAPSULE-003 tests, +expo-image-picker mocks)
+- MODIFIED: prd-killer-features.json (CAPSULE-003 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- tsc --noEmit: PASS
+- npm run lint: PASS (pre-existing expo-blur issue)
+- npm test (time-capsule): 42/42 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- CAPSULE-003 complete: Create capsule, tap Add Video Message, record/select, preview, save with capsule
+- Video source options: Record Video (camera) or Choose from Library
+- Preview shows video player with play/pause controls
+- Video attached indicator with duration and remove option
+- Time Capsule category now 6/8 complete (CAPSULE-001, 002, 003, 004, 007, 008)
+
+---
+

@@ -20,7 +20,7 @@ jest.mock("expo-router", () => ({
   },
 }));
 
-// Mock expo-av for CAPSULE-002 voice recording
+// Mock expo-av for CAPSULE-002 voice recording and CAPSULE-003 video playback
 jest.mock("expo-av", () => ({
   Audio: {
     Recording: jest.fn().mockImplementation(() => ({
@@ -48,6 +48,29 @@ jest.mock("expo-av", () => ({
     RecordingOptionsPresets: {
       HIGH_QUALITY: {},
     },
+  },
+  Video: "Video",
+  ResizeMode: {
+    CONTAIN: "contain",
+    COVER: "cover",
+  },
+}));
+
+// Mock expo-image-picker for CAPSULE-003 video recording/selection
+const mockLaunchCameraAsync = jest.fn();
+const mockLaunchImageLibraryAsync = jest.fn();
+jest.mock("expo-image-picker", () => ({
+  launchCameraAsync: (...args: unknown[]) => mockLaunchCameraAsync(...args),
+  launchImageLibraryAsync: (...args: unknown[]) =>
+    mockLaunchImageLibraryAsync(...args),
+  requestCameraPermissionsAsync: jest
+    .fn()
+    .mockResolvedValue({ status: "granted" }),
+  requestMediaLibraryPermissionsAsync: jest
+    .fn()
+    .mockResolvedValue({ status: "granted" }),
+  UIImagePickerControllerQualityType: {
+    Medium: 1,
   },
 }));
 
@@ -133,6 +156,8 @@ describe("TimeCapsuleScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockRouterPush.mockClear();
+    mockLaunchCameraAsync.mockClear();
+    mockLaunchImageLibraryAsync.mockClear();
   });
 
   // CAPSULE-001: Navigate to Time Capsule section
@@ -813,6 +838,250 @@ describe("TimeCapsuleScreen", () => {
       // Should show duration display
       await waitFor(() => {
         expect(screen.getByTestId("recording-duration")).toBeTruthy();
+      });
+    });
+  });
+
+  // CAPSULE-003: Video message in time capsule
+  describe("CAPSULE-003: Video message", () => {
+    // CAPSULE-003: Tap 'Add Video Message'
+    it("shows Add Video Message button in create modal", async () => {
+      render(
+        <TestWrapper>
+          <TimeCapsuleScreen />
+        </TestWrapper>,
+      );
+
+      fireEvent.press(screen.getByText("Write New Letter"));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("add-video-message-button")).toBeTruthy();
+      });
+    });
+
+    // CAPSULE-003: Shows video source selection modal
+    it("shows video source modal when Add Video Message is tapped", async () => {
+      render(
+        <TestWrapper>
+          <TimeCapsuleScreen />
+        </TestWrapper>,
+      );
+
+      fireEvent.press(screen.getByText("Write New Letter"));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("add-video-message-button")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByTestId("add-video-message-button"));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("video-source-modal")).toBeTruthy();
+        expect(screen.getByTestId("record-video-button")).toBeTruthy();
+        expect(screen.getByTestId("select-video-button")).toBeTruthy();
+      });
+    });
+
+    // CAPSULE-003: Record or select video
+    it("shows record and select video options", async () => {
+      render(
+        <TestWrapper>
+          <TimeCapsuleScreen />
+        </TestWrapper>,
+      );
+
+      fireEvent.press(screen.getByText("Write New Letter"));
+      await waitFor(() => {
+        expect(screen.getByTestId("add-video-message-button")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByTestId("add-video-message-button"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Record Video")).toBeTruthy();
+        expect(screen.getByText("Choose from Library")).toBeTruthy();
+      });
+    });
+
+    // CAPSULE-003: Cancel video source modal
+    it("closes video source modal when cancel is tapped", async () => {
+      render(
+        <TestWrapper>
+          <TimeCapsuleScreen />
+        </TestWrapper>,
+      );
+
+      fireEvent.press(screen.getByText("Write New Letter"));
+      await waitFor(() => {
+        expect(screen.getByTestId("add-video-message-button")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByTestId("add-video-message-button"));
+      await waitFor(() => {
+        expect(screen.getByTestId("video-source-modal")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByTestId("cancel-video-source-button"));
+
+      // Modal should close, add video button still visible
+      await waitFor(() => {
+        expect(screen.getByTestId("add-video-message-button")).toBeTruthy();
+      });
+    });
+
+    // CAPSULE-003: Select video from library shows preview
+    it("shows video preview modal after selecting video from library", async () => {
+      mockLaunchImageLibraryAsync.mockResolvedValueOnce({
+        canceled: false,
+        assets: [{ uri: "file:///test-video.mp4", duration: 45 }],
+      });
+
+      render(
+        <TestWrapper>
+          <TimeCapsuleScreen />
+        </TestWrapper>,
+      );
+
+      fireEvent.press(screen.getByText("Write New Letter"));
+      await waitFor(() => {
+        expect(screen.getByTestId("add-video-message-button")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByTestId("add-video-message-button"));
+      await waitFor(() => {
+        expect(screen.getByTestId("select-video-button")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByTestId("select-video-button"));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("video-preview-modal")).toBeTruthy();
+        expect(screen.getByTestId("video-preview")).toBeTruthy();
+      });
+    });
+
+    // CAPSULE-003: Preview video playback controls
+    it("shows play button in video preview", async () => {
+      mockLaunchImageLibraryAsync.mockResolvedValueOnce({
+        canceled: false,
+        assets: [{ uri: "file:///test-video.mp4", duration: 60 }],
+      });
+
+      render(
+        <TestWrapper>
+          <TimeCapsuleScreen />
+        </TestWrapper>,
+      );
+
+      fireEvent.press(screen.getByText("Write New Letter"));
+      await waitFor(() => {
+        expect(screen.getByTestId("add-video-message-button")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByTestId("add-video-message-button"));
+      await waitFor(() => {
+        expect(screen.getByTestId("select-video-button")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByTestId("select-video-button"));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("play-video-button")).toBeTruthy();
+        expect(screen.getByTestId("save-video-button")).toBeTruthy();
+      });
+    });
+
+    // CAPSULE-003: Save video message shows indicator
+    it("shows video attached indicator after saving video", async () => {
+      mockLaunchImageLibraryAsync.mockResolvedValueOnce({
+        canceled: false,
+        assets: [{ uri: "file:///test-video.mp4", duration: 90 }],
+      });
+
+      render(
+        <TestWrapper>
+          <TimeCapsuleScreen />
+        </TestWrapper>,
+      );
+
+      fireEvent.press(screen.getByText("Write New Letter"));
+      await waitFor(() => {
+        expect(screen.getByTestId("add-video-message-button")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByTestId("add-video-message-button"));
+      await waitFor(() => {
+        expect(screen.getByTestId("select-video-button")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByTestId("select-video-button"));
+      await waitFor(() => {
+        expect(screen.getByTestId("save-video-button")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByTestId("save-video-button"));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("video-attached-indicator")).toBeTruthy();
+        expect(screen.getByText("Video message attached")).toBeTruthy();
+      });
+    });
+
+    // CAPSULE-003: Remove attached video
+    it("removes video when remove button is tapped", async () => {
+      mockLaunchImageLibraryAsync.mockResolvedValueOnce({
+        canceled: false,
+        assets: [{ uri: "file:///test-video.mp4", duration: 30 }],
+      });
+
+      render(
+        <TestWrapper>
+          <TimeCapsuleScreen />
+        </TestWrapper>,
+      );
+
+      fireEvent.press(screen.getByText("Write New Letter"));
+      await waitFor(() => {
+        expect(screen.getByTestId("add-video-message-button")).toBeTruthy();
+      });
+
+      // Select and save a video
+      fireEvent.press(screen.getByTestId("add-video-message-button"));
+      await waitFor(() => {
+        expect(screen.getByTestId("select-video-button")).toBeTruthy();
+      });
+      fireEvent.press(screen.getByTestId("select-video-button"));
+      await waitFor(() => {
+        expect(screen.getByTestId("save-video-button")).toBeTruthy();
+      });
+      fireEvent.press(screen.getByTestId("save-video-button"));
+
+      // Verify video attached
+      await waitFor(() => {
+        expect(screen.getByTestId("video-attached-indicator")).toBeTruthy();
+      });
+
+      // Remove video
+      fireEvent.press(screen.getByTestId("remove-video-button"));
+
+      // Should show add button again
+      await waitFor(() => {
+        expect(screen.getByTestId("add-video-message-button")).toBeTruthy();
+      });
+    });
+
+    // CAPSULE-003: Video up to 2 minutes
+    it("displays video duration limit in UI", async () => {
+      render(
+        <TestWrapper>
+          <TimeCapsuleScreen />
+        </TestWrapper>,
+      );
+
+      fireEvent.press(screen.getByText("Write New Letter"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Up to 2 minutes")).toBeTruthy();
       });
     });
   });

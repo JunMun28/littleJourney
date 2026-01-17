@@ -197,7 +197,7 @@
         "Save with capsule"
       ],
       "acceptanceCriteria": "Time capsules can include video messages",
-      "passes": false
+      "passes": true
     },
     {
       "id": "CAPSULE-004",

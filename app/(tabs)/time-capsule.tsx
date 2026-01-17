@@ -12,7 +12,8 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { Audio } from "expo-av";
+import { Audio, Video, ResizeMode } from "expo-av";
+import * as ImagePicker from "expo-image-picker";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -33,6 +34,9 @@ import {
 
 // CAPSULE-002: Max voice recording duration (5 minutes in milliseconds)
 const MAX_RECORDING_DURATION_MS = 5 * 60 * 1000;
+
+// CAPSULE-003: Max video duration (2 minutes in seconds for ImagePicker)
+const MAX_VIDEO_DURATION_SEC = 2 * 60;
 
 type ModalState = "closed" | "createCapsule";
 type UnlockOption = "age" | "custom";
@@ -233,6 +237,14 @@ export default function TimeCapsuleScreen() {
     null,
   );
 
+  // CAPSULE-003: Video message state
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const [showVideoSourceModal, setShowVideoSourceModal] = useState(false);
+  const [videoUri, setVideoUri] = useState<string | null>(null);
+  const [videoDuration, setVideoDuration] = useState(0);
+  const [isPlayingVideo, setIsPlayingVideo] = useState(false);
+  const videoRef = useRef<Video | null>(null);
+
   const sealedCapsules = useMemo(
     () => getSealedCapsules(),
     [getSealedCapsules],
@@ -411,6 +423,98 @@ export default function TimeCapsuleScreen() {
     setVoiceDuration(0);
   }, []);
 
+  // CAPSULE-003: Open video source selection modal
+  const handleOpenVideoSourceModal = useCallback(() => {
+    setShowVideoSourceModal(true);
+  }, []);
+
+  // CAPSULE-003: Close video source modal
+  const handleCloseVideoSourceModal = useCallback(() => {
+    setShowVideoSourceModal(false);
+  }, []);
+
+  // CAPSULE-003: Record video with camera
+  const handleRecordVideo = useCallback(async () => {
+    setShowVideoSourceModal(false);
+
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ["videos"],
+      videoMaxDuration: MAX_VIDEO_DURATION_SEC,
+      videoQuality: ImagePicker.UIImagePickerControllerQualityType.Medium,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      setVideoUri(asset.uri);
+      setVideoDuration((asset.duration || 0) * 1000); // Convert to ms
+      setShowVideoModal(true);
+    }
+  }, []);
+
+  // CAPSULE-003: Select video from library
+  const handleSelectVideo = useCallback(async () => {
+    setShowVideoSourceModal(false);
+
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["videos"],
+      videoMaxDuration: MAX_VIDEO_DURATION_SEC,
+      videoQuality: ImagePicker.UIImagePickerControllerQualityType.Medium,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      setVideoUri(asset.uri);
+      setVideoDuration((asset.duration || 0) * 1000); // Convert to ms
+      setShowVideoModal(true);
+    }
+  }, []);
+
+  // CAPSULE-003: Play video preview
+  const handlePlayVideo = useCallback(async () => {
+    if (videoRef.current) {
+      await videoRef.current.playAsync();
+      setIsPlayingVideo(true);
+    }
+  }, []);
+
+  // CAPSULE-003: Pause video preview
+  const handlePauseVideo = useCallback(async () => {
+    if (videoRef.current) {
+      await videoRef.current.pauseAsync();
+      setIsPlayingVideo(false);
+    }
+  }, []);
+
+  // CAPSULE-003: Save video message to capsule form
+  const handleSaveVideo = useCallback(() => {
+    setShowVideoModal(false);
+  }, []);
+
+  // CAPSULE-003: Close video preview modal (cancel)
+  const handleCloseVideoModal = useCallback(() => {
+    setVideoUri(null);
+    setVideoDuration(0);
+    setShowVideoModal(false);
+    setIsPlayingVideo(false);
+  }, []);
+
+  // CAPSULE-003: Remove attached video message
+  const handleRemoveVideo = useCallback(() => {
+    setVideoUri(null);
+    setVideoDuration(0);
+    setIsPlayingVideo(false);
+  }, []);
+
   // CAPSULE-002: Auto-stop at 5 minutes
   useEffect(() => {
     if (
@@ -432,6 +536,10 @@ export default function TimeCapsuleScreen() {
     setVoiceUri(null);
     setVoiceDuration(0);
     setVoiceState("idle");
+    // CAPSULE-003: Reset video state
+    setVideoUri(null);
+    setVideoDuration(0);
+    setIsPlayingVideo(false);
     setModalState("createCapsule");
   };
 
@@ -449,6 +557,8 @@ export default function TimeCapsuleScreen() {
       childId: child?.id,
       // CAPSULE-002: Include voice message URI if recorded
       voiceMessageUri: voiceUri || undefined,
+      // CAPSULE-003: Include video message URI if recorded
+      videoMessageUri: videoUri || undefined,
     });
 
     setModalState("closed");
@@ -456,6 +566,9 @@ export default function TimeCapsuleScreen() {
     // CAPSULE-002: Reset voice state
     setVoiceUri(null);
     setVoiceDuration(0);
+    // CAPSULE-003: Reset video state
+    setVideoUri(null);
+    setVideoDuration(0);
   };
 
   const isValidCapsule = letterContent.trim().length > 0;
@@ -787,6 +900,65 @@ export default function TimeCapsuleScreen() {
               </Pressable>
             )}
 
+            {/* CAPSULE-003: Video Message Section */}
+            <Text style={[styles.label, { color: colors.text }]}>
+              Video Message (Optional)
+            </Text>
+            {videoUri ? (
+              <View
+                testID="video-attached-indicator"
+                style={[
+                  styles.videoAttachedContainer,
+                  { borderColor: colors.border },
+                ]}
+              >
+                <View style={styles.videoAttachedInfo}>
+                  <Text style={styles.videoIcon}>🎬</Text>
+                  <View>
+                    <Text
+                      style={[styles.videoAttachedText, { color: colors.text }]}
+                    >
+                      Video message attached
+                    </Text>
+                    <Text
+                      style={[
+                        styles.videoDurationText,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      {formatDuration(videoDuration)}
+                    </Text>
+                  </View>
+                </View>
+                <Pressable
+                  testID="remove-video-button"
+                  onPress={handleRemoveVideo}
+                  style={styles.removeVideoButton}
+                >
+                  <Text style={styles.removeVideoText}>✕</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <Pressable
+                testID="add-video-message-button"
+                style={[styles.addVideoButton, { borderColor: colors.border }]}
+                onPress={handleOpenVideoSourceModal}
+              >
+                <Text style={styles.addVideoIcon}>🎬</Text>
+                <Text style={[styles.addVideoText, { color: colors.text }]}>
+                  Add Video Message
+                </Text>
+                <Text
+                  style={[
+                    styles.addVideoSubtext,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Up to 2 minutes
+                </Text>
+              </Pressable>
+            )}
+
             <Text style={[styles.label, { color: colors.text }]}>
               When to Unlock
             </Text>
@@ -1050,6 +1222,199 @@ export default function TimeCapsuleScreen() {
                       <Text style={styles.saveVoiceButtonText}>
                         Use Recording
                       </Text>
+                    </Pressable>
+                  </View>
+                </View>
+              )}
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* CAPSULE-003: Video Source Selection Modal */}
+      <Modal
+        visible={showVideoSourceModal}
+        animationType="fade"
+        transparent={true}
+        testID="video-source-modal"
+      >
+        <View style={styles.videoSourceModalOverlay}>
+          <View
+            style={[
+              styles.videoSourceModalContent,
+              { backgroundColor: colors.background },
+            ]}
+          >
+            <Text style={[styles.videoSourceTitle, { color: colors.text }]}>
+              Add Video Message
+            </Text>
+
+            <Pressable
+              testID="record-video-button"
+              style={[styles.videoSourceOption, { borderColor: colors.border }]}
+              onPress={handleRecordVideo}
+            >
+              <Text style={styles.videoSourceIcon}>📹</Text>
+              <View>
+                <Text
+                  style={[
+                    styles.videoSourceOptionTitle,
+                    { color: colors.text },
+                  ]}
+                >
+                  Record Video
+                </Text>
+                <Text
+                  style={[
+                    styles.videoSourceOptionSubtext,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Use camera to record a new video
+                </Text>
+              </View>
+            </Pressable>
+
+            <Pressable
+              testID="select-video-button"
+              style={[styles.videoSourceOption, { borderColor: colors.border }]}
+              onPress={handleSelectVideo}
+            >
+              <Text style={styles.videoSourceIcon}>📁</Text>
+              <View>
+                <Text
+                  style={[
+                    styles.videoSourceOptionTitle,
+                    { color: colors.text },
+                  ]}
+                >
+                  Choose from Library
+                </Text>
+                <Text
+                  style={[
+                    styles.videoSourceOptionSubtext,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Select an existing video
+                </Text>
+              </View>
+            </Pressable>
+
+            <Pressable
+              testID="cancel-video-source-button"
+              style={styles.videoSourceCancelButton}
+              onPress={handleCloseVideoSourceModal}
+            >
+              <Text style={styles.videoSourceCancelText}>Cancel</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      {/* CAPSULE-003: Video Preview Modal */}
+      <Modal
+        visible={showVideoModal}
+        animationType="slide"
+        transparent={true}
+        testID="video-preview-modal"
+      >
+        <View style={styles.videoModalOverlay}>
+          <View
+            style={[
+              styles.videoModalContent,
+              { backgroundColor: colors.background },
+            ]}
+          >
+            <View
+              style={[
+                styles.videoModalHeader,
+                { borderBottomColor: colors.border },
+              ]}
+            >
+              <Pressable
+                testID="close-video-modal-button"
+                onPress={handleCloseVideoModal}
+              >
+                <Text style={styles.backButton}>Cancel</Text>
+              </Pressable>
+              <ThemedText type="subtitle">Video Preview</ThemedText>
+              <View style={{ width: 60 }} />
+            </View>
+
+            <View style={styles.videoModalBody}>
+              {videoUri && (
+                <View
+                  testID="video-preview"
+                  style={styles.videoPreviewContainer}
+                >
+                  <Video
+                    ref={videoRef}
+                    source={{ uri: videoUri }}
+                    style={styles.videoPlayer}
+                    resizeMode={ResizeMode.CONTAIN}
+                    isLooping={false}
+                    onPlaybackStatusUpdate={(status) => {
+                      if (status.isLoaded && status.didJustFinish) {
+                        setIsPlayingVideo(false);
+                      }
+                    }}
+                  />
+
+                  <Text
+                    style={[
+                      styles.videoPreviewDuration,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    Duration: {formatDuration(videoDuration)}
+                  </Text>
+
+                  <Pressable
+                    testID="play-video-button"
+                    style={[
+                      styles.playVideoButton,
+                      isPlayingVideo && styles.playVideoButtonActive,
+                    ]}
+                    onPress={
+                      isPlayingVideo ? handlePauseVideo : handlePlayVideo
+                    }
+                  >
+                    <Text style={styles.playVideoIcon}>
+                      {isPlayingVideo ? "⏸️" : "▶️"}
+                    </Text>
+                    <Text style={styles.playVideoText}>
+                      {isPlayingVideo ? "Pause" : "Play"}
+                    </Text>
+                  </Pressable>
+
+                  <View style={styles.videoPreviewActions}>
+                    <Pressable
+                      testID="change-video-button"
+                      style={[
+                        styles.videoPreviewActionButton,
+                        { borderColor: colors.border },
+                      ]}
+                      onPress={() => {
+                        setShowVideoModal(false);
+                        setShowVideoSourceModal(true);
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.videoPreviewActionText,
+                          { color: colors.text },
+                        ]}
+                      >
+                        Change Video
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      testID="save-video-button"
+                      style={styles.saveVideoButton}
+                      onPress={handleSaveVideo}
+                    >
+                      <Text style={styles.saveVideoButtonText}>Use Video</Text>
                     </Pressable>
                   </View>
                 </View>
@@ -1531,6 +1896,202 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   saveVoiceButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  // CAPSULE-003: Video message styles
+  addVideoButton: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: Spacing.lg,
+    alignItems: "center",
+    borderStyle: "dashed",
+    marginBottom: Spacing.xl,
+  },
+  addVideoIcon: {
+    fontSize: 32,
+    marginBottom: Spacing.sm,
+  },
+  addVideoText: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  addVideoSubtext: {
+    fontSize: 12,
+    marginTop: Spacing.xs,
+  },
+  videoAttachedContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: Spacing.md,
+    marginBottom: Spacing.xl,
+    backgroundColor: "#E8F4FD",
+    borderColor: "#4A90D9",
+  },
+  videoAttachedInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  videoIcon: {
+    fontSize: 24,
+    marginRight: Spacing.md,
+  },
+  videoAttachedText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  videoDurationText: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  removeVideoButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(0,0,0,0.1)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  removeVideoText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  videoSourceModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: Spacing.lg,
+  },
+  videoSourceModalContent: {
+    borderRadius: 16,
+    padding: Spacing.xl,
+    width: "100%",
+    maxWidth: 340,
+  },
+  videoSourceTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: Spacing.xl,
+  },
+  videoSourceOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderRadius: 12,
+    marginBottom: Spacing.md,
+  },
+  videoSourceIcon: {
+    fontSize: 28,
+    marginRight: Spacing.md,
+  },
+  videoSourceOptionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  videoSourceOptionSubtext: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  videoSourceCancelButton: {
+    marginTop: Spacing.md,
+    alignItems: "center",
+    padding: Spacing.md,
+  },
+  videoSourceCancelText: {
+    fontSize: 16,
+    color: PRIMARY_COLOR,
+    fontWeight: "600",
+  },
+  videoModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  videoModalContent: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    minHeight: 500,
+  },
+  videoModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: Spacing.lg,
+    borderBottomWidth: 1,
+  },
+  videoModalBody: {
+    flex: 1,
+    padding: Spacing.lg,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  videoPreviewContainer: {
+    width: "100%",
+    alignItems: "center",
+  },
+  videoPlayer: {
+    width: "100%",
+    height: 200,
+    backgroundColor: "#000",
+    borderRadius: 8,
+    marginBottom: Spacing.md,
+  },
+  videoPreviewDuration: {
+    fontSize: 14,
+    marginBottom: Spacing.lg,
+  },
+  playVideoButton: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: PRIMARY_COLOR,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: Spacing.xl,
+  },
+  playVideoButtonActive: {
+    backgroundColor: "#333",
+  },
+  playVideoIcon: {
+    fontSize: 24,
+  },
+  playVideoText: {
+    color: "#fff",
+    fontSize: 11,
+    fontWeight: "600",
+    marginTop: 2,
+  },
+  videoPreviewActions: {
+    flexDirection: "row",
+    gap: Spacing.md,
+    width: "100%",
+  },
+  videoPreviewActionButton: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    borderWidth: 1,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  videoPreviewActionText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  saveVideoButton: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    backgroundColor: PRIMARY_COLOR,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  saveVideoButtonText: {
     color: "#fff",
     fontSize: 14,
     fontWeight: "600",
