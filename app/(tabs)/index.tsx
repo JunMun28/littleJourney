@@ -327,6 +327,9 @@ export default function FeedScreen() {
   // Voice recording state (VOICE-001)
   const [voiceUri, setVoiceUri] = useState<string | null>(null);
   const [voiceDuration, setVoiceDuration] = useState<number>(0);
+  // Voice photo attachment state (VOICE-003)
+  const [voicePhotoUris, setVoicePhotoUris] = useState<string[]>([]);
+  const [voicePhotoSizes, setVoicePhotoSizes] = useState<number[]>([]);
   const hasShownDraftPrompt = useRef(false);
   const hasSentMemoriesNotification = useRef(false);
   const hasSentBirthdayPrompt = useRef(false);
@@ -439,6 +442,9 @@ export default function FeedScreen() {
     // Reset voice state (VOICE-001)
     setVoiceUri(null);
     setVoiceDuration(0);
+    // Reset voice photo state (VOICE-003)
+    setVoicePhotoUris([]);
+    setVoicePhotoSizes([]);
     discardRecording();
     resetVideoUploadState();
     resetImageAnalysis();
@@ -665,6 +671,44 @@ export default function FeedScreen() {
     }
   };
 
+  // Voice photo attachment handler (VOICE-003)
+  const handleVoicePhotoAttach = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Permission Required",
+        "Permission to access media library is required.",
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+      const totalSize = result.assets.reduce(
+        (sum, a) => sum + (a.fileSize ?? 0),
+        0,
+      );
+
+      // Check storage limit
+      if (!canUpload(totalSize)) {
+        Alert.alert(
+          "Storage Limit Reached",
+          "You don't have enough storage space for these photos.",
+          [{ text: "OK" }],
+        );
+        return;
+      }
+
+      setVoicePhotoUris(result.assets.map((a) => a.uri));
+      setVoicePhotoSizes(result.assets.map((a) => a.fileSize ?? 0));
+    }
+  };
+
   const handleSubmit = async () => {
     if (!selectedType) return;
 
@@ -700,6 +744,11 @@ export default function FeedScreen() {
       thumbnailUrl = uploadResult.thumbnailUrl;
     }
 
+    // For voice entries, use voicePhotoUris as mediaUris (VOICE-003)
+    if (selectedType === "voice" && voicePhotoUris.length > 0) {
+      mediaUrisToSave = voicePhotoUris;
+    }
+
     createEntry.mutate(
       {
         type: selectedType,
@@ -718,8 +767,14 @@ export default function FeedScreen() {
       {
         onSuccess: () => {
           // Track storage usage for uploaded media and check for threshold warnings (PRD Section 7.1)
-          if (selectedMediaSizes.length > 0) {
-            const totalSize = selectedMediaSizes.reduce(
+          // Include voice photo sizes for voice entries (VOICE-003)
+          const mediaSizesToTrack =
+            selectedType === "voice" && voicePhotoSizes.length > 0
+              ? voicePhotoSizes
+              : selectedMediaSizes;
+
+          if (mediaSizesToTrack.length > 0) {
+            const totalSize = mediaSizesToTrack.reduce(
               (sum, size) => sum + size,
               0,
             );
@@ -751,7 +806,7 @@ export default function FeedScreen() {
           trackEvent(AnalyticsEvent.ENTRY_CREATED, {
             type: selectedType,
             hasCaption: caption.trim().length > 0,
-            hasMedia: selectedMedia.length > 0,
+            hasMedia: mediaUrisToSave.length > 0,
             tagCount: tags.length,
           });
 
@@ -993,6 +1048,77 @@ export default function FeedScreen() {
                   </TouchableOpacity>
                 </View>
               )}
+
+              {/* Photo attachment section (VOICE-003) */}
+              <View style={styles.voicePhotoSection}>
+                <ThemedText
+                  style={[styles.voicePhotoLabel, { color: colors.textMuted }]}
+                >
+                  Attach Photos (Optional)
+                </ThemedText>
+
+                {voicePhotoUris.length > 0 ? (
+                  <View style={styles.voicePhotoPreviewContainer}>
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={styles.voicePhotoPreviewScroll}
+                    >
+                      {voicePhotoUris.map((uri, index) => (
+                        <View key={uri} style={styles.voicePhotoPreviewItem}>
+                          <Image
+                            source={{ uri }}
+                            style={styles.voicePhotoPreviewImage}
+                          />
+                          <Pressable
+                            style={styles.voicePhotoRemove}
+                            onPress={() => {
+                              setVoicePhotoUris(
+                                voicePhotoUris.filter((_, i) => i !== index),
+                              );
+                              setVoicePhotoSizes(
+                                voicePhotoSizes.filter((_, i) => i !== index),
+                              );
+                            }}
+                            hitSlop={8}
+                            testID={`remove-voice-photo-${index}`}
+                          >
+                            <ThemedText style={styles.voicePhotoRemoveText}>
+                              ×
+                            </ThemedText>
+                          </Pressable>
+                        </View>
+                      ))}
+                    </ScrollView>
+                    <Pressable
+                      style={[
+                        styles.addMorePhotosButton,
+                        { backgroundColor: colors.backgroundSecondary },
+                      ]}
+                      onPress={handleVoicePhotoAttach}
+                      testID="add-more-voice-photos"
+                    >
+                      <ThemedText style={styles.addMorePhotosText}>
+                        + Add More
+                      </ThemedText>
+                    </Pressable>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    style={[
+                      styles.attachPhotoButton,
+                      { backgroundColor: colors.backgroundSecondary },
+                    ]}
+                    onPress={handleVoicePhotoAttach}
+                    testID="attach-voice-photo-button"
+                  >
+                    <ThemedText style={styles.attachPhotoIcon}>📷</ThemedText>
+                    <ThemedText style={styles.attachPhotoText}>
+                      Attach Photo
+                    </ThemedText>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
           )}
 
@@ -1013,7 +1139,25 @@ export default function FeedScreen() {
                   </ThemedText>
                 </View>
               )}
-              {selectedMedia.length > 0 && (
+              {/* Voice photo preview (VOICE-003) */}
+              {selectedType === "voice" && voicePhotoUris.length > 0 && (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.voicePhotoCaptionPreview}
+                  contentContainerStyle={styles.voicePhotoCaptionPreviewContent}
+                  testID="voice-photo-caption-preview"
+                >
+                  {voicePhotoUris.map((uri) => (
+                    <Image
+                      key={uri}
+                      source={{ uri }}
+                      style={styles.voicePhotoCaptionImage}
+                    />
+                  ))}
+                </ScrollView>
+              )}
+              {selectedMedia.length > 0 && selectedType !== "voice" && (
                 <Image
                   source={{ uri: selectedMedia[0] }}
                   style={styles.previewImage}
@@ -1564,5 +1708,84 @@ const styles = StyleSheet.create({
   },
   voicePreviewText: {
     fontSize: 16,
+  },
+  // Voice photo attachment styles (VOICE-003)
+  voicePhotoSection: {
+    width: "100%",
+    marginTop: 24,
+    paddingHorizontal: 16,
+  },
+  voicePhotoLabel: {
+    fontSize: 14,
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  attachPhotoButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 16,
+    borderRadius: 12,
+    gap: 8,
+  },
+  attachPhotoIcon: {
+    fontSize: 24,
+  },
+  attachPhotoText: {
+    fontSize: 16,
+  },
+  voicePhotoPreviewContainer: {
+    alignItems: "center",
+  },
+  voicePhotoPreviewScroll: {
+    gap: 8,
+    paddingVertical: 4,
+  },
+  voicePhotoPreviewItem: {
+    position: "relative",
+  },
+  voicePhotoPreviewImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+  },
+  voicePhotoRemove: {
+    position: "absolute",
+    top: -6,
+    right: -6,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "#FF5252",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  voicePhotoRemoveText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "bold",
+    lineHeight: 16,
+  },
+  addMorePhotosButton: {
+    marginTop: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 16,
+  },
+  addMorePhotosText: {
+    fontSize: 14,
+  },
+  voicePhotoCaptionPreview: {
+    marginBottom: 16,
+    marginHorizontal: -16,
+  },
+  voicePhotoCaptionPreviewContent: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  voicePhotoCaptionImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
   },
 });

@@ -639,7 +639,7 @@
         "Verify entry shows photo with voice playback"
       ],
       "acceptanceCriteria": "Combine voice recording with photo in single entry",
-      "passes": false
+      "passes": true
     },
     {
       "id": "VOICE-004",

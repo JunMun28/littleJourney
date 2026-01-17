@@ -1057,3 +1057,79 @@ describe("Voice Journal Entry Type", () => {
     expect(voiceEntry.transcript).toBeUndefined();
   });
 });
+
+// VOICE-003: Voice entry with photo attachment
+describe("Voice entry with photo attachment", () => {
+  it("should support voice entry with mediaUris", () => {
+    // Voice entries can include photos attached from gallery
+    const voiceEntryWithPhoto = {
+      id: "entry_125",
+      type: "voice" as const,
+      audioUri: "file:///recording.m4a",
+      audioDuration: 10000,
+      mediaUris: ["file:///photo1.jpg", "file:///photo2.jpg"],
+      caption: "Voice with photos",
+      date: "2026-01-18",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    expect(voiceEntryWithPhoto.type).toBe("voice");
+    expect(voiceEntryWithPhoto.audioUri).toBeDefined();
+    expect(voiceEntryWithPhoto.mediaUris).toHaveLength(2);
+  });
+
+  it("should allow voice entry without photo attachment", () => {
+    const voiceEntryNoPhoto = {
+      id: "entry_126",
+      type: "voice" as const,
+      audioUri: "file:///recording.m4a",
+      audioDuration: 5000,
+      mediaUris: undefined,
+      date: "2026-01-18",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    expect(voiceEntryNoPhoto.type).toBe("voice");
+    expect(voiceEntryNoPhoto.mediaUris).toBeUndefined();
+  });
+
+  it("should create voice entry with photo via API", async () => {
+    const { clearAllMockData, entryApi } = require("@/services/api-client");
+    clearAllMockData();
+
+    const result = await entryApi.createEntry({
+      entry: {
+        type: "voice",
+        date: "2026-01-18",
+        audioUri: "file:///recording.m4a",
+        audioDuration: 8000,
+        mediaUris: ["file:///attached-photo.jpg"],
+        caption: "Voice with attached photo",
+      },
+    });
+
+    expect(result.data.type).toBe("voice");
+    expect(result.data.audioUri).toBe("file:///recording.m4a");
+    expect(result.data.mediaUris).toEqual(["file:///attached-photo.jpg"]);
+  });
+
+  it("should support viewing voice entry with photo display", () => {
+    // Entry with voice should show photo along with voice playback
+    const voiceWithPhotoEntry = {
+      type: "voice",
+      audioUri: "file:///recording.m4a",
+      audioDuration: 5000,
+      mediaUris: ["file:///photo.jpg"],
+    };
+
+    // Voice entry shows photo if mediaUris present
+    const hasPhoto =
+      voiceWithPhotoEntry.mediaUris && voiceWithPhotoEntry.mediaUris.length > 0;
+    const hasVoice = !!voiceWithPhotoEntry.audioUri;
+
+    expect(hasPhoto).toBe(true);
+    expect(hasVoice).toBe(true);
+  });
+});

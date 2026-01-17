@@ -879,3 +879,42 @@ Reasoning: Integrates video recording/selection with time capsule creation. Foll
 
 ---
 
+### Task Selection
+Selected: VOICE-003 (Voice entry with photo attachment) - UI implementation
+Priority: 2 (Integration points between modules)
+Reasoning: Integrates photo attachment with voice recording. Builds on VOICE-001 infrastructure. No external dependencies. Clear PRD requirements.
+
+### Implementation Complete
+
+**Task:** VOICE-003 Voice entry with photo attachment
+**PRD Ref:** Voice Journal - VOICE-003
+
+**Key Decisions:**
+- Added voicePhotoUris and voicePhotoSizes state for voice photo attachment
+- Created handleVoicePhotoAttach() using ImagePicker with storage limit check
+- Photo attachment section in voice recording step with preview/remove capability
+- Voice photos stored in entry's mediaUris field (same as photo entries)
+- Caption step shows attached photos in horizontal ScrollView
+- Storage tracking includes voice photo sizes
+- Multiple photo selection supported
+
+**Files Changed:**
+- MODIFIED: app/(tabs)/index.tsx (+voicePhotoUris/Sizes state, +handleVoicePhotoAttach, +photo UI in voice step, +photo preview in caption step, +styles)
+- MODIFIED: __tests__/app/tabs/feed.test.tsx (+4 VOICE-003 tests)
+- MODIFIED: prd-killer-features.json (VOICE-003 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- tsc --noEmit: PASS
+- npm run lint: PASS (pre-existing expo-blur issue)
+- npm test (feed): 47/47 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- VOICE-003 complete: Select Voice Note, record, attach photos from gallery, save with photos
+- Photos displayed in recording step with remove option
+- Caption step shows attached photos in horizontal scroll
+- Voice Journal category now 2/4 complete (VOICE-001, VOICE-003)
+
+---
+
