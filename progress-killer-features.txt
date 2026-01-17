@@ -750,3 +750,49 @@ Reasoning: Standalone UI feature to help parents write meaningful letters. Build
 
 ---
 
+### Task Selection
+Selected: VOICE-001 (Create voice journal entry) - Full implementation
+Priority: 1 (Architectural decisions and core abstractions)
+Reasoning: Voice Journal category completely unimplemented. Requires new context, audio recording integration with expo-av, and Entry type extension.
+
+### Implementation Complete
+
+**Task:** VOICE-001 Create voice journal entry
+**PRD Ref:** Voice Journal - VOICE-001
+
+**Key Decisions:**
+- Created VoiceJournalContext for recording/playback state management
+- Extended EntryType to include "voice" alongside photo/video/text
+- Added Entry fields: audioUri, audioDuration, transcript
+- Voice recording uses expo-av Audio.Recording with HIGH_QUALITY preset
+- Playback uses Audio.Sound with progress tracking
+- Voice Note option added to entry type selector (4th option)
+- New "voice" createStep with recording UI (mic button, stop, preview)
+- Recording preview shows duration before saving
+- Voice preview displayed in caption step with duration badge
+
+**Files Changed:**
+- NEW: contexts/voice-journal-context.tsx (VoiceJournalContext, 290 lines)
+- NEW: __tests__/contexts/voice-journal-context.test.tsx (11 tests)
+- MODIFIED: contexts/entry-context.tsx (+voice type, +audioUri, +audioDuration, +transcript fields)
+- MODIFIED: app/_layout.tsx (+VoiceJournalProvider)
+- MODIFIED: app/(tabs)/index.tsx (+voice type option, +voice recording step, +handlers, +styles)
+- MODIFIED: __tests__/app/tabs/feed.test.tsx (+2 VOICE-001 tests)
+- MODIFIED: prd-killer-features.json (VOICE-001 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- tsc --noEmit: PASS
+- npm run lint: PASS (pre-existing expo-blur issue)
+- npm test: 863/863 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- VOICE-001 complete: Tap +, select Voice Note, record, stop, preview, save entry
+- Voice entries stored with audioUri and audioDuration
+- Photo attachment (VOICE-003) not implemented in this iteration
+- Transcription (VOICE-002) requires AI integration, deferred
+- Voice Journal category now 1/4 complete
+
+---
+

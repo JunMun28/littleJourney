@@ -44,6 +44,7 @@ import {
   Shadows,
 } from "@/constants/theme";
 import { trackEvent, AnalyticsEvent } from "@/services/analytics";
+import { useVoiceJournal } from "@/contexts/voice-journal-context";
 
 function EmptyState() {
   return (
@@ -253,7 +254,7 @@ function EntryCard({ entry, onPress }: EntryCardProps) {
   );
 }
 
-type CreateStep = "type" | "source" | "caption";
+type CreateStep = "type" | "source" | "caption" | "voice";
 type MediaSource = "gallery" | "camera";
 
 export default function FeedScreen() {
@@ -300,6 +301,15 @@ export default function FeedScreen() {
     analyzeImages,
     reset: resetImageAnalysis,
   } = useImageAnalysis();
+  // Voice recording (VOICE-001)
+  const {
+    isRecording,
+    currentRecording,
+    permissionDenied: voicePermissionDenied,
+    startRecording,
+    stopRecording,
+    discardRecording,
+  } = useVoiceJournal();
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
 
@@ -314,6 +324,9 @@ export default function FeedScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
+  // Voice recording state (VOICE-001)
+  const [voiceUri, setVoiceUri] = useState<string | null>(null);
+  const [voiceDuration, setVoiceDuration] = useState<number>(0);
   const hasShownDraftPrompt = useRef(false);
   const hasSentMemoriesNotification = useRef(false);
   const hasSentBirthdayPrompt = useRef(false);
@@ -423,6 +436,10 @@ export default function FeedScreen() {
     setShowDatePicker(false);
     setTags([]);
     setTagInput("");
+    // Reset voice state (VOICE-001)
+    setVoiceUri(null);
+    setVoiceDuration(0);
+    discardRecording();
     resetVideoUploadState();
     resetImageAnalysis();
   };
@@ -433,7 +450,8 @@ export default function FeedScreen() {
 
   const handleTypeSelect = async (type: EntryType) => {
     // Check rate limit for photo/video uploads (PRD Section 13.2)
-    if (type !== "text" && !canUploadWithinRateLimit) {
+    // Voice entries don't count toward media upload limits
+    if (type !== "text" && type !== "voice" && !canUploadWithinRateLimit) {
       Alert.alert(
         "Upload Limit Reached",
         rateLimitMessage || "Please try again later.",
@@ -447,6 +465,9 @@ export default function FeedScreen() {
     if (type === "text") {
       // Skip media selection for text entries
       setCreateStep("caption");
+    } else if (type === "voice") {
+      // Go to voice recording step (VOICE-001)
+      setCreateStep("voice");
     } else if (type === "video") {
       // Check video permission for tier first
       if (tier === "free") {
@@ -630,6 +651,20 @@ export default function FeedScreen() {
     setCreateStep("caption");
   };
 
+  // Voice recording handlers (VOICE-001)
+  const handleStartRecording = async () => {
+    await startRecording();
+  };
+
+  const handleStopRecording = async () => {
+    const recording = await stopRecording();
+    if (recording) {
+      setVoiceUri(recording.uri);
+      setVoiceDuration(recording.duration);
+      setCreateStep("caption");
+    }
+  };
+
   const handleSubmit = async () => {
     if (!selectedType) return;
 
@@ -674,6 +709,9 @@ export default function FeedScreen() {
         date: dateString,
         tags: tags.length > 0 ? tags : undefined,
         aiLabels: aiLabels.length > 0 ? aiLabels : undefined, // AI labels for semantic search (SEARCH-002)
+        // Voice entry fields (VOICE-001)
+        audioUri: voiceUri || undefined,
+        audioDuration: voiceDuration > 0 ? voiceDuration : undefined,
         createdBy: user?.id,
         createdByName: user?.name || user?.email?.split("@")[0], // Fallback to email prefix
       },
@@ -836,6 +874,17 @@ export default function FeedScreen() {
                   <ThemedText style={styles.typeIcon}>✏️</ThemedText>
                   <ThemedText>Text</ThemedText>
                 </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.typeOption,
+                    { backgroundColor: colors.backgroundSecondary },
+                  ]}
+                  onPress={() => handleTypeSelect("voice")}
+                  testID="voice-type-option"
+                >
+                  <ThemedText style={styles.typeIcon}>🎙️</ThemedText>
+                  <ThemedText>Voice Note</ThemedText>
+                </TouchableOpacity>
               </View>
             </View>
           )}
@@ -882,8 +931,88 @@ export default function FeedScreen() {
             </View>
           )}
 
+          {/* Voice recording step (VOICE-001) */}
+          {createStep === "voice" && (
+            <View
+              style={styles.voiceRecordingStep}
+              testID="voice-recording-step"
+            >
+              <ThemedText style={styles.stepTitle}>
+                {isRecording ? "Recording..." : "Tap to start recording"}
+              </ThemedText>
+
+              {voicePermissionDenied && (
+                <View style={styles.permissionError}>
+                  <ThemedText style={styles.permissionErrorText}>
+                    Microphone permission is required. Please enable it in
+                    Settings.
+                  </ThemedText>
+                </View>
+              )}
+
+              <TouchableOpacity
+                style={[
+                  styles.recordButton,
+                  isRecording && styles.recordButtonActive,
+                ]}
+                onPress={
+                  isRecording ? handleStopRecording : handleStartRecording
+                }
+                testID="record-button"
+              >
+                <ThemedText style={styles.recordButtonIcon}>
+                  {isRecording ? "⏹️" : "🎙️"}
+                </ThemedText>
+              </TouchableOpacity>
+
+              {isRecording && (
+                <ThemedText
+                  style={[styles.recordingHint, { color: colors.textMuted }]}
+                >
+                  Tap to stop recording
+                </ThemedText>
+              )}
+
+              {currentRecording && !isRecording && (
+                <View style={styles.recordingPreview}>
+                  <ThemedText style={styles.recordingDuration}>
+                    Duration: {Math.round(currentRecording.duration / 1000)}s
+                  </ThemedText>
+                  <TouchableOpacity
+                    style={styles.useRecordingButton}
+                    onPress={() => {
+                      setVoiceUri(currentRecording.uri);
+                      setVoiceDuration(currentRecording.duration);
+                      setCreateStep("caption");
+                    }}
+                    testID="use-recording-button"
+                  >
+                    <ThemedText style={styles.useRecordingButtonText}>
+                      Use This Recording
+                    </ThemedText>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          )}
+
           {createStep === "caption" && (
             <View style={styles.captionStep}>
+              {/* Voice recording preview (VOICE-001) */}
+              {selectedType === "voice" && voiceUri && (
+                <View
+                  style={[
+                    styles.voicePreview,
+                    { backgroundColor: colors.backgroundSecondary },
+                  ]}
+                  testID="voice-preview"
+                >
+                  <ThemedText style={styles.voicePreviewIcon}>🎙️</ThemedText>
+                  <ThemedText style={styles.voicePreviewText}>
+                    Voice Note ({Math.round(voiceDuration / 1000)}s)
+                  </ThemedText>
+                </View>
+              )}
               {selectedMedia.length > 0 && (
                 <Image
                   source={{ uri: selectedMedia[0] }}
@@ -1366,5 +1495,74 @@ const styles = StyleSheet.create({
   onThisDayYears: {
     fontSize: 12,
     opacity: 0.7,
+  },
+  // Voice recording styles (VOICE-001)
+  voiceRecordingStep: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+  },
+  recordButton: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: "#F0F0F0",
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 24,
+  },
+  recordButtonActive: {
+    backgroundColor: "#FFEBEE",
+  },
+  recordButtonIcon: {
+    fontSize: 48,
+  },
+  recordingHint: {
+    fontSize: 14,
+    marginTop: 8,
+  },
+  recordingPreview: {
+    alignItems: "center",
+    marginTop: 24,
+  },
+  recordingDuration: {
+    fontSize: 16,
+    marginBottom: 16,
+  },
+  useRecordingButton: {
+    backgroundColor: PRIMARY_COLOR,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  useRecordingButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+  permissionError: {
+    backgroundColor: "#FFEBEE",
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  permissionErrorText: {
+    color: "#C62828",
+    textAlign: "center",
+  },
+  voicePreview: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 16,
+    gap: 12,
+  },
+  voicePreviewIcon: {
+    fontSize: 24,
+  },
+  voicePreviewText: {
+    fontSize: 16,
   },
 });

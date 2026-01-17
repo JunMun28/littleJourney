@@ -611,7 +611,7 @@
         "Save entry"
       ],
       "acceptanceCriteria": "Parents can create entries via voice recording",
-      "passes": false
+      "passes": true
     },
     {
       "id": "VOICE-002",

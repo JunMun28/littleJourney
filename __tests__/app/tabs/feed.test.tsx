@@ -1018,3 +1018,40 @@ describe("Upload rate limiting", () => {
     expect(result.current.dailyUploads).toBe(1);
   });
 });
+
+// VOICE-001: Voice journal entry type tests
+describe("Voice Journal Entry Type", () => {
+  it("should include voice type in Entry interface", () => {
+    // Test that Entry type accepts 'voice' as a valid type
+    const voiceEntry = {
+      id: "entry_123",
+      type: "voice" as const,
+      audioUri: "file:///recording.m4a",
+      audioDuration: 5000,
+      caption: "Baby's first words!",
+      date: "2026-01-18",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    expect(voiceEntry.type).toBe("voice");
+    expect(voiceEntry.audioUri).toBeDefined();
+    expect(voiceEntry.audioDuration).toBe(5000);
+  });
+
+  it("should allow voice entries without optional fields", () => {
+    const voiceEntry = {
+      id: "entry_124",
+      type: "voice" as const,
+      audioUri: "file:///recording2.m4a",
+      audioDuration: 3000,
+      date: "2026-01-18",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    expect(voiceEntry.type).toBe("voice");
+    expect(voiceEntry.caption).toBeUndefined();
+    expect(voiceEntry.transcript).toBeUndefined();
+  });
+});

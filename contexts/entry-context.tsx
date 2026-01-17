@@ -6,7 +6,7 @@ import {
   type ReactNode,
 } from "react";
 
-export type EntryType = "photo" | "video" | "text";
+export type EntryType = "photo" | "video" | "text" | "voice";
 
 export interface Entry {
   id: string;
@@ -18,6 +18,10 @@ export interface Entry {
   tags?: string[];
   aiLabels?: string[]; // AI-generated labels from image analysis (SEARCH-002)
   milestoneId?: string; // Reference to linked milestone (PRD SEARCH-005)
+  // Voice entry fields (VOICE-001)
+  audioUri?: string; // Voice recording URI
+  audioDuration?: number; // Duration in milliseconds
+  transcript?: string; // AI transcription (VOICE-002)
   createdAt: string; // ISO timestamp
   updatedAt: string; // ISO timestamp
   createdBy?: string; // User ID who created (for attribution)
