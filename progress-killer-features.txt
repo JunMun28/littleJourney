@@ -469,3 +469,46 @@ Reasoning: On This Day context exists and provider integrated. Need UI for feed 
 
 ---
 
+### Task Selection
+Selected: CAPSULE-004 (Time capsule sealed state) - UI implementation
+Priority: 4 (Standard features and implementation)
+Reasoning: Completes core time capsule UX. Without sealed content behavior, capsules don't feel "sealed". Builds on CAPSULE-001 UI. Also implements CAPSULE-007 force unlock.
+
+### Implementation Complete
+
+**Task:** CAPSULE-004 Time capsule sealed state + CAPSULE-007 Emergency unlock
+**PRD Ref:** Time Capsule - CAPSULE-004, CAPSULE-007
+
+**Key Decisions:**
+- Created capsule detail screen at /app/capsule/[id].tsx
+- Sealed content uses BlurView from expo-blur + overlay with lock icon
+- Capsule cards now tappable - navigate to detail screen on tap
+- Sealed capsules show: lock icon, "Content is sealed", time until unlock
+- No edit button for sealed capsules (immutable after sealing)
+- "Unlock Early" button with confirmation modal for CAPSULE-007
+- Force unlock sets status to "opened_early" (marked in UI)
+- Full letter content visible only when unlocked/opened_early
+
+**Files Changed:**
+- NEW: app/capsule/[id].tsx (capsule detail screen, 435 lines)
+- NEW: __tests__/app/capsule/capsule-detail.test.tsx (12 tests)
+- MODIFIED: app/(tabs)/time-capsule.tsx (+tap navigation, +router import)
+- MODIFIED: __tests__/app/tabs/time-capsule.test.tsx (+navigation test)
+- MODIFIED: package.json (+expo-blur)
+- MODIFIED: prd-killer-features.json (CAPSULE-004 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- npx tsc --noEmit: PASS
+- npm run lint: PASS
+- npm test: 781/781 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- CAPSULE-004 complete: Tap sealed capsule, see blurred content, cannot edit, shows unlock countdown
+- CAPSULE-007 complete: Tap "Unlock Early", confirm warning, capsule unlocks with "Opened Early" label
+- Implemented both features together as they share the detail screen
+- Bonus: CAPSULE-007 not originally planned but was quick win with same screen
+
+---
+

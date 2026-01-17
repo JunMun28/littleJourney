@@ -212,7 +212,7 @@
         "Verify cannot edit after sealing"
       ],
       "acceptanceCriteria": "Sealed capsules show countdown but hide content until unlock date",
-      "passes": false
+      "passes": true
     },
     {
       "id": "CAPSULE-005",
@@ -254,7 +254,7 @@
         "Verify marked as 'Opened early'"
       ],
       "acceptanceCriteria": "Parents can force-unlock capsules with clear warning",
-      "passes": false
+      "passes": true
     },
     {
       "id": "CAPSULE-008",

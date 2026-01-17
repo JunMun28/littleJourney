@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   StyleSheet,
   View,
@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import { router } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
 import { ThemedText } from "@/components/themed-text";
@@ -144,13 +145,17 @@ export default function TimeCapsuleScreen() {
 
   const isValidCapsule = letterContent.trim().length > 0;
 
+  const handleCapsulePress = useCallback((capsuleId: string) => {
+    router.push(`/capsule/${capsuleId}`);
+  }, []);
+
   const renderCapsuleCard = (capsule: TimeCapsule) => {
     const isSealed = capsule.status === "sealed";
     const isOpenedEarly = capsule.status === "opened_early";
     const timeUntil = getTimeUntilUnlock(capsule, child?.dateOfBirth);
 
     return (
-      <View
+      <Pressable
         key={capsule.id}
         testID={`capsule-card-${capsule.id}`}
         style={[
@@ -158,6 +163,7 @@ export default function TimeCapsuleScreen() {
           { backgroundColor: colors.card, borderColor: colors.cardBorder },
           Shadows.small,
         ]}
+        onPress={() => handleCapsulePress(capsule.id)}
       >
         <View style={styles.capsuleHeader}>
           <View style={styles.capsuleIconContainer}>
@@ -221,7 +227,7 @@ export default function TimeCapsuleScreen() {
             {capsule.letterContent}
           </Text>
         )}
-      </View>
+      </Pressable>
     );
   };
 
