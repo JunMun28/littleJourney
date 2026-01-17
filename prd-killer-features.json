@@ -438,7 +438,7 @@
         "Save as new entry with comparison"
       ],
       "acceptanceCriteria": "Create side-by-side growth comparisons from memories",
-      "passes": false
+      "passes": true
     },
     {
       "id": "OTD-005",

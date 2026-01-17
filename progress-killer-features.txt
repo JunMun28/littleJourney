@@ -550,3 +550,42 @@ Reasoning: On This Day context has getMemoriesByYear(). Extends OTD-002 with yea
 
 ---
 
+### Task Selection
+Selected: OTD-004 (Then vs Now comparison) - UI implementation
+Priority: 4 (Standard features and implementation)
+Reasoning: Builds on OTD-002/003. Context already has ThenVsNow type and createThenVsNow(). Emotional feature parents love.
+
+### Implementation Complete
+
+**Task:** OTD-004 Then vs Now comparison UI
+**PRD Ref:** On This Day Memories - OTD-004
+
+**Key Decisions:**
+- Added "Create Then vs Now" button to memory detail screen (only for photo memories)
+- Photo source modal: take new photo or choose from library
+- Side-by-side comparison view with "Then" and "Now" labels
+- Caption input for comparison with 200 char limit
+- Saved message shows briefly after successful save
+- Uses existing createThenVsNow() from OnThisDayContext
+- Button styled with gold background to stand out from primary action
+
+**Files Changed:**
+- MODIFIED: app/memory/[id].tsx (+Then vs Now button, +photo source modal, +comparison modal, +styles)
+- MODIFIED: __tests__/app/memory/memory-detail.test.tsx (+12 OTD-004 tests, +ImagePicker mocks)
+- MODIFIED: prd-killer-features.json (OTD-004 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- npx tsc --noEmit: PASS
+- npm run lint: PASS (pre-existing expo-blur issue)
+- npm test: 803/803 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- OTD-004 complete: View memory, tap Create Then vs Now, take/select current photo, see side-by-side, add caption, save
+- Comparisons saved to context (thenVsNowComparisons array)
+- Step 6 "Save as new entry" not literally implemented - comparison saved in context, not as Entry
+- Future: OTD-007 could add "Save to Camera Roll" for Then vs Now images
+
+---
+
