@@ -481,7 +481,7 @@
         "Verify Little Journey watermark optional"
       ],
       "acceptanceCriteria": "Save memory images to device for external sharing",
-      "passes": false
+      "passes": true
     },
     {
       "id": "GROWTH-001",

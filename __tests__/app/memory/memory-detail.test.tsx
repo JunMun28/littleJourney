@@ -33,6 +33,17 @@ jest.mock("expo-image-picker", () => ({
   },
 }));
 
+// Mock expo-media-library for OTD-007
+const mockSaveToLibraryAsync = jest.fn().mockResolvedValue("saved-asset-id");
+const mockRequestPermissionsAsync = jest
+  .fn()
+  .mockResolvedValue({ status: "granted" });
+
+jest.mock("expo-media-library", () => ({
+  saveToLibraryAsync: (...args: unknown[]) => mockSaveToLibraryAsync(...args),
+  requestPermissionsAsync: () => mockRequestPermissionsAsync(),
+}));
+
 // Mock OnThisDayContext
 const mockDismissMemory = jest.fn();
 const mockGetMemory = jest.fn();
@@ -585,5 +596,180 @@ describe("MemoryDetailScreen - OTD-005: Share with Family", () => {
     expect(screen.getByText(/Shared with Family/)).toBeTruthy();
     const shareButton = screen.getByTestId("share-with-family-button");
     expect(shareButton.props.accessibilityState?.disabled).toBe(true);
+  });
+});
+
+describe("MemoryDetailScreen - OTD-007: Save to Camera Roll", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (useLocalSearchParams as jest.Mock).mockReturnValue({
+      id: "memory_entry-1",
+    });
+    mockGetMemory.mockReturnValue(mockMemory);
+    mockIsMemoryShared.mockReturnValue(false);
+    mockSaveToLibraryAsync.mockResolvedValue("saved-asset-id");
+    mockRequestPermissionsAsync.mockResolvedValue({ status: "granted" });
+  });
+
+  it("shows Save to Photos button for photo memories", () => {
+    render(<MemoryDetailScreen />);
+
+    expect(screen.getByTestId("save-to-photos-button")).toBeTruthy();
+    expect(screen.getByText(/Save to Photos/)).toBeTruthy();
+  });
+
+  it("does not show Save to Photos button for text-only memories", () => {
+    mockGetMemory.mockReturnValue({
+      ...mockMemory,
+      entry: {
+        ...mockMemory.entry,
+        type: "text" as const,
+        mediaUris: undefined,
+      },
+    });
+
+    render(<MemoryDetailScreen />);
+
+    expect(screen.queryByTestId("save-to-photos-button")).toBeNull();
+  });
+
+  it("opens save options modal when Save to Photos is pressed", () => {
+    render(<MemoryDetailScreen />);
+
+    fireEvent.press(screen.getByTestId("save-to-photos-button"));
+
+    expect(screen.getByText("Save to Photos")).toBeTruthy();
+    expect(screen.getByText(/Add Little Journey watermark/)).toBeTruthy();
+  });
+
+  it("shows watermark toggle in save options", () => {
+    render(<MemoryDetailScreen />);
+
+    fireEvent.press(screen.getByTestId("save-to-photos-button"));
+
+    expect(screen.getByTestId("watermark-toggle")).toBeTruthy();
+  });
+
+  it("requests permissions when saving photo", async () => {
+    render(<MemoryDetailScreen />);
+
+    fireEvent.press(screen.getByTestId("save-to-photos-button"));
+
+    await act(async () => {
+      fireEvent.press(screen.getByTestId("confirm-save-button"));
+    });
+
+    expect(mockRequestPermissionsAsync).toHaveBeenCalled();
+  });
+
+  it("saves photo to camera roll with permissions granted", async () => {
+    render(<MemoryDetailScreen />);
+
+    fireEvent.press(screen.getByTestId("save-to-photos-button"));
+
+    await act(async () => {
+      fireEvent.press(screen.getByTestId("confirm-save-button"));
+    });
+
+    await waitFor(() => {
+      expect(mockSaveToLibraryAsync).toHaveBeenCalled();
+    });
+  });
+
+  it("shows success message after saving photo", async () => {
+    render(<MemoryDetailScreen />);
+
+    fireEvent.press(screen.getByTestId("save-to-photos-button"));
+
+    await act(async () => {
+      fireEvent.press(screen.getByTestId("confirm-save-button"));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Saved to Photos/)).toBeTruthy();
+    });
+  });
+
+  it("can cancel save modal", () => {
+    render(<MemoryDetailScreen />);
+
+    fireEvent.press(screen.getByTestId("save-to-photos-button"));
+
+    expect(screen.getByText("Save to Photos")).toBeTruthy();
+
+    fireEvent.press(screen.getByTestId("cancel-save-button"));
+
+    // Modal should close
+    expect(screen.queryByTestId("watermark-toggle")).toBeNull();
+  });
+
+  it("shows error when permissions denied", async () => {
+    mockRequestPermissionsAsync.mockResolvedValueOnce({ status: "denied" });
+
+    render(<MemoryDetailScreen />);
+
+    fireEvent.press(screen.getByTestId("save-to-photos-button"));
+
+    await act(async () => {
+      fireEvent.press(screen.getByTestId("confirm-save-button"));
+    });
+
+    // Should not call save when permission denied
+    expect(mockSaveToLibraryAsync).not.toHaveBeenCalled();
+  });
+});
+
+describe("MemoryDetailScreen - OTD-007: Save Then vs Now to Camera Roll", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (useLocalSearchParams as jest.Mock).mockReturnValue({
+      id: "memory_entry-1",
+    });
+    mockGetMemory.mockReturnValue(mockMemory);
+    mockIsMemoryShared.mockReturnValue(false);
+    mockSaveToLibraryAsync.mockResolvedValue("saved-asset-id");
+    mockRequestPermissionsAsync.mockResolvedValue({ status: "granted" });
+    (ImagePicker.launchImageLibraryAsync as jest.Mock).mockResolvedValue({
+      canceled: false,
+      assets: [{ uri: "file:///current-photo.jpg" }],
+    });
+  });
+
+  it("shows Save to Photos button in Then vs Now comparison view", async () => {
+    render(<MemoryDetailScreen />);
+
+    fireEvent.press(screen.getByTestId("then-vs-now-button"));
+
+    await act(async () => {
+      fireEvent.press(screen.getByTestId("choose-library-button"));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("then-vs-now-preview")).toBeTruthy();
+    });
+
+    expect(screen.getByTestId("save-comparison-to-photos-button")).toBeTruthy();
+  });
+
+  it("saves Then vs Now comparison to camera roll", async () => {
+    render(<MemoryDetailScreen />);
+
+    fireEvent.press(screen.getByTestId("then-vs-now-button"));
+
+    await act(async () => {
+      fireEvent.press(screen.getByTestId("choose-library-button"));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("then-vs-now-preview")).toBeTruthy();
+    });
+
+    await act(async () => {
+      fireEvent.press(screen.getByTestId("save-comparison-to-photos-button"));
+    });
+
+    await waitFor(() => {
+      expect(mockRequestPermissionsAsync).toHaveBeenCalled();
+    });
   });
 });

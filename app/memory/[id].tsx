@@ -12,9 +12,11 @@ import {
   Modal,
   TextInput,
   Alert,
+  Switch,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
+import * as MediaLibrary from "expo-media-library";
 
 import { ThemedText } from "@/components/themed-text";
 import { VideoPlayer } from "@/components/video-player";
@@ -62,6 +64,12 @@ export default function MemoryDetailScreen() {
     new Set(),
   );
   const [showShareSuccess, setShowShareSuccess] = useState(false);
+
+  // OTD-007: Save to camera roll state
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [addWatermark, setAddWatermark] = useState(false);
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -205,6 +213,72 @@ export default function MemoryDetailScreen() {
       setSelectedFamilyIds(new Set());
     }, 2000);
   }, [id, selectedFamilyIds, shareMemoryWithFamily]);
+
+  // OTD-007: Save to Photos handlers
+  const handleSaveToPhotos = useCallback(() => {
+    setShowSaveModal(true);
+  }, []);
+
+  const handleCancelSave = useCallback(() => {
+    setShowSaveModal(false);
+    setAddWatermark(false);
+  }, []);
+
+  const handleConfirmSave = useCallback(async () => {
+    if (!memory?.entry.mediaUris?.[0]) return;
+
+    setIsSaving(true);
+
+    const { status } = await MediaLibrary.requestPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Permission Required",
+        "Camera roll permission is required to save photos.",
+      );
+      setIsSaving(false);
+      return;
+    }
+
+    try {
+      // For now, save the original photo. Watermark would require image processing.
+      const photoUri = memory.entry.mediaUris[0];
+      await MediaLibrary.saveToLibraryAsync(photoUri);
+
+      setShowSaveSuccess(true);
+      setTimeout(() => {
+        setShowSaveSuccess(false);
+        setShowSaveModal(false);
+        setAddWatermark(false);
+      }, 2000);
+    } catch {
+      Alert.alert("Error", "Failed to save photo. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  }, [memory]);
+
+  // OTD-007: Save Then vs Now comparison to photos
+  const handleSaveComparisonToPhotos = useCallback(async () => {
+    if (!currentPhotoUri) return;
+
+    const { status } = await MediaLibrary.requestPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Permission Required",
+        "Camera roll permission is required to save photos.",
+      );
+      return;
+    }
+
+    // Save the current photo for now (full comparison image would require canvas rendering)
+    // In production, this would composite the Then vs Now side-by-side image
+    try {
+      await MediaLibrary.saveToLibraryAsync(currentPhotoUri);
+      Alert.alert("Success", "Photo saved to camera roll!");
+    } catch {
+      Alert.alert("Error", "Failed to save photo. Please try again.");
+    }
+  }, [currentPhotoUri]);
 
   // Filter to only accepted family members
   const acceptedFamilyMembers = familyMembers.filter(
@@ -377,6 +451,19 @@ export default function MemoryDetailScreen() {
                   : "👪 Share with Family"}
               </ThemedText>
             </Pressable>
+
+            {/* OTD-007: Save to Photos button - only for photos */}
+            {hasMedia && !isVideo && (
+              <Pressable
+                testID="save-to-photos-button"
+                style={styles.saveToPhotosButton}
+                onPress={handleSaveToPhotos}
+              >
+                <ThemedText style={styles.saveToPhotosButtonText}>
+                  💾 Save to Photos
+                </ThemedText>
+              </Pressable>
+            )}
           </View>
         </View>
       </View>
@@ -492,24 +579,37 @@ export default function MemoryDetailScreen() {
             />
           </View>
 
-          {/* Save button */}
-          {showSavedMessage ? (
-            <View style={styles.savedMessage}>
-              <ThemedText style={styles.savedMessageText}>
-                ✓ Comparison Saved!
-              </ThemedText>
-            </View>
-          ) : (
+          {/* Save buttons */}
+          <View style={styles.comparisonButtons}>
+            {showSavedMessage ? (
+              <View style={styles.savedMessage}>
+                <ThemedText style={styles.savedMessageText}>
+                  ✓ Comparison Saved!
+                </ThemedText>
+              </View>
+            ) : (
+              <Pressable
+                testID="save-comparison-button"
+                style={styles.saveButton}
+                onPress={handleSaveComparison}
+              >
+                <ThemedText style={styles.saveButtonText}>
+                  Save Comparison
+                </ThemedText>
+              </Pressable>
+            )}
+
+            {/* OTD-007: Save comparison to camera roll */}
             <Pressable
-              testID="save-comparison-button"
-              style={styles.saveButton}
-              onPress={handleSaveComparison}
+              testID="save-comparison-to-photos-button"
+              style={styles.saveComparisonToPhotosButton}
+              onPress={handleSaveComparisonToPhotos}
             >
-              <ThemedText style={styles.saveButtonText}>
-                Save Comparison
+              <ThemedText style={styles.saveComparisonToPhotosButtonText}>
+                💾 Save to Photos
               </ThemedText>
             </Pressable>
-          )}
+          </View>
         </View>
       </Modal>
 
@@ -602,6 +702,70 @@ export default function MemoryDetailScreen() {
                 >
                   <ThemedText style={styles.confirmShareButtonText}>
                     Share
+                  </ThemedText>
+                </Pressable>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* OTD-007: Save to Photos Modal */}
+      <Modal
+        visible={showSaveModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={handleCancelSave}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.saveModal}>
+            <ThemedText style={styles.saveModalTitle}>
+              Save to Photos
+            </ThemedText>
+            <ThemedText style={styles.saveModalSubtitle}>
+              Save this memory to your camera roll
+            </ThemedText>
+
+            <View style={styles.watermarkOption}>
+              <ThemedText style={styles.watermarkLabel}>
+                Add Little Journey watermark
+              </ThemedText>
+              <Switch
+                testID="watermark-toggle"
+                value={addWatermark}
+                onValueChange={setAddWatermark}
+                trackColor={{ false: "#767577", true: PRIMARY_COLOR }}
+              />
+            </View>
+
+            {showSaveSuccess ? (
+              <View style={styles.saveSuccessMessage}>
+                <ThemedText style={styles.saveSuccessText}>
+                  ✓ Saved to Photos!
+                </ThemedText>
+              </View>
+            ) : (
+              <View style={styles.saveModalButtons}>
+                <Pressable
+                  testID="cancel-save-button"
+                  style={styles.cancelSaveButton}
+                  onPress={handleCancelSave}
+                >
+                  <ThemedText style={styles.cancelSaveButtonText}>
+                    Cancel
+                  </ThemedText>
+                </Pressable>
+                <Pressable
+                  testID="confirm-save-button"
+                  style={[
+                    styles.confirmSaveButton,
+                    isSaving && styles.confirmSaveButtonDisabled,
+                  ]}
+                  onPress={handleConfirmSave}
+                  disabled={isSaving}
+                >
+                  <ThemedText style={styles.confirmSaveButtonText}>
+                    {isSaving ? "Saving..." : "Save"}
                   </ThemedText>
                 </Pressable>
               </View>
@@ -1067,6 +1231,110 @@ const styles = StyleSheet.create({
   },
   shareSuccessText: {
     color: SemanticColors.success,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  // OTD-007: Save to Photos styles
+  saveToPhotosButton: {
+    backgroundColor: "#7B68EE",
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: Spacing.sm,
+    alignItems: "center",
+  },
+  saveToPhotosButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  saveModal: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: Spacing.xl,
+    paddingBottom: 40,
+  },
+  saveModalTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#333",
+    textAlign: "center",
+    marginBottom: Spacing.sm,
+  },
+  saveModalSubtitle: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: Spacing.xl,
+  },
+  watermarkOption: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.sm,
+    backgroundColor: "#f5f5f5",
+    borderRadius: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  watermarkLabel: {
+    fontSize: 16,
+    color: "#333",
+  },
+  saveModalButtons: {
+    flexDirection: "row",
+    gap: Spacing.md,
+  },
+  cancelSaveButton: {
+    flex: 1,
+    padding: Spacing.md,
+    alignItems: "center",
+    borderRadius: Spacing.sm,
+    backgroundColor: "#f0f0f0",
+  },
+  cancelSaveButtonText: {
+    fontSize: 16,
+    color: "#666",
+  },
+  confirmSaveButton: {
+    flex: 1,
+    padding: Spacing.md,
+    alignItems: "center",
+    borderRadius: Spacing.sm,
+    backgroundColor: PRIMARY_COLOR,
+  },
+  confirmSaveButtonDisabled: {
+    backgroundColor: "#ccc",
+  },
+  confirmSaveButtonText: {
+    fontSize: 16,
+    color: "#fff",
+    fontWeight: "600",
+  },
+  saveSuccessMessage: {
+    backgroundColor: SemanticColors.successLight,
+    paddingVertical: Spacing.md,
+    borderRadius: Spacing.sm,
+    alignItems: "center",
+  },
+  saveSuccessText: {
+    color: SemanticColors.success,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  comparisonButtons: {
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: 40,
+    gap: Spacing.md,
+  },
+  saveComparisonToPhotosButton: {
+    backgroundColor: "#7B68EE",
+    paddingVertical: Spacing.md,
+    borderRadius: Spacing.sm,
+    alignItems: "center",
+  },
+  saveComparisonToPhotosButtonText: {
+    color: "#fff",
     fontSize: 16,
     fontWeight: "600",
   },

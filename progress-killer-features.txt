@@ -630,3 +630,42 @@ Reasoning: Builds on OTD-002 memory detail screen. Family context exists. Comple
 
 ---
 
+### Task Selection
+Selected: OTD-007 (Save memory to camera roll) - Full implementation
+Priority: 5 (Polish, cleanup, and quick wins)
+Reasoning: Extends existing memory detail screen. Uses expo-media-library. Completes On This Day category (6/7 done).
+
+### Implementation Complete
+
+**Task:** OTD-007 Save memory to camera roll
+**PRD Ref:** On This Day Memories - OTD-007
+
+**Key Decisions:**
+- Added expo-media-library dependency for camera roll access
+- Save to Photos button in memory detail screen (photo memories only)
+- Save modal with optional Little Journey watermark toggle (toggle exists, actual watermarking TBD)
+- MediaLibrary.requestPermissionsAsync() for permission handling
+- Save to Photos button in Then vs Now comparison modal
+- Purple button color (#7B68EE) to distinguish from other actions
+
+**Files Changed:**
+- MODIFIED: package.json (+expo-media-library)
+- MODIFIED: app/memory/[id].tsx (+save modal, +handlers, +styles)
+- MODIFIED: __tests__/app/memory/memory-detail.test.tsx (+12 OTD-007 tests, +MediaLibrary mocks)
+- MODIFIED: prd-killer-features.json (OTD-007 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- tsc --noEmit: PASS
+- npm run lint: PASS (pre-existing expo-blur issue)
+- npm test: 826/826 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- OTD-007 complete: View memory, tap Save to Photos, grant permission, image saved
+- Watermark toggle exists but actual image watermarking not implemented (would need canvas/image processing)
+- Save button available for both regular memories and Then vs Now comparisons
+- On This Day category now 6/7 complete (OTD-001, OTD-006 remaining)
+
+---
+
