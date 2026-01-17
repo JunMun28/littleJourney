@@ -13,6 +13,7 @@ import {
   RefreshControl,
   Alert,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -76,12 +77,23 @@ interface OnThisDayCardProps {
 function OnThisDayCard({ memories, onPress, onDismiss }: OnThisDayCardProps) {
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
+  const { getMemoriesByYear } = useOnThisDay();
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
 
   if (memories.length === 0) return null;
 
   const yearsAgoText = (yearsAgo: number) => {
     return yearsAgo === 1 ? "1 year ago" : `${yearsAgo} years ago`;
   };
+
+  // Group memories by year (OTD-003)
+  const memoryGroups = getMemoriesByYear();
+  const hasMultipleYears = memoryGroups.length > 1;
+
+  // If no year selected, default to most recent year
+  const activeYear = selectedYear ?? memoryGroups[0]?.year ?? null;
+  const activeGroup = memoryGroups.find((g) => g.year === activeYear);
+  const activeMemories = activeGroup?.memories ?? memories;
 
   return (
     <View style={styles.onThisDayCard} testID="on-this-day-card">
@@ -98,18 +110,63 @@ function OnThisDayCard({ memories, onPress, onDismiss }: OnThisDayCardProps) {
           onPress={() => memories.forEach((m) => onDismiss(m.id))}
           hitSlop={12}
         >
-          <ThemedText style={[styles.onThisDayDismissText, { color: colors.textMuted }]}>
+          <ThemedText
+            style={[styles.onThisDayDismissText, { color: colors.textMuted }]}
+          >
             Dismiss
           </ThemedText>
         </Pressable>
       </View>
+
+      {/* Year tabs for multi-year memories (OTD-003) */}
+      {hasMultipleYears && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.yearTabsContainer}
+          contentContainerStyle={styles.yearTabsContent}
+          testID="year-tabs"
+        >
+          {memoryGroups.map((group) => {
+            const isActive = group.year === activeYear;
+            return (
+              <Pressable
+                key={group.year}
+                onPress={() => setSelectedYear(group.year)}
+                style={[
+                  styles.yearTab,
+                  isActive && styles.yearTabActive,
+                  {
+                    backgroundColor: isActive
+                      ? PRIMARY_COLOR
+                      : colors.backgroundSecondary,
+                  },
+                ]}
+                testID={`year-tab-${group.year}`}
+              >
+                <ThemedText
+                  style={[
+                    styles.yearTabText,
+                    isActive && styles.yearTabTextActive,
+                  ]}
+                >
+                  {yearsAgoText(group.yearsAgo)}
+                </ThemedText>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      )}
+
       <ThemedText style={styles.onThisDaySubtitle}>
-        {memories.length === 1
-          ? "A memory from the past"
-          : `${memories.length} memories from the past`}
+        {hasMultipleYears
+          ? `${activeMemories.length} ${activeMemories.length === 1 ? "memory" : "memories"} from ${activeGroup?.yearsAgo ?? 1} ${activeGroup?.yearsAgo === 1 ? "year" : "years"} ago`
+          : memories.length === 1
+            ? "A memory from the past"
+            : `${memories.length} memories from the past`}
       </ThemedText>
       <View style={styles.onThisDayMemories}>
-        {memories.slice(0, 3).map((memory) => (
+        {activeMemories.slice(0, 3).map((memory) => (
           <Pressable
             key={memory.id}
             style={styles.onThisDayMemory}
@@ -133,9 +190,11 @@ function OnThisDayCard({ memories, onPress, onDismiss }: OnThisDayCardProps) {
                 </ThemedText>
               </View>
             )}
-            <ThemedText style={styles.onThisDayYears}>
-              {yearsAgoText(memory.yearsAgo)}
-            </ThemedText>
+            {!hasMultipleYears && (
+              <ThemedText style={styles.onThisDayYears}>
+                {yearsAgoText(memory.yearsAgo)}
+              </ThemedText>
+            )}
           </Pressable>
         ))}
       </View>
@@ -217,10 +276,7 @@ export default function FeedScreen() {
     sendPhotoBookBirthdayPrompt,
     settings,
   } = useNotifications();
-  const {
-    memories: onThisDayMemories,
-    dismissMemory,
-  } = useOnThisDay();
+  const { memories: onThisDayMemories, dismissMemory } = useOnThisDay();
   const {
     draft,
     hasDraft,
@@ -1259,6 +1315,29 @@ const styles = StyleSheet.create({
   onThisDaySubtitle: {
     opacity: 0.7,
     marginBottom: 12,
+  },
+  yearTabsContainer: {
+    marginBottom: 8,
+    marginHorizontal: -4,
+  },
+  yearTabsContent: {
+    paddingHorizontal: 4,
+    gap: 8,
+  },
+  yearTab: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  yearTabActive: {
+    // Background color set dynamically
+  },
+  yearTabText: {
+    fontSize: 13,
+    fontWeight: "500",
+  },
+  yearTabTextActive: {
+    color: "#fff",
   },
   onThisDayMemories: {
     flexDirection: "row",

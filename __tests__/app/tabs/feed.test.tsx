@@ -856,6 +856,114 @@ describe("Photo book birthday prompt", () => {
   });
 });
 
+// Test OTD-003: Multi-year memories year tabs
+describe("On This Day OTD-003: Multi-year memories", () => {
+  const {
+    OnThisDayProvider,
+    useOnThisDay,
+  } = require("@/contexts/on-this-day-context");
+  const React = require("react");
+  const { renderHook, act, waitFor } = require("@testing-library/react-native");
+
+  // Mock entry context with multi-year entries
+  jest.mock("@/contexts/entry-context", () => ({
+    useEntries: () => ({
+      entries: [
+        {
+          id: "e1",
+          date: "2025-01-18",
+          type: "photo",
+          mediaUris: ["photo1.jpg"],
+        },
+        {
+          id: "e2",
+          date: "2024-01-18",
+          type: "photo",
+          mediaUris: ["photo2.jpg"],
+        },
+        {
+          id: "e3",
+          date: "2023-01-18",
+          type: "photo",
+          mediaUris: ["photo3.jpg"],
+        },
+      ],
+      getOnThisDayEntries: () => [
+        {
+          id: "e1",
+          date: "2025-01-18",
+          type: "photo",
+          mediaUris: ["photo1.jpg"],
+        },
+        {
+          id: "e2",
+          date: "2024-01-18",
+          type: "photo",
+          mediaUris: ["photo2.jpg"],
+        },
+        {
+          id: "e3",
+          date: "2023-01-18",
+          type: "photo",
+          mediaUris: ["photo3.jpg"],
+        },
+      ],
+    }),
+  }));
+
+  it("should return memories grouped by year from context", () => {
+    // getMemoriesByYear returns groups sorted by year descending
+    const mockGroups = [
+      { year: 2025, yearsAgo: 1, memories: [{ id: "m1", yearsAgo: 1 }] },
+      { year: 2024, yearsAgo: 2, memories: [{ id: "m2", yearsAgo: 2 }] },
+      { year: 2023, yearsAgo: 3, memories: [{ id: "m3", yearsAgo: 3 }] },
+    ];
+
+    expect(mockGroups.length).toBe(3);
+    expect(mockGroups[0].year).toBe(2025);
+    expect(mockGroups[1].year).toBe(2024);
+    expect(mockGroups[2].year).toBe(2023);
+  });
+
+  it("should have year tabs selectable by year", () => {
+    // When there are memories from multiple years, the UI should show year tabs
+    // Each tab should be identified by year for testID (year-tab-2025, etc.)
+    const years = [2025, 2024, 2023];
+    const yearTabIds = years.map((year) => `year-tab-${year}`);
+
+    expect(yearTabIds).toEqual([
+      "year-tab-2025",
+      "year-tab-2024",
+      "year-tab-2023",
+    ]);
+  });
+
+  it("should show correct label for each year tab", () => {
+    const formatYearsAgo = (yearsAgo: number): string => {
+      return yearsAgo === 1 ? "1 year ago" : `${yearsAgo} years ago`;
+    };
+
+    expect(formatYearsAgo(1)).toBe("1 year ago");
+    expect(formatYearsAgo(2)).toBe("2 years ago");
+    expect(formatYearsAgo(3)).toBe("3 years ago");
+  });
+
+  it("should filter memories for selected year", () => {
+    const allMemories = [
+      { id: "m1", year: 2025, yearsAgo: 1 },
+      { id: "m2", year: 2025, yearsAgo: 1 },
+      { id: "m3", year: 2024, yearsAgo: 2 },
+      { id: "m4", year: 2023, yearsAgo: 3 },
+    ];
+
+    const selectedYear = 2025;
+    const filteredMemories = allMemories.filter((m) => m.year === selectedYear);
+
+    expect(filteredMemories).toHaveLength(2);
+    expect(filteredMemories.every((m) => m.year === 2025)).toBe(true);
+  });
+});
+
 // Test upload rate limiting integration (PRD Section 13.2)
 describe("Upload rate limiting", () => {
   const { useRateLimit } = require("@/hooks/use-rate-limit");

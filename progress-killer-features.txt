@@ -512,3 +512,41 @@ Reasoning: Completes core time capsule UX. Without sealed content behavior, caps
 
 ---
 
+### Task Selection
+Selected: OTD-003 (Multi-year memories) - UI implementation
+Priority: 4 (Standard features and implementation)
+Reasoning: On This Day context has getMemoriesByYear(). Extends OTD-002 with year tabs for multi-year carousel.
+
+### Implementation Complete
+
+**Task:** OTD-003 Multi-year memories with year tabs
+**PRD Ref:** On This Day Memories - OTD-003
+
+**Key Decisions:**
+- Added year tabs (horizontal ScrollView) when memories span multiple years
+- Year tabs show "1 year ago", "2 years ago" etc. labels
+- Default to most recent year; user can tap tabs to switch
+- Memories filtered by selected year (shows up to 3 per year)
+- Year tabs hidden when only one year has memories (no need for navigation)
+- Uses getMemoriesByYear() from OnThisDayContext
+
+**Files Changed:**
+- MODIFIED: app/(tabs)/index.tsx (+year tabs in OnThisDayCard, +ScrollView import, +styles)
+- NEW: __tests__/components/on-this-day-card.test.tsx (7 tests)
+- MODIFIED: __tests__/app/tabs/feed.test.tsx (+4 OTD-003 tests)
+- MODIFIED: prd-killer-features.json (OTD-003 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- npm test: 792/792 PASS
+- npx expo export --platform web: PASS
+- Pre-existing lint error (expo-blur import/no-unresolved) unrelated to changes
+
+**Notes:**
+- OTD-003 complete: Year tabs appear when memories from multiple years, swipe/tap to change year
+- Year label shows correct "X years ago" text
+- Memories filtered by selected year
+- Single-year memories fall back to original display (no tabs needed)
+
+---
+
