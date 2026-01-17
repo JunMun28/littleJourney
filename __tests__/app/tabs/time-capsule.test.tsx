@@ -10,6 +10,15 @@ import { TimeCapsuleProvider } from "@/contexts/time-capsule-context";
 import { ChildProvider, useChild } from "@/contexts/child-context";
 import { useEffect } from "react";
 
+// Mock expo-router
+const mockRouterPush = jest.fn();
+jest.mock("expo-router", () => ({
+  router: {
+    push: (path: string) => mockRouterPush(path),
+    back: jest.fn(),
+  },
+}));
+
 // Mock DateTimePicker
 jest.mock("@react-native-community/datetimepicker", () => {
   const MockDateTimePicker = ({
@@ -89,6 +98,7 @@ function TestWrapperNoChild({ children }: { children: React.ReactNode }) {
 describe("TimeCapsuleScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockRouterPush.mockClear();
   });
 
   // CAPSULE-001: Navigate to Time Capsule section
@@ -384,6 +394,40 @@ describe("TimeCapsuleScreen", () => {
     // Should show 2 capsules
     await waitFor(() => {
       expect(screen.getByText("Sealed (2)")).toBeTruthy();
+    });
+  });
+
+  // CAPSULE-004: Tap to view capsule
+  it("navigates to capsule detail when card is tapped", async () => {
+    render(
+      <TestWrapper>
+        <TimeCapsuleScreen />
+      </TestWrapper>
+    );
+
+    // Create a capsule
+    fireEvent.press(screen.getByText("Write New Letter"));
+    await waitFor(() => {
+      expect(screen.getByTestId("letter-content-input")).toBeTruthy();
+    });
+    fireEvent.changeText(
+      screen.getByTestId("letter-content-input"),
+      "Test letter for navigation"
+    );
+    fireEvent.press(screen.getByTestId("save-capsule-button"));
+
+    // Wait for capsule card to appear
+    await waitFor(() => {
+      expect(screen.getByText("Sealed (1)")).toBeTruthy();
+    });
+
+    // Find and tap the capsule card
+    const capsuleCards = screen.getAllByText("Sealed Letter");
+    fireEvent.press(capsuleCards[0]);
+
+    // Should navigate to capsule detail
+    await waitFor(() => {
+      expect(mockRouterPush).toHaveBeenCalledWith(expect.stringMatching(/^\/capsule\/capsule_/));
     });
   });
 });
