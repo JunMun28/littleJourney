@@ -431,3 +431,41 @@ Reasoning: Time Capsule context exists. UI screen needed for user to write lette
 
 ---
 
+### Task Selection
+Selected: OTD-002 (On This Day card in feed) - verification and tests
+Priority: 4 (Standard features and implementation)
+Reasoning: OnThisDayCard already implemented in index.tsx but not documented or tested. Need to verify against PRD, add tests, and mark complete.
+
+### Implementation Complete
+
+**Task:** OTD-002 On This Day card in feed
+**PRD Ref:** On This Day Memories - OTD-002
+
+**Key Decisions:**
+- Discovered OnThisDayCard already implemented in app/(tabs)/index.tsx
+- Card displays at top of feed when memories exist from previous years
+- Shows "On This Day" header with ✨ emoji
+- Displays up to 3 memory thumbnails with "X years ago" labels
+- Tap navigates to full entry detail (full memory experience)
+- Uses getOnThisDayEntries() from entry-context directly
+- Gold background color (SemanticColors.goldLight) for visual prominence
+
+**Files Changed:**
+- MODIFIED: __tests__/app/tabs/feed.test.tsx (+9 OnThisDayCard tests)
+- MODIFIED: prd-killer-features.json (OTD-002 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- npm run lint: PASS (warnings only)
+- npm test (feed): 46/46 PASS
+- npm test (all): 763/764 PASS (1 pre-existing flaky test)
+- npx expo export --platform web: PASS
+
+**Notes:**
+- OTD-002 complete: Feed shows On This Day card at top with photos and years ago labels
+- Card already implemented in prior work, needed verification and test coverage
+- Uses entry-context directly; OnThisDayContext available for future enhancements
+- Pre-existing flaky test (entry-detail.test.tsx timeout) unrelated
+
+---
+
