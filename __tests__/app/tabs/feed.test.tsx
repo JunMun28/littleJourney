@@ -64,6 +64,135 @@ jest.mock("expo-image-picker", () => ({
 
 const mockAsyncStorage = AsyncStorage as jest.Mocked<typeof AsyncStorage>;
 
+// OTD-003: Multi-year memories carousel tests
+describe("OTD-003 Multi-year memories", () => {
+  const { OnThisDayProvider, useOnThisDay } = require("@/contexts/on-this-day-context");
+  const React = require("react");
+
+  // Use a combined hook to access both contexts in the same wrapper
+  function useCombinedHooks() {
+    const entries = useEntries();
+    const onThisDay = useOnThisDay();
+    return { entries, onThisDay };
+  }
+
+  function createCombinedWrapper() {
+    return ({ children }: { children: ReactNode }) =>
+      React.createElement(
+        EntryProvider,
+        null,
+        React.createElement(OnThisDayProvider, null, children),
+      );
+  }
+
+  it("should group memories by year via getMemoriesByYear", () => {
+    const wrapper = createCombinedWrapper();
+    const { result } = renderHook(() => useCombinedHooks(), { wrapper });
+
+    // Add entries from multiple years using string format
+    const today = new Date();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+
+    const lastYearDate = `${today.getFullYear() - 1}-${month}-${day}`;
+    const twoYearsAgoDate = `${today.getFullYear() - 2}-${month}-${day}`;
+    const threeYearsAgoDate = `${today.getFullYear() - 3}-${month}-${day}`;
+
+    act(() => {
+      result.current.entries.addEntry({
+        type: "photo",
+        caption: "One year ago",
+        date: lastYearDate,
+      });
+      result.current.entries.addEntry({
+        type: "photo",
+        caption: "Two years ago",
+        date: twoYearsAgoDate,
+      });
+      result.current.entries.addEntry({
+        type: "text",
+        caption: "Three years ago",
+        date: threeYearsAgoDate,
+      });
+    });
+
+    const memoryGroups = result.current.onThisDay.getMemoriesByYear();
+    expect(memoryGroups).toHaveLength(3);
+
+    // Groups should be sorted by year descending (most recent first)
+    expect(memoryGroups[0].yearsAgo).toBe(1);
+    expect(memoryGroups[1].yearsAgo).toBe(2);
+    expect(memoryGroups[2].yearsAgo).toBe(3);
+  });
+
+  it("should return yearsWithMemories sorted descending", () => {
+    const wrapper = createCombinedWrapper();
+    const { result } = renderHook(() => useCombinedHooks(), { wrapper });
+
+    const today = new Date();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+
+    const lastYearDate = `${today.getFullYear() - 1}-${month}-${day}`;
+    const twoYearsAgoDate = `${today.getFullYear() - 2}-${month}-${day}`;
+
+    act(() => {
+      result.current.entries.addEntry({
+        type: "photo",
+        caption: "One year ago",
+        date: lastYearDate,
+      });
+      result.current.entries.addEntry({
+        type: "photo",
+        caption: "Two years ago",
+        date: twoYearsAgoDate,
+      });
+    });
+
+    const years = result.current.onThisDay.yearsWithMemories();
+    expect(years).toHaveLength(2);
+    expect(years[0]).toBe(today.getFullYear() - 1); // Most recent first
+    expect(years[1]).toBe(today.getFullYear() - 2);
+  });
+
+  it("should have multiple memories within a single year group", () => {
+    const wrapper = createCombinedWrapper();
+    const { result } = renderHook(() => useCombinedHooks(), { wrapper });
+
+    const today = new Date();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    const lastYearDate = `${today.getFullYear() - 1}-${month}-${day}`;
+
+    // Add multiple entries from same year
+    act(() => {
+      result.current.entries.addEntry({
+        type: "photo",
+        caption: "Morning last year",
+        date: lastYearDate,
+      });
+      result.current.entries.addEntry({
+        type: "photo",
+        caption: "Evening last year",
+        date: lastYearDate,
+      });
+    });
+
+    const memoryGroups = result.current.onThisDay.getMemoriesByYear();
+    expect(memoryGroups).toHaveLength(1);
+    expect(memoryGroups[0].memories).toHaveLength(2);
+    expect(memoryGroups[0].yearsAgo).toBe(1);
+  });
+
+  it("should return empty array when no memories exist", () => {
+    const wrapper = createCombinedWrapper();
+    const { result } = renderHook(() => useCombinedHooks(), { wrapper });
+
+    const memoryGroups = result.current.onThisDay.getMemoriesByYear();
+    expect(memoryGroups).toHaveLength(0);
+  });
+});
+
 describe("On This Day memories", () => {
   const entryWrapper = ({ children }: { children: ReactNode }) => (
     <EntryProvider>{children}</EntryProvider>

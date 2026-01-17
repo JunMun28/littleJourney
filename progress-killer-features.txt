@@ -512,3 +512,45 @@ Reasoning: Completes core time capsule UX. Without sealed content behavior, caps
 
 ---
 
+### Task Selection
+Selected: OTD-003 (Multi-year memories) - UI implementation
+Priority: 4 (Standard features and implementation)
+Reasoning: On This Day context already has getMemoriesByYear() and yearsWithMemories() ready. OTD-002 done. Next logical step is multi-year carousel view.
+
+### Implementation Complete
+
+**Task:** OTD-003 Multi-year memories carousel
+**PRD Ref:** On This Day Memories - OTD-003
+
+**Key Decisions:**
+- Created MultiYearCarousel component for swipeable year-by-year view
+- Horizontal ScrollView with paging for year pages
+- Each page shows year header with "X year(s) ago" label
+- Memories grid (up to 4) per year page
+- Year indicator dots at bottom for multiple years
+- Feed uses MultiYearCarousel when getMemoriesByYear().length > 1
+- Falls back to simple OnThisDayCard for single-year scenario
+- Dismiss dismisses all memories at once (same as before)
+
+**Files Changed:**
+- NEW: components/multi-year-carousel.tsx (195 lines)
+- NEW: __tests__/components/multi-year-carousel.test.tsx (10 tests)
+- MODIFIED: app/(tabs)/index.tsx (+MultiYearCarousel import, +getMemoriesByYear usage, +conditional rendering)
+- MODIFIED: __tests__/app/tabs/feed.test.tsx (+4 OTD-003 tests)
+- MODIFIED: prd-killer-features.json (OTD-003 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- npx tsc --noEmit: PASS
+- npm run lint: PASS
+- npm test: 795/795 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- OTD-003 complete: Have entries from 1, 2, 3 years ago -> view memories -> all years in carousel -> swipe through -> correct year labels
+- Memory groups sorted by yearsAgo (most recent first)
+- Existing OnThisDayCard preserved for single-year backwards compatibility
+- TDD approach used: tests written before component
+
+---
+

@@ -27,6 +27,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { PhotoCarousel } from "@/components/photo-carousel";
 import { VideoPlayer } from "@/components/video-player";
+import { MultiYearCarousel } from "@/components/multi-year-carousel";
 import { type Entry, type EntryType } from "@/contexts/entry-context";
 import { useAuth } from "@/contexts/auth-context";
 import { useInfiniteEntries, useCreateEntry } from "@/hooks/use-entries";
@@ -220,6 +221,7 @@ export default function FeedScreen() {
   const {
     memories: onThisDayMemories,
     dismissMemory,
+    getMemoriesByYear,
   } = useOnThisDay();
   const {
     draft,
@@ -681,11 +683,20 @@ export default function FeedScreen() {
           />
         )}
         ListHeaderComponent={
-          <OnThisDayCard
-            memories={onThisDayMemories}
-            onPress={(memory) => router.push(`/memory/${memory.id}`)}
-            onDismiss={dismissMemory}
-          />
+          // OTD-003: Use multi-year carousel when there are multiple years of memories
+          getMemoriesByYear().length > 1 ? (
+            <MultiYearCarousel
+              memoryGroups={getMemoriesByYear()}
+              onMemoryPress={(memory) => router.push(`/memory/${memory.id}`)}
+              onDismiss={() => onThisDayMemories.forEach((m) => dismissMemory(m.id))}
+            />
+          ) : (
+            <OnThisDayCard
+              memories={onThisDayMemories}
+              onPress={(memory) => router.push(`/memory/${memory.id}`)}
+              onDismiss={dismissMemory}
+            />
+          )
         }
         ListEmptyComponent={EmptyState}
         ListFooterComponent={<LoadingFooter isLoading={isFetchingNextPage} />}
