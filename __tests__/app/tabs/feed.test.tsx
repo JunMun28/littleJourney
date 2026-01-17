@@ -1045,6 +1045,8 @@ describe("Voice Journal Entry Type", () => {
       type: "voice" as const,
       audioUri: "file:///recording2.m4a",
       audioDuration: 3000,
+      caption: undefined,
+      transcript: undefined,
       date: "2026-01-18",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),

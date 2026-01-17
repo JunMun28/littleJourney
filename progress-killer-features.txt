@@ -796,3 +796,45 @@ Reasoning: Voice Journal category completely unimplemented. Requires new context
 
 ---
 
+### Task Selection
+Selected: CAPSULE-002 (Voice recording in time capsule) - Full implementation
+Priority: 2 (Integration points between modules)
+Reasoning: Integrates voice recording (from VOICE-001) with time capsule creation. Leverages expo-av directly in component for recording/playback since standalone capsule voice recording has different UX than journal entries.
+
+### Implementation Complete
+
+**Task:** CAPSULE-002 Voice recording in time capsule
+**PRD Ref:** Time Capsule - CAPSULE-002
+
+**Key Decisions:**
+- Built voice recording directly in time-capsule.tsx (not using VoiceJournalContext)
+- Cleaner UX: recording is capsule-specific, not global state
+- expo-av Audio.Recording for recording with HIGH_QUALITY preset
+- expo-av Audio.Sound for playback preview
+- Max 5 minutes (300000ms) with auto-stop via useEffect
+- Voice modal: start/stop recording, preview with play/re-record, save button
+- Voice attached indicator shows duration and remove button
+- Voice URI stored in voiceMessageUri on capsule create
+
+**Files Changed:**
+- MODIFIED: app/(tabs)/time-capsule.tsx (+voice state, +voice modal, +recording handlers, +styles)
+- MODIFIED: __tests__/app/tabs/time-capsule.test.tsx (+8 CAPSULE-002 tests, +expo-av mocks, +VoiceJournalProvider)
+- MODIFIED: __tests__/app/tabs/feed.test.tsx (fix TS error - add caption/transcript to test entry)
+- MODIFIED: prd-killer-features.json (CAPSULE-002 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- tsc --noEmit: PASS
+- npm run lint: PASS (pre-existing expo-blur issue)
+- npm test: 870/870 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- CAPSULE-002 complete: Create capsule, tap Add Voice Message, record, preview, re-record, save with capsule
+- Recording duration shown in real-time during recording
+- Preview shows duration with play/stop controls
+- Voice attached indicator with remove option
+- Time Capsule category now 5/8 complete (CAPSULE-001, 002, 004, 007, 008)
+
+---
+

@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import TimeCapsuleScreen from "@/app/(tabs)/time-capsule";
 import { TimeCapsuleProvider } from "@/contexts/time-capsule-context";
 import { ChildProvider, useChild } from "@/contexts/child-context";
+import { VoiceJournalProvider } from "@/contexts/voice-journal-context";
 import { useEffect } from "react";
 
 // Mock expo-router
@@ -16,6 +17,37 @@ jest.mock("expo-router", () => ({
   router: {
     push: (path: string) => mockRouterPush(path),
     back: jest.fn(),
+  },
+}));
+
+// Mock expo-av for CAPSULE-002 voice recording
+jest.mock("expo-av", () => ({
+  Audio: {
+    Recording: jest.fn().mockImplementation(() => ({
+      prepareToRecordAsync: jest.fn().mockResolvedValue({}),
+      startAsync: jest.fn().mockResolvedValue({}),
+      stopAndUnloadAsync: jest.fn().mockResolvedValue({}),
+      getURI: jest.fn().mockReturnValue("file:///test-capsule-voice.m4a"),
+      getStatusAsync: jest.fn().mockResolvedValue({ durationMillis: 30000 }),
+    })),
+    Sound: {
+      createAsync: jest.fn().mockResolvedValue({
+        sound: {
+          playAsync: jest.fn().mockResolvedValue({}),
+          pauseAsync: jest.fn().mockResolvedValue({}),
+          stopAsync: jest.fn().mockResolvedValue({}),
+          unloadAsync: jest.fn().mockResolvedValue({}),
+          setOnPlaybackStatusUpdate: jest.fn(),
+          getStatusAsync: jest.fn().mockResolvedValue({ isLoaded: true }),
+        },
+        status: { isLoaded: true, durationMillis: 30000 },
+      }),
+    },
+    setAudioModeAsync: jest.fn().mockResolvedValue({}),
+    requestPermissionsAsync: jest.fn().mockResolvedValue({ granted: true }),
+    RecordingOptionsPresets: {
+      HIGH_QUALITY: {},
+    },
   },
 }));
 
@@ -77,7 +109,9 @@ function TestWrapper({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <ChildProvider>
         <ChildSetup>
-          <TimeCapsuleProvider>{children}</TimeCapsuleProvider>
+          <VoiceJournalProvider>
+            <TimeCapsuleProvider>{children}</TimeCapsuleProvider>
+          </VoiceJournalProvider>
         </ChildSetup>
       </ChildProvider>
     </QueryClientProvider>
@@ -565,6 +599,221 @@ describe("TimeCapsuleScreen", () => {
     await waitFor(() => {
       const input = screen.getByTestId("letter-content-input");
       expect(input.props.value).toBe("");
+    });
+  });
+
+  // CAPSULE-002: Voice recording in time capsule
+  describe("CAPSULE-002: Voice recording", () => {
+    // CAPSULE-002: Tap 'Add Voice Message'
+    it("shows Add Voice Message button in create modal", async () => {
+      render(
+        <TestWrapper>
+          <TimeCapsuleScreen />
+        </TestWrapper>,
+      );
+
+      fireEvent.press(screen.getByText("Write New Letter"));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("add-voice-message-button")).toBeTruthy();
+      });
+    });
+
+    // CAPSULE-002: Record voice message
+    it("shows recording UI when Add Voice Message is tapped", async () => {
+      render(
+        <TestWrapper>
+          <TimeCapsuleScreen />
+        </TestWrapper>,
+      );
+
+      fireEvent.press(screen.getByText("Write New Letter"));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("add-voice-message-button")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByTestId("add-voice-message-button"));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("voice-recording-modal")).toBeTruthy();
+        expect(screen.getByTestId("start-recording-button")).toBeTruthy();
+      });
+    });
+
+    // CAPSULE-002: Start and stop recording
+    it("can start and stop voice recording", async () => {
+      render(
+        <TestWrapper>
+          <TimeCapsuleScreen />
+        </TestWrapper>,
+      );
+
+      fireEvent.press(screen.getByText("Write New Letter"));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("add-voice-message-button")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByTestId("add-voice-message-button"));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("start-recording-button")).toBeTruthy();
+      });
+
+      // Start recording
+      fireEvent.press(screen.getByTestId("start-recording-button"));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("stop-recording-button")).toBeTruthy();
+      });
+
+      // Stop recording
+      fireEvent.press(screen.getByTestId("stop-recording-button"));
+
+      // Should show preview
+      await waitFor(() => {
+        expect(screen.getByTestId("voice-preview")).toBeTruthy();
+      });
+    });
+
+    // CAPSULE-002: Preview recording
+    it("shows preview with playback controls after recording", async () => {
+      render(
+        <TestWrapper>
+          <TimeCapsuleScreen />
+        </TestWrapper>,
+      );
+
+      fireEvent.press(screen.getByText("Write New Letter"));
+      await waitFor(() => {
+        expect(screen.getByTestId("add-voice-message-button")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByTestId("add-voice-message-button"));
+      await waitFor(() => {
+        expect(screen.getByTestId("start-recording-button")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByTestId("start-recording-button"));
+      await waitFor(() => {
+        expect(screen.getByTestId("stop-recording-button")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByTestId("stop-recording-button"));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("voice-preview")).toBeTruthy();
+        expect(screen.getByTestId("play-preview-button")).toBeTruthy();
+      });
+    });
+
+    // CAPSULE-002: Re-record if needed
+    it("allows re-recording after preview", async () => {
+      render(
+        <TestWrapper>
+          <TimeCapsuleScreen />
+        </TestWrapper>,
+      );
+
+      fireEvent.press(screen.getByText("Write New Letter"));
+      await waitFor(() => {
+        expect(screen.getByTestId("add-voice-message-button")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByTestId("add-voice-message-button"));
+      await waitFor(() => {
+        expect(screen.getByTestId("start-recording-button")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByTestId("start-recording-button"));
+      await waitFor(() => {
+        expect(screen.getByTestId("stop-recording-button")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByTestId("stop-recording-button"));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("re-record-button")).toBeTruthy();
+      });
+
+      // Tap re-record
+      fireEvent.press(screen.getByTestId("re-record-button"));
+
+      // Should return to recording UI
+      await waitFor(() => {
+        expect(screen.getByTestId("start-recording-button")).toBeTruthy();
+      });
+    });
+
+    // CAPSULE-002: Save with capsule
+    it("saves voice message with capsule and shows indicator", async () => {
+      render(
+        <TestWrapper>
+          <TimeCapsuleScreen />
+        </TestWrapper>,
+      );
+
+      fireEvent.press(screen.getByText("Write New Letter"));
+
+      // Add letter content
+      await waitFor(() => {
+        expect(screen.getByTestId("letter-content-input")).toBeTruthy();
+      });
+      fireEvent.changeText(
+        screen.getByTestId("letter-content-input"),
+        "Letter with voice",
+      );
+
+      // Add voice message
+      fireEvent.press(screen.getByTestId("add-voice-message-button"));
+      await waitFor(() => {
+        expect(screen.getByTestId("start-recording-button")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByTestId("start-recording-button"));
+      await waitFor(() => {
+        expect(screen.getByTestId("stop-recording-button")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByTestId("stop-recording-button"));
+
+      // Save the voice message
+      await waitFor(() => {
+        expect(screen.getByTestId("save-voice-button")).toBeTruthy();
+      });
+      fireEvent.press(screen.getByTestId("save-voice-button"));
+
+      // Should show voice attached indicator in capsule form
+      await waitFor(() => {
+        expect(screen.getByTestId("voice-attached-indicator")).toBeTruthy();
+      });
+    });
+
+    // CAPSULE-002: Voice message up to 5 minutes (enforced in UI)
+    it("displays recording duration", async () => {
+      render(
+        <TestWrapper>
+          <TimeCapsuleScreen />
+        </TestWrapper>,
+      );
+
+      fireEvent.press(screen.getByText("Write New Letter"));
+      await waitFor(() => {
+        expect(screen.getByTestId("add-voice-message-button")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByTestId("add-voice-message-button"));
+      await waitFor(() => {
+        expect(screen.getByTestId("start-recording-button")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByTestId("start-recording-button"));
+
+      // Should show duration display
+      await waitFor(() => {
+        expect(screen.getByTestId("recording-duration")).toBeTruthy();
+      });
     });
   });
 });

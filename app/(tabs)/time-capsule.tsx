@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import {
   StyleSheet,
   View,
@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { Audio } from "expo-av";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -30,8 +31,22 @@ import {
   Spacing,
 } from "@/constants/theme";
 
+// CAPSULE-002: Max voice recording duration (5 minutes in milliseconds)
+const MAX_RECORDING_DURATION_MS = 5 * 60 * 1000;
+
 type ModalState = "closed" | "createCapsule";
 type UnlockOption = "age" | "custom";
+
+// CAPSULE-002: Voice recording state types
+type VoiceRecordingState = "idle" | "recording" | "preview";
+
+// Helper to format duration in mm:ss
+function formatDuration(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
 
 // CAPSULE-008: Time capsule templates
 interface CapsuleTemplate {
@@ -205,6 +220,19 @@ export default function TimeCapsuleScreen() {
   });
   const [showDatePicker, setShowDatePicker] = useState(false);
 
+  // CAPSULE-002: Voice recording state
+  const [showVoiceModal, setShowVoiceModal] = useState(false);
+  const [voiceState, setVoiceState] = useState<VoiceRecordingState>("idle");
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const [voiceUri, setVoiceUri] = useState<string | null>(null);
+  const [voiceDuration, setVoiceDuration] = useState(0);
+  const [isPlayingPreview, setIsPlayingPreview] = useState(false);
+  const recordingRef = useRef<Audio.Recording | null>(null);
+  const soundRef = useRef<Audio.Sound | null>(null);
+  const durationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
+    null,
+  );
+
   const sealedCapsules = useMemo(
     () => getSealedCapsules(),
     [getSealedCapsules],
@@ -216,6 +244,183 @@ export default function TimeCapsuleScreen() {
 
   const hasCapsules = capsules.length > 0;
 
+  // CAPSULE-002: Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (durationIntervalRef.current) {
+        clearInterval(durationIntervalRef.current);
+      }
+      if (soundRef.current) {
+        soundRef.current.unloadAsync();
+      }
+    };
+  }, []);
+
+  // CAPSULE-002: Stop voice recording (defined first to avoid circular dependency)
+  const handleStopRecording = useCallback(async () => {
+    try {
+      if (durationIntervalRef.current) {
+        clearInterval(durationIntervalRef.current);
+        durationIntervalRef.current = null;
+      }
+
+      if (!recordingRef.current) {
+        return;
+      }
+
+      const recording = recordingRef.current;
+      const status = await recording.getStatusAsync();
+      await recording.stopAndUnloadAsync();
+      const uri = recording.getURI();
+
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+      });
+
+      recordingRef.current = null;
+
+      if (uri) {
+        setVoiceUri(uri);
+        setVoiceDuration(status.durationMillis || 0);
+        setVoiceState("preview");
+      } else {
+        setVoiceState("idle");
+      }
+    } catch (error) {
+      console.error("Failed to stop recording:", error);
+      setVoiceState("idle");
+    }
+  }, []);
+
+  // CAPSULE-002: Start voice recording
+  const handleStartRecording = useCallback(async () => {
+    try {
+      const { granted } = await Audio.requestPermissionsAsync();
+      if (!granted) {
+        return;
+      }
+
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+
+      const recording = new Audio.Recording();
+      await recording.prepareToRecordAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY,
+      );
+      await recording.startAsync();
+
+      recordingRef.current = recording;
+      setVoiceState("recording");
+      setRecordingDuration(0);
+
+      // Start duration timer
+      durationIntervalRef.current = setInterval(() => {
+        setRecordingDuration((prev) => {
+          const next = prev + 1000;
+          // Auto-stop at 5 minutes (will be handled via useEffect)
+          return next;
+        });
+      }, 1000);
+    } catch (error) {
+      console.error("Failed to start recording:", error);
+    }
+  }, []);
+
+  // CAPSULE-002: Play voice preview
+  const handlePlayPreview = useCallback(async () => {
+    if (!voiceUri) return;
+
+    try {
+      if (soundRef.current) {
+        await soundRef.current.unloadAsync();
+      }
+
+      const { sound } = await Audio.Sound.createAsync({ uri: voiceUri });
+      soundRef.current = sound;
+
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if (status.isLoaded && status.didJustFinish) {
+          setIsPlayingPreview(false);
+        }
+      });
+
+      await sound.playAsync();
+      setIsPlayingPreview(true);
+    } catch (error) {
+      console.error("Failed to play preview:", error);
+    }
+  }, [voiceUri]);
+
+  // CAPSULE-002: Stop preview playback
+  const handleStopPreview = useCallback(async () => {
+    if (soundRef.current) {
+      await soundRef.current.stopAsync();
+      setIsPlayingPreview(false);
+    }
+  }, []);
+
+  // CAPSULE-002: Re-record voice message
+  const handleReRecord = useCallback(() => {
+    setVoiceUri(null);
+    setVoiceDuration(0);
+    setVoiceState("idle");
+    setRecordingDuration(0);
+  }, []);
+
+  // CAPSULE-002: Save voice message to capsule form
+  const handleSaveVoice = useCallback(() => {
+    // Voice is already saved in voiceUri state
+    setShowVoiceModal(false);
+    setVoiceState("idle");
+    setRecordingDuration(0);
+  }, []);
+
+  // CAPSULE-002: Open voice recording modal
+  const handleOpenVoiceModal = useCallback(() => {
+    setShowVoiceModal(true);
+    setVoiceState("idle");
+    setRecordingDuration(0);
+  }, []);
+
+  // CAPSULE-002: Close voice modal (cancel)
+  const handleCloseVoiceModal = useCallback(() => {
+    // If we have a recording in progress, stop it
+    if (recordingRef.current) {
+      recordingRef.current.stopAndUnloadAsync();
+      recordingRef.current = null;
+    }
+    if (durationIntervalRef.current) {
+      clearInterval(durationIntervalRef.current);
+      durationIntervalRef.current = null;
+    }
+    // Don't clear voiceUri if we already have a saved voice message
+    if (voiceState !== "preview" || !voiceUri) {
+      setVoiceUri(null);
+      setVoiceDuration(0);
+    }
+    setShowVoiceModal(false);
+    setVoiceState("idle");
+    setRecordingDuration(0);
+  }, [voiceState, voiceUri]);
+
+  // CAPSULE-002: Remove attached voice message
+  const handleRemoveVoice = useCallback(() => {
+    setVoiceUri(null);
+    setVoiceDuration(0);
+  }, []);
+
+  // CAPSULE-002: Auto-stop at 5 minutes
+  useEffect(() => {
+    if (
+      voiceState === "recording" &&
+      recordingDuration >= MAX_RECORDING_DURATION_MS
+    ) {
+      handleStopRecording();
+    }
+  }, [voiceState, recordingDuration, handleStopRecording]);
+
   const handleOpenCreateModal = () => {
     setLetterContent("");
     setUnlockOption("age");
@@ -223,6 +428,10 @@ export default function TimeCapsuleScreen() {
     const defaultDate = new Date();
     defaultDate.setFullYear(defaultDate.getFullYear() + 18);
     setCustomDate(defaultDate);
+    // CAPSULE-002: Reset voice state
+    setVoiceUri(null);
+    setVoiceDuration(0);
+    setVoiceState("idle");
     setModalState("createCapsule");
   };
 
@@ -238,10 +447,15 @@ export default function TimeCapsuleScreen() {
           ? customDate.toISOString().split("T")[0]
           : undefined,
       childId: child?.id,
+      // CAPSULE-002: Include voice message URI if recorded
+      voiceMessageUri: voiceUri || undefined,
     });
 
     setModalState("closed");
     setLetterContent("");
+    // CAPSULE-002: Reset voice state
+    setVoiceUri(null);
+    setVoiceDuration(0);
   };
 
   const isValidCapsule = letterContent.trim().length > 0;
@@ -514,6 +728,65 @@ export default function TimeCapsuleScreen() {
               textAlignVertical="top"
             />
 
+            {/* CAPSULE-002: Voice Message Section */}
+            <Text style={[styles.label, { color: colors.text }]}>
+              Voice Message (Optional)
+            </Text>
+            {voiceUri ? (
+              <View
+                testID="voice-attached-indicator"
+                style={[
+                  styles.voiceAttachedContainer,
+                  { borderColor: colors.border },
+                ]}
+              >
+                <View style={styles.voiceAttachedInfo}>
+                  <Text style={styles.voiceIcon}>🎙️</Text>
+                  <View>
+                    <Text
+                      style={[styles.voiceAttachedText, { color: colors.text }]}
+                    >
+                      Voice message attached
+                    </Text>
+                    <Text
+                      style={[
+                        styles.voiceDurationText,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      {formatDuration(voiceDuration)}
+                    </Text>
+                  </View>
+                </View>
+                <Pressable
+                  testID="remove-voice-button"
+                  onPress={handleRemoveVoice}
+                  style={styles.removeVoiceButton}
+                >
+                  <Text style={styles.removeVoiceText}>✕</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <Pressable
+                testID="add-voice-message-button"
+                style={[styles.addVoiceButton, { borderColor: colors.border }]}
+                onPress={handleOpenVoiceModal}
+              >
+                <Text style={styles.addVoiceIcon}>🎙️</Text>
+                <Text style={[styles.addVoiceText, { color: colors.text }]}>
+                  Add Voice Message
+                </Text>
+                <Text
+                  style={[
+                    styles.addVoiceSubtext,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Up to 5 minutes
+                </Text>
+              </Pressable>
+            )}
+
             <Text style={[styles.label, { color: colors.text }]}>
               When to Unlock
             </Text>
@@ -627,6 +900,163 @@ export default function TimeCapsuleScreen() {
             </Pressable>
           </ScrollView>
         </KeyboardAvoidingView>
+      </Modal>
+
+      {/* CAPSULE-002: Voice Recording Modal */}
+      <Modal
+        visible={showVoiceModal}
+        animationType="slide"
+        transparent={true}
+        testID="voice-recording-modal"
+      >
+        <View style={styles.voiceModalOverlay}>
+          <View
+            style={[
+              styles.voiceModalContent,
+              { backgroundColor: colors.background },
+            ]}
+          >
+            <View
+              style={[
+                styles.voiceModalHeader,
+                { borderBottomColor: colors.border },
+              ]}
+            >
+              <Pressable
+                testID="close-voice-modal-button"
+                onPress={handleCloseVoiceModal}
+              >
+                <Text style={styles.backButton}>Cancel</Text>
+              </Pressable>
+              <ThemedText type="subtitle">Voice Message</ThemedText>
+              <View style={{ width: 60 }} />
+            </View>
+
+            <View style={styles.voiceModalBody}>
+              {voiceState === "idle" && (
+                <>
+                  <Text
+                    style={[
+                      styles.voiceModalInstruction,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    Tap to start recording your voice message
+                  </Text>
+                  <Pressable
+                    testID="start-recording-button"
+                    style={styles.recordButton}
+                    onPress={handleStartRecording}
+                  >
+                    <Text style={styles.recordButtonIcon}>🎙️</Text>
+                    <Text style={styles.recordButtonText}>Start Recording</Text>
+                  </Pressable>
+                  <Text
+                    style={[
+                      styles.voiceModalSubtext,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    Maximum 5 minutes
+                  </Text>
+                </>
+              )}
+
+              {voiceState === "recording" && (
+                <>
+                  <View style={styles.recordingIndicator}>
+                    <View style={styles.recordingDot} />
+                    <Text
+                      style={[
+                        styles.recordingLabel,
+                        { color: SemanticColors.error },
+                      ]}
+                    >
+                      Recording
+                    </Text>
+                  </View>
+                  <Text
+                    testID="recording-duration"
+                    style={[styles.durationDisplay, { color: colors.text }]}
+                  >
+                    {formatDuration(recordingDuration)}
+                  </Text>
+                  <Pressable
+                    testID="stop-recording-button"
+                    style={styles.stopButton}
+                    onPress={handleStopRecording}
+                  >
+                    <View style={styles.stopButtonIcon} />
+                    <Text style={styles.stopButtonText}>Stop</Text>
+                  </Pressable>
+                </>
+              )}
+
+              {voiceState === "preview" && (
+                <View testID="voice-preview" style={styles.previewContainer}>
+                  <Text style={[styles.previewTitle, { color: colors.text }]}>
+                    Preview
+                  </Text>
+                  <Text
+                    style={[
+                      styles.previewDuration,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    Duration: {formatDuration(voiceDuration)}
+                  </Text>
+
+                  <Pressable
+                    testID="play-preview-button"
+                    style={[
+                      styles.playPreviewButton,
+                      isPlayingPreview && styles.playPreviewButtonActive,
+                    ]}
+                    onPress={
+                      isPlayingPreview ? handleStopPreview : handlePlayPreview
+                    }
+                  >
+                    <Text style={styles.playPreviewIcon}>
+                      {isPlayingPreview ? "⏹️" : "▶️"}
+                    </Text>
+                    <Text style={styles.playPreviewText}>
+                      {isPlayingPreview ? "Stop" : "Play"}
+                    </Text>
+                  </Pressable>
+
+                  <View style={styles.previewActions}>
+                    <Pressable
+                      testID="re-record-button"
+                      style={[
+                        styles.previewActionButton,
+                        { borderColor: colors.border },
+                      ]}
+                      onPress={handleReRecord}
+                    >
+                      <Text
+                        style={[
+                          styles.previewActionText,
+                          { color: colors.text },
+                        ]}
+                      >
+                        Re-record
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      testID="save-voice-button"
+                      style={styles.saveVoiceButton}
+                      onPress={handleSaveVoice}
+                    >
+                      <Text style={styles.saveVoiceButtonText}>
+                        Use Recording
+                      </Text>
+                    </Pressable>
+                  </View>
+                </View>
+              )}
+            </View>
+          </View>
+        </View>
       </Modal>
     </ThemedView>
   );
@@ -890,6 +1320,219 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: "#fff",
     fontSize: 16,
+    fontWeight: "600",
+  },
+  // CAPSULE-002: Voice recording styles
+  addVoiceButton: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: Spacing.lg,
+    alignItems: "center",
+    borderStyle: "dashed",
+    marginBottom: Spacing.xl,
+  },
+  addVoiceIcon: {
+    fontSize: 32,
+    marginBottom: Spacing.sm,
+  },
+  addVoiceText: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  addVoiceSubtext: {
+    fontSize: 12,
+    marginTop: Spacing.xs,
+  },
+  voiceAttachedContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: Spacing.md,
+    marginBottom: Spacing.xl,
+    backgroundColor: SemanticColors.successLight,
+    borderColor: SemanticColors.success,
+  },
+  voiceAttachedInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  voiceIcon: {
+    fontSize: 24,
+    marginRight: Spacing.md,
+  },
+  voiceAttachedText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  voiceDurationText: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  removeVoiceButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(0,0,0,0.1)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  removeVoiceText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  voiceModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  voiceModalContent: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    minHeight: 350,
+  },
+  voiceModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: Spacing.lg,
+    borderBottomWidth: 1,
+  },
+  voiceModalBody: {
+    flex: 1,
+    padding: Spacing.xl,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  voiceModalInstruction: {
+    fontSize: 14,
+    textAlign: "center",
+    marginBottom: Spacing.xl,
+  },
+  voiceModalSubtext: {
+    fontSize: 12,
+    marginTop: Spacing.md,
+  },
+  recordButton: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: SemanticColors.error,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  recordButtonIcon: {
+    fontSize: 32,
+    marginBottom: Spacing.xs,
+  },
+  recordButtonText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  recordingIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: Spacing.lg,
+  },
+  recordingDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: SemanticColors.error,
+    marginRight: Spacing.sm,
+  },
+  recordingLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  durationDisplay: {
+    fontSize: 48,
+    fontWeight: "300",
+    marginBottom: Spacing.xl,
+    fontVariant: ["tabular-nums"],
+  },
+  stopButton: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: "#333",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  stopButtonIcon: {
+    width: 32,
+    height: 32,
+    backgroundColor: "#fff",
+    borderRadius: 4,
+  },
+  stopButtonText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+    marginTop: Spacing.xs,
+  },
+  previewContainer: {
+    width: "100%",
+    alignItems: "center",
+  },
+  previewTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: Spacing.sm,
+  },
+  previewDuration: {
+    fontSize: 14,
+    marginBottom: Spacing.xl,
+  },
+  playPreviewButton: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: PRIMARY_COLOR,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: Spacing.xl,
+  },
+  playPreviewButtonActive: {
+    backgroundColor: "#333",
+  },
+  playPreviewIcon: {
+    fontSize: 24,
+  },
+  playPreviewText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+    marginTop: Spacing.xs,
+  },
+  previewActions: {
+    flexDirection: "row",
+    gap: Spacing.md,
+    width: "100%",
+  },
+  previewActionButton: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    borderWidth: 1,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  previewActionText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  saveVoiceButton: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    backgroundColor: PRIMARY_COLOR,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  saveVoiceButtonText: {
+    color: "#fff",
+    fontSize: 14,
     fontWeight: "600",
   },
 });

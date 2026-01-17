@@ -183,7 +183,7 @@
         "Save with capsule"
       ],
       "acceptanceCriteria": "Time capsules can include voice recordings from parents",
-      "passes": false
+      "passes": true
     },
     {
       "id": "CAPSULE-003",
