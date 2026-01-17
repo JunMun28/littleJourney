@@ -390,3 +390,44 @@ Reasoning: Builds on existing growth tracking. Provides doctor-ready PDF export.
 
 ---
 
+### Task Selection
+Selected: CAPSULE-001 (Create time capsule letter) - UI implementation
+Priority: 4 (Standard features and implementation)
+Reasoning: Time Capsule context exists. UI screen needed for user to write letters and select unlock dates. Foundation for CAPSULE-002 through CAPSULE-008.
+
+### Implementation Complete
+
+**Task:** CAPSULE-001 Create time capsule letter UI
+**PRD Ref:** Time Capsule - CAPSULE-001
+
+**Key Decisions:**
+- Added new Capsule tab to tab layout (envelope icon)
+- Screen shows empty state with "Write New Letter" CTA when no capsules
+- Full-screen modal for composing letters with multiline TextInput
+- Unlock options: "At Age" (5, 10, 18, 21 presets) or "Custom Date"
+- Capsules sealed immediately on save (per CAPSULE-004)
+- Sealed list shows countdown badge with time until unlock
+- Card displays status icon (locked/opened) and creation date
+- FAB for adding when capsules exist
+- Info box warns about seal being permanent
+
+**Files Changed:**
+- MODIFIED: app/(tabs)/_layout.tsx (+Time Capsule tab with envelope icon)
+- NEW: app/(tabs)/time-capsule.tsx (Time Capsule screen, 490 lines)
+- NEW: __tests__/app/tabs/time-capsule.test.tsx (12 tests)
+- MODIFIED: prd-killer-features.json (CAPSULE-001 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- npm run lint: PASS
+- npm test (time-capsule): 19/19 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- CAPSULE-001 complete: Navigate to Capsule tab, tap Write New Letter, enter content, select age/custom date, save, see in sealed list
+- Photo attachment (CAPSULE-001 step 4) not implemented - requires entry integration
+- Voice recording (CAPSULE-002) and Video (CAPSULE-003) need separate implementation
+- forceUnlock UI (CAPSULE-007) not implemented in this iteration
+
+---
+

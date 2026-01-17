@@ -45,6 +45,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="time-capsule"
+        options={{
+          title: "Capsule",
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={28} name="envelope.fill" color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="search"
         options={{
           title: "Search",
