@@ -431,3 +431,41 @@ Reasoning: Time Capsule context exists. UI screen needed for user to write lette
 
 ---
 
+### Task Selection
+Selected: OTD-002 (On This Day card in feed) - Full implementation
+Priority: 4 (Standard features and implementation)
+Reasoning: On This Day context exists and provider integrated. Need UI for feed card and memory detail experience.
+
+### Implementation Complete
+
+**Task:** OTD-002 On This Day card in feed
+**PRD Ref:** On This Day Memories - OTD-002
+
+**Key Decisions:**
+- Updated OnThisDayCard to use useOnThisDay() context (proper state management)
+- Added dismiss functionality with "Dismiss" button in card header
+- Created dedicated memory detail screen at /memory/[id]
+- Memory screen shows "On This Day" banner with years ago context
+- Memory screen has dismiss and view full entry options
+- Card navigates to memory detail for "full memory experience"
+
+**Files Changed:**
+- MODIFIED: app/(tabs)/index.tsx (OnThisDayCard uses context, dismiss button, new styles)
+- NEW: app/memory/[id].tsx (Memory detail screen, 295 lines)
+- NEW: __tests__/app/memory/memory-detail.test.tsx (14 tests)
+- MODIFIED: prd-killer-features.json (OTD-002 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- npx expo lint: PASS
+- npm test: 768/768 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- OTD-002 complete: Card shows at top of feed, displays photo with years ago, tap navigates to memory detail screen
+- Memory screen shows context banner, dismiss option, and link to full entry
+- Dismiss functionality hides memories for session (not persisted)
+- Future: OTD-001 (notifications), OTD-003 (multi-year carousel), OTD-004 (then vs now)
+
+---
+
