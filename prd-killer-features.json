@@ -423,7 +423,7 @@
         "Verify correct year label on each"
       ],
       "acceptanceCriteria": "Multiple years of memories shown together",
-      "passes": false
+      "passes": true
     },
     {
       "id": "OTD-004",
