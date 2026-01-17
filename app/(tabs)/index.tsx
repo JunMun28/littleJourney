@@ -35,7 +35,10 @@ import { useStorage, TIER_LIMITS } from "@/contexts/storage-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useDraft } from "@/hooks/use-draft";
 import { useNotifications } from "@/contexts/notification-context";
-import { useOnThisDay, type Memory } from "@/contexts/on-this-day-context";
+import {
+  useOnThisDay,
+  type Memory,
+} from "@/contexts/on-this-day-context";
 import {
   PRIMARY_COLOR,
   Colors,
@@ -67,20 +70,37 @@ function LoadingFooter({ isLoading }: { isLoading: boolean }) {
   );
 }
 
-interface OnThisDayCardProps {
+interface MemoryGroup {
+  year: number;
+  yearsAgo: number;
   memories: Memory[];
+}
+
+interface OnThisDayCardProps {
+  memoryGroups: MemoryGroup[];
   onPress: (memory: Memory) => void;
   onDismiss: (memoryId: string) => void;
 }
 
-function OnThisDayCard({ memories, onPress, onDismiss }: OnThisDayCardProps) {
+function OnThisDayCard({ memoryGroups, onPress, onDismiss }: OnThisDayCardProps) {
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
+  const [selectedYearIndex, setSelectedYearIndex] = useState(0);
 
-  if (memories.length === 0) return null;
+  if (memoryGroups.length === 0) return null;
+
+  const currentGroup = memoryGroups[selectedYearIndex] ?? memoryGroups[0];
+  const totalMemories = memoryGroups.reduce((sum, g) => sum + g.memories.length, 0);
+  const hasMultipleYears = memoryGroups.length > 1;
 
   const yearsAgoText = (yearsAgo: number) => {
     return yearsAgo === 1 ? "1 year ago" : `${yearsAgo} years ago`;
+  };
+
+  const dismissAll = () => {
+    memoryGroups.forEach((group) => {
+      group.memories.forEach((m) => onDismiss(m.id));
+    });
   };
 
   return (
@@ -95,7 +115,7 @@ function OnThisDayCard({ memories, onPress, onDismiss }: OnThisDayCardProps) {
         <Pressable
           testID="dismiss-all-memories"
           style={styles.onThisDayDismiss}
-          onPress={() => memories.forEach((m) => onDismiss(m.id))}
+          onPress={dismissAll}
           hitSlop={12}
         >
           <ThemedText style={[styles.onThisDayDismissText, { color: colors.textMuted }]}>
@@ -104,12 +124,41 @@ function OnThisDayCard({ memories, onPress, onDismiss }: OnThisDayCardProps) {
         </Pressable>
       </View>
       <ThemedText style={styles.onThisDaySubtitle}>
-        {memories.length === 1
+        {totalMemories === 1
           ? "A memory from the past"
-          : `${memories.length} memories from the past`}
+          : `${totalMemories} memories from the past`}
       </ThemedText>
-      <View style={styles.onThisDayMemories}>
-        {memories.slice(0, 3).map((memory) => (
+
+      {/* Year tabs (OTD-003) */}
+      {hasMultipleYears && (
+        <View style={styles.yearTabs} testID="year-tabs">
+          {memoryGroups.map((group, index) => (
+            <Pressable
+              key={group.year}
+              testID={`year-tab-${group.year}`}
+              style={[
+                styles.yearTab,
+                index === selectedYearIndex && styles.yearTabSelected,
+                { borderColor: index === selectedYearIndex ? colors.text : colors.border },
+              ]}
+              onPress={() => setSelectedYearIndex(index)}
+            >
+              <ThemedText
+                style={[
+                  styles.yearTabText,
+                  index === selectedYearIndex && styles.yearTabTextSelected,
+                ]}
+              >
+                {yearsAgoText(group.yearsAgo)}
+              </ThemedText>
+            </Pressable>
+          ))}
+        </View>
+      )}
+
+      {/* Memories for selected year */}
+      <View style={styles.onThisDayMemories} testID={`memories-for-year-${currentGroup.year}`}>
+        {currentGroup.memories.slice(0, 3).map((memory) => (
           <Pressable
             key={memory.id}
             style={styles.onThisDayMemory}
@@ -218,9 +267,10 @@ export default function FeedScreen() {
     settings,
   } = useNotifications();
   const {
-    memories: onThisDayMemories,
+    getMemoriesByYear,
     dismissMemory,
   } = useOnThisDay();
+  const memoryGroups = getMemoriesByYear();
   const {
     draft,
     hasDraft,
@@ -263,16 +313,17 @@ export default function FeedScreen() {
   const hasSentBirthdayPrompt = useRef(false);
 
   // Send "On This Day" memories notification once per session (PRD Section 4.5)
+  const totalMemoriesCount = memoryGroups.reduce((sum, g) => sum + g.memories.length, 0);
   useEffect(() => {
     if (
       !hasSentMemoriesNotification.current &&
-      onThisDayMemories.length > 0 &&
+      totalMemoriesCount > 0 &&
       settings.memories
     ) {
       hasSentMemoriesNotification.current = true;
-      sendMemoriesNotification(onThisDayMemories.length);
+      sendMemoriesNotification(totalMemoriesCount);
     }
-  }, [onThisDayMemories.length, settings.memories, sendMemoriesNotification]);
+  }, [totalMemoriesCount, settings.memories, sendMemoriesNotification]);
 
   // Check for child's first birthday and prompt photo book creation (PRD Section 10.1)
   useEffect(() => {
@@ -682,7 +733,7 @@ export default function FeedScreen() {
         )}
         ListHeaderComponent={
           <OnThisDayCard
-            memories={onThisDayMemories}
+            memoryGroups={memoryGroups}
             onPress={(memory) => router.push(`/memory/${memory.id}`)}
             onDismiss={dismissMemory}
           />
@@ -690,7 +741,7 @@ export default function FeedScreen() {
         ListEmptyComponent={EmptyState}
         ListFooterComponent={<LoadingFooter isLoading={isFetchingNextPage} />}
         contentContainerStyle={
-          entries.length === 0 && onThisDayMemories.length === 0
+          entries.length === 0 && memoryGroups.length === 0
             ? styles.listEmpty
             : styles.list
         }
@@ -1287,5 +1338,27 @@ const styles = StyleSheet.create({
   onThisDayYears: {
     fontSize: 12,
     opacity: 0.7,
+  },
+  yearTabs: {
+    flexDirection: "row",
+    marginBottom: 12,
+    gap: 8,
+  },
+  yearTab: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  yearTabSelected: {
+    backgroundColor: "rgba(0, 0, 0, 0.1)",
+  },
+  yearTabText: {
+    fontSize: 12,
+    opacity: 0.7,
+  },
+  yearTabTextSelected: {
+    fontWeight: "600",
+    opacity: 1,
   },
 });

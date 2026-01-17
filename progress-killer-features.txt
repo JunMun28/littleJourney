@@ -512,3 +512,41 @@ Reasoning: Completes core time capsule UX. Without sealed content behavior, caps
 
 ---
 
+### Task Selection
+Selected: OTD-003 (Multi-year memories carousel) - UI implementation
+Priority: 4 (Standard features and implementation)
+Reasoning: Context already has getMemoriesByYear() and yearsWithMemories(). UI enhancement to show year tabs for switching between years. Builds on OTD-002.
+
+### Implementation Complete
+
+**Task:** OTD-003 Multi-year memories carousel
+**PRD Ref:** On This Day Memories - OTD-003
+
+**Key Decisions:**
+- Added MemoryGroup interface to OnThisDayCard component
+- OnThisDayCard now receives memoryGroups prop instead of flat memories array
+- Year tabs displayed as horizontal row when multiple years have memories
+- Year tabs show "1 year ago", "2 years ago" etc. as labels
+- Selected year tab highlighted with border and bold text
+- Memories grid shows entries for selected year only
+- Default to most recent year (first tab)
+- Single year: no tabs shown, behaves like before
+
+**Files Changed:**
+- MODIFIED: app/(tabs)/index.tsx (OnThisDayCard accepts memoryGroups, year tabs UI, FeedScreen uses getMemoriesByYear())
+- MODIFIED: prd-killer-features.json (OTD-003 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- npm test (on-this-day): 8/8 PASS
+- npm test: 779/781 PASS (2 pre-existing timeout tests)
+- npx expo export --platform web: PASS
+
+**Notes:**
+- OTD-003 complete: Year tabs shown when entries from multiple years exist on same day
+- Tap year tab to switch between years, memories grid updates
+- Context already had getMemoriesByYear() from previous architecture work
+- 2 pre-existing timeout tests (entry-detail, capsule-detail) unrelated to changes
+
+---
+
