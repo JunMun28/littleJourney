@@ -712,3 +712,41 @@ Reasoning: Completes On This Day to 7/7. Builds on memory detail screen. Uses ex
 
 ---
 
+### Task Selection
+Selected: CAPSULE-008 (Time capsule templates) - Full implementation
+Priority: 4 (Standard features and implementation)
+Reasoning: Standalone UI feature to help parents write meaningful letters. Builds on existing CAPSULE-001 infrastructure. No external dependencies.
+
+### Implementation Complete
+
+**Task:** CAPSULE-008 Time capsule templates
+**PRD Ref:** Time Capsule - CAPSULE-008
+
+**Key Decisions:**
+- Added CapsuleTemplate interface with id, title, icon, content, and optional suggestedAge
+- 4 templates: Start Blank, Letter to 18-year-old, First Day of School, For Graduation Day
+- Template selector shown as horizontal ScrollView with cards in create modal
+- Selecting template fills letter content and auto-selects suggested unlock age
+- Templates contain placeholder prompts like [Child's Name], [favorite activity]
+- Users can edit template content after selection
+
+**Files Changed:**
+- MODIFIED: app/(tabs)/time-capsule.tsx (+templates data, +selector UI, +handler, +styles)
+- MODIFIED: __tests__/app/tabs/time-capsule.test.tsx (+7 CAPSULE-008 tests)
+- MODIFIED: prd-killer-features.json (CAPSULE-008 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- tsc --noEmit: PASS
+- npm run lint: PASS (pre-existing expo-blur issue)
+- npm test: 850/850 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- CAPSULE-008 complete: Create capsule, view templates, select "Letter to 18-year-old", prompts appear, edit content
+- Templates include meaningful writing prompts to help parents craft heartfelt letters
+- First Day of School template auto-selects age 5, Graduation auto-selects age 21
+- Time Capsule category now 4/8 complete (CAPSULE-001, 004, 007, 008)
+
+---
+

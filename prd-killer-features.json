@@ -268,7 +268,7 @@
         "Edit prompts with personal content"
       ],
       "acceptanceCriteria": "Writing prompts help parents create meaningful letters",
-      "passes": false
+      "passes": true
     },
     {
       "id": "AIDETECT-001",

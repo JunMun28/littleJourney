@@ -106,7 +106,7 @@ describe("TimeCapsuleScreen", () => {
     render(
       <TestWrapper>
         <TimeCapsuleScreen />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
@@ -120,7 +120,7 @@ describe("TimeCapsuleScreen", () => {
     render(
       <TestWrapper>
         <TimeCapsuleScreen />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
@@ -140,7 +140,7 @@ describe("TimeCapsuleScreen", () => {
     render(
       <TestWrapper>
         <TimeCapsuleScreen />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     fireEvent.press(screen.getByText("Write New Letter"));
@@ -151,7 +151,7 @@ describe("TimeCapsuleScreen", () => {
 
     fireEvent.changeText(
       screen.getByTestId("letter-content-input"),
-      "Dear child, I love you so much!"
+      "Dear child, I love you so much!",
     );
 
     // The save button should now be enabled
@@ -164,7 +164,7 @@ describe("TimeCapsuleScreen", () => {
     render(
       <TestWrapper>
         <TimeCapsuleScreen />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     fireEvent.press(screen.getByText("Write New Letter"));
@@ -191,7 +191,7 @@ describe("TimeCapsuleScreen", () => {
     render(
       <TestWrapper>
         <TimeCapsuleScreen />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     fireEvent.press(screen.getByText("Write New Letter"));
@@ -215,7 +215,7 @@ describe("TimeCapsuleScreen", () => {
     render(
       <TestWrapper>
         <TimeCapsuleScreen />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // Open modal
@@ -228,7 +228,7 @@ describe("TimeCapsuleScreen", () => {
     // Enter letter content
     fireEvent.changeText(
       screen.getByTestId("letter-content-input"),
-      "Dear child, this is my message to you."
+      "Dear child, this is my message to you.",
     );
 
     // Save capsule
@@ -246,7 +246,7 @@ describe("TimeCapsuleScreen", () => {
     render(
       <TestWrapper>
         <TimeCapsuleScreen />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // Create a capsule
@@ -258,7 +258,7 @@ describe("TimeCapsuleScreen", () => {
 
     fireEvent.changeText(
       screen.getByTestId("letter-content-input"),
-      "Test letter"
+      "Test letter",
     );
     fireEvent.press(screen.getByTestId("save-capsule-button"));
 
@@ -273,7 +273,7 @@ describe("TimeCapsuleScreen", () => {
     render(
       <TestWrapper>
         <TimeCapsuleScreen />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     fireEvent.press(screen.getByText("Write New Letter"));
@@ -295,7 +295,7 @@ describe("TimeCapsuleScreen", () => {
     render(
       <TestWrapper>
         <TimeCapsuleScreen />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // Create a capsule
@@ -307,7 +307,7 @@ describe("TimeCapsuleScreen", () => {
 
     fireEvent.changeText(
       screen.getByTestId("letter-content-input"),
-      "Future message"
+      "Future message",
     );
     fireEvent.press(screen.getByTestId("save-capsule-button"));
 
@@ -325,7 +325,7 @@ describe("TimeCapsuleScreen", () => {
     render(
       <TestWrapper>
         <TimeCapsuleScreen />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     fireEvent.press(screen.getByText("Write New Letter"));
@@ -344,14 +344,14 @@ describe("TimeCapsuleScreen", () => {
     render(
       <TestWrapper>
         <TimeCapsuleScreen />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     fireEvent.press(screen.getByText("Write New Letter"));
 
     await waitFor(() => {
       expect(
-        screen.getByText(/Once saved, the letter will be sealed/)
+        screen.getByText(/Once saved, the letter will be sealed/),
       ).toBeTruthy();
     });
   });
@@ -361,7 +361,7 @@ describe("TimeCapsuleScreen", () => {
     render(
       <TestWrapper>
         <TimeCapsuleScreen />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // Create first capsule
@@ -371,7 +371,7 @@ describe("TimeCapsuleScreen", () => {
     });
     fireEvent.changeText(
       screen.getByTestId("letter-content-input"),
-      "First letter"
+      "First letter",
     );
     fireEvent.press(screen.getByTestId("save-capsule-button"));
 
@@ -387,7 +387,7 @@ describe("TimeCapsuleScreen", () => {
     });
     fireEvent.changeText(
       screen.getByTestId("letter-content-input"),
-      "Second letter"
+      "Second letter",
     );
     fireEvent.press(screen.getByTestId("save-capsule-button"));
 
@@ -402,7 +402,7 @@ describe("TimeCapsuleScreen", () => {
     render(
       <TestWrapper>
         <TimeCapsuleScreen />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // Create a capsule
@@ -412,7 +412,7 @@ describe("TimeCapsuleScreen", () => {
     });
     fireEvent.changeText(
       screen.getByTestId("letter-content-input"),
-      "Test letter for navigation"
+      "Test letter for navigation",
     );
     fireEvent.press(screen.getByTestId("save-capsule-button"));
 
@@ -427,7 +427,144 @@ describe("TimeCapsuleScreen", () => {
 
     // Should navigate to capsule detail
     await waitFor(() => {
-      expect(mockRouterPush).toHaveBeenCalledWith(expect.stringMatching(/^\/capsule\/capsule_/));
+      expect(mockRouterPush).toHaveBeenCalledWith(
+        expect.stringMatching(/^\/capsule\/capsule_/),
+      );
+    });
+  });
+
+  // CAPSULE-008: View template suggestions
+  it("shows template suggestions when creating new capsule", async () => {
+    render(
+      <TestWrapper>
+        <TimeCapsuleScreen />
+      </TestWrapper>,
+    );
+
+    fireEvent.press(screen.getByText("Write New Letter"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("template-selector")).toBeTruthy();
+    });
+
+    // Check that template options are visible
+    expect(screen.getByText("Use a Template")).toBeTruthy();
+  });
+
+  // CAPSULE-008: Select Letter to 18-year-old template
+  it("shows Letter to 18-year-old template option", async () => {
+    render(
+      <TestWrapper>
+        <TimeCapsuleScreen />
+      </TestWrapper>,
+    );
+
+    fireEvent.press(screen.getByText("Write New Letter"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("template-option-18-year-old")).toBeTruthy();
+    });
+
+    expect(screen.getByText("Letter to 18-year-old")).toBeTruthy();
+  });
+
+  // CAPSULE-008: Verify pre-filled prompts appear
+  it("fills letter with prompts when template is selected", async () => {
+    render(
+      <TestWrapper>
+        <TimeCapsuleScreen />
+      </TestWrapper>,
+    );
+
+    fireEvent.press(screen.getByText("Write New Letter"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("template-option-18-year-old")).toBeTruthy();
+    });
+
+    fireEvent.press(screen.getByTestId("template-option-18-year-old"));
+
+    // Verify prompts are filled in letter content
+    await waitFor(() => {
+      const input = screen.getByTestId("letter-content-input");
+      expect(input.props.value).toContain("Dear");
+      expect(input.props.value).toContain("18");
+    });
+  });
+
+  // CAPSULE-008: Edit prompts with personal content
+  it("allows editing template content after selection", async () => {
+    render(
+      <TestWrapper>
+        <TimeCapsuleScreen />
+      </TestWrapper>,
+    );
+
+    fireEvent.press(screen.getByText("Write New Letter"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("template-option-18-year-old")).toBeTruthy();
+    });
+
+    fireEvent.press(screen.getByTestId("template-option-18-year-old"));
+
+    await waitFor(() => {
+      const input = screen.getByTestId("letter-content-input");
+      expect(input.props.value.length).toBeGreaterThan(0);
+    });
+
+    // Clear and write own content
+    fireEvent.changeText(
+      screen.getByTestId("letter-content-input"),
+      "My personal message to my child.",
+    );
+
+    // Verify content was changed
+    const input = screen.getByTestId("letter-content-input");
+    expect(input.props.value).toBe("My personal message to my child.");
+  });
+
+  // CAPSULE-008: Multiple template options available
+  it("shows multiple template options", async () => {
+    render(
+      <TestWrapper>
+        <TimeCapsuleScreen />
+      </TestWrapper>,
+    );
+
+    fireEvent.press(screen.getByText("Write New Letter"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("template-selector")).toBeTruthy();
+    });
+
+    // Should have multiple template options
+    expect(screen.getByTestId("template-option-start-blank")).toBeTruthy();
+    expect(screen.getByTestId("template-option-18-year-old")).toBeTruthy();
+    expect(screen.getByTestId("template-option-first-day-school")).toBeTruthy();
+    expect(screen.getByTestId("template-option-graduation")).toBeTruthy();
+  });
+
+  // CAPSULE-008: Start blank option
+  it("allows starting with blank letter", async () => {
+    render(
+      <TestWrapper>
+        <TimeCapsuleScreen />
+      </TestWrapper>,
+    );
+
+    fireEvent.press(screen.getByText("Write New Letter"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("template-option-start-blank")).toBeTruthy();
+    });
+
+    fireEvent.press(screen.getByTestId("template-option-start-blank"));
+
+    // Letter should remain empty
+    await waitFor(() => {
+      const input = screen.getByTestId("letter-content-input");
+      expect(input.props.value).toBe("");
     });
   });
 });
