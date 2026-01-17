@@ -20,6 +20,7 @@ import * as MediaLibrary from "expo-media-library";
 
 import { ThemedText } from "@/components/themed-text";
 import { VideoPlayer } from "@/components/video-player";
+import { MemorySlideshow } from "@/components/memory-slideshow";
 import { useOnThisDay } from "@/contexts/on-this-day-context";
 import { useFamily } from "@/contexts/family-context";
 import {
@@ -44,6 +45,7 @@ export default function MemoryDetailScreen() {
     createThenVsNow,
     shareMemoryWithFamily,
     isMemoryShared,
+    memories,
   } = useOnThisDay();
   const { familyMembers } = useFamily();
 
@@ -70,6 +72,9 @@ export default function MemoryDetailScreen() {
   const [addWatermark, setAddWatermark] = useState(false);
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // OTD-006: Slideshow state
+  const [showSlideshow, setShowSlideshow] = useState(false);
 
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -98,6 +103,15 @@ export default function MemoryDetailScreen() {
       router.push(`/entry/${memory.entry.id}`);
     }
   }, [memory]);
+
+  // OTD-006: Slideshow handlers
+  const handlePlaySlideshow = useCallback(() => {
+    setShowSlideshow(true);
+  }, []);
+
+  const handleCloseSlideshow = useCallback(() => {
+    setShowSlideshow(false);
+  }, []);
 
   // OTD-004: Then vs Now handlers
   const handleCreateThenVsNow = useCallback(() => {
@@ -416,6 +430,24 @@ export default function MemoryDetailScreen() {
                 View Full Entry
               </ThemedText>
             </Pressable>
+
+            {/* OTD-006: Play Slideshow button - when multiple photos available */}
+            {memories.filter(
+              (m) =>
+                m.entry.type === "photo" &&
+                m.entry.mediaUris &&
+                m.entry.mediaUris.length > 0,
+            ).length > 1 && (
+              <Pressable
+                testID="play-slideshow-button"
+                style={styles.slideshowButton}
+                onPress={handlePlaySlideshow}
+              >
+                <ThemedText style={styles.slideshowButtonText}>
+                  ▶️ Play Slideshow
+                </ThemedText>
+              </Pressable>
+            )}
 
             {/* OTD-004: Then vs Now button - only for photos */}
             {hasMedia && !isVideo && (
@@ -773,6 +805,13 @@ export default function MemoryDetailScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* OTD-006: Memory Slideshow */}
+      <MemorySlideshow
+        memories={memories}
+        visible={showSlideshow}
+        onClose={handleCloseSlideshow}
+      />
     </View>
   );
 }
@@ -1334,6 +1373,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   saveComparisonToPhotosButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  // OTD-006: Slideshow button styles
+  slideshowButton: {
+    backgroundColor: "#FF6B6B",
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: Spacing.sm,
+    alignItems: "center",
+  },
+  slideshowButtonText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",

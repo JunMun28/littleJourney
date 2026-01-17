@@ -50,6 +50,8 @@ const mockGetMemory = jest.fn();
 const mockCreateThenVsNow = jest.fn();
 const mockShareMemoryWithFamily = jest.fn();
 const mockIsMemoryShared = jest.fn();
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let mockMemoriesArray: any[] = [];
 
 jest.mock("@/contexts/on-this-day-context", () => ({
   useOnThisDay: () => ({
@@ -57,12 +59,21 @@ jest.mock("@/contexts/on-this-day-context", () => ({
     dismissMemory: mockDismissMemory,
     createThenVsNow: mockCreateThenVsNow,
     thenVsNowComparisons: [],
-    memories: [],
+    memories: mockMemoriesArray,
     shareMemoryWithFamily: mockShareMemoryWithFamily,
     sharedMemories: [],
     isMemoryShared: mockIsMemoryShared,
   }),
 }));
+
+// Mock memory slideshow
+jest.mock("@/components/memory-slideshow", () => {
+  const { View } = require("react-native");
+  return {
+    MemorySlideshow: ({ visible }: { visible: boolean }) =>
+      visible ? <View testID="memory-slideshow" /> : null,
+  };
+});
 
 // Mock FamilyContext
 const mockFamilyMembers = [
@@ -123,6 +134,23 @@ const mockMemory = {
   isDismissed: false,
 };
 
+const mockMemory2 = {
+  id: "memory_entry-2",
+  entry: {
+    id: "entry-2",
+    type: "photo" as const,
+    mediaUris: ["file:///test-photo-2.jpg"],
+    caption: "Another great memory",
+    date: "2024-01-16",
+    createdByName: "Jane Doe",
+    createdAt: "2024-01-16T10:00:00Z",
+    updatedAt: "2024-01-16T10:00:00Z",
+  },
+  yearsAgo: 2,
+  year: 2024,
+  isDismissed: false,
+};
+
 describe("MemoryDetailScreen (OTD-002)", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -131,6 +159,7 @@ describe("MemoryDetailScreen (OTD-002)", () => {
     });
     mockGetMemory.mockReturnValue(mockMemory);
     mockIsMemoryShared.mockReturnValue(false);
+    mockMemoriesArray = [];
   });
 
   it("renders memory detail screen with banner", () => {
@@ -771,5 +800,60 @@ describe("MemoryDetailScreen - OTD-007: Save Then vs Now to Camera Roll", () => 
     await waitFor(() => {
       expect(mockRequestPermissionsAsync).toHaveBeenCalled();
     });
+  });
+});
+
+describe("MemoryDetailScreen (OTD-006: Memory slideshow)", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (useLocalSearchParams as jest.Mock).mockReturnValue({
+      id: "memory_entry-1",
+    });
+    mockGetMemory.mockReturnValue(mockMemory);
+    mockIsMemoryShared.mockReturnValue(false);
+    mockMemoriesArray = [];
+  });
+
+  it("does not show slideshow button when only one photo memory", () => {
+    mockMemoriesArray = [mockMemory];
+    render(<MemoryDetailScreen />);
+
+    expect(screen.queryByTestId("play-slideshow-button")).toBeNull();
+  });
+
+  it("shows slideshow button when multiple photo memories exist", () => {
+    mockMemoriesArray = [mockMemory, mockMemory2];
+    render(<MemoryDetailScreen />);
+
+    expect(screen.getByTestId("play-slideshow-button")).toBeTruthy();
+    expect(screen.getByText("▶️ Play Slideshow")).toBeTruthy();
+  });
+
+  it("opens slideshow when play button is pressed", async () => {
+    mockMemoriesArray = [mockMemory, mockMemory2];
+    render(<MemoryDetailScreen />);
+
+    await act(async () => {
+      fireEvent.press(screen.getByTestId("play-slideshow-button"));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("memory-slideshow")).toBeTruthy();
+    });
+  });
+
+  it("does not show slideshow button for video entries", () => {
+    const videoMemory = {
+      ...mockMemory,
+      entry: { ...mockMemory.entry, type: "video" as const },
+    };
+    const videoMemory2 = {
+      ...mockMemory2,
+      entry: { ...mockMemory2.entry, type: "video" as const },
+    };
+    mockMemoriesArray = [videoMemory, videoMemory2];
+    render(<MemoryDetailScreen />);
+
+    expect(screen.queryByTestId("play-slideshow-button")).toBeNull();
   });
 });

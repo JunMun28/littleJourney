@@ -669,3 +669,46 @@ Reasoning: Extends existing memory detail screen. Uses expo-media-library. Compl
 
 ---
 
+### Task Selection
+Selected: OTD-006 (Memory slideshow) - Full implementation
+Priority: 5 (Polish, cleanup, and quick wins)
+Reasoning: Completes On This Day to 7/7. Builds on memory detail screen. Uses expo-av already in deps.
+
+### Implementation Complete
+
+**Task:** OTD-006 Memory slideshow
+**PRD Ref:** On This Day Memories - OTD-006
+
+**Key Decisions:**
+- Created MemorySlideshow component with full-screen modal experience
+- Auto-transition every 4 seconds with 0.5s fade animation
+- Play/pause controls: button and tap-to-toggle on slide area
+- Next/prev navigation buttons for manual control
+- Background music: picker modal with 3 royalty-free track options (placeholders)
+- Music toggle: on/off with expo-av Audio.Sound integration
+- Photo counter and progress dots showing current position
+- Caption and "X years ago" overlay on each slide
+- Empty state when no photo memories available
+- Slideshow button appears in memory detail only when 2+ photo memories exist
+
+**Files Changed:**
+- NEW: components/memory-slideshow.tsx (MemorySlideshow component, 340 lines)
+- NEW: __tests__/components/memory-slideshow.test.tsx (17 tests)
+- MODIFIED: app/memory/[id].tsx (+slideshow integration, +styles)
+- MODIFIED: __tests__/app/memory/memory-detail.test.tsx (+4 OTD-006 tests, +mock)
+- MODIFIED: prd-killer-features.json (OTD-006 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- tsc --noEmit: PASS
+- npm run lint: PASS (pre-existing expo-blur issue)
+- npm test: 844/844 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- OTD-006 complete: Play slideshow, photos auto-transition, music controls, pause/resume, exit
+- Music tracks are placeholders (no bundled audio files)
+- On This Day category now 7/7 complete (only OTD-001 notification remains separate)
+
+---
+

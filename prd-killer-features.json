@@ -467,7 +467,7 @@
         "Exit slideshow"
       ],
       "acceptanceCriteria": "Auto-playing slideshow for memory viewing",
-      "passes": false
+      "passes": true
     },
     {
       "id": "OTD-007",
