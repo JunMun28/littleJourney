@@ -1,9 +1,9 @@
 #!/bin/bash
 
-prompt="@PRD.md @progress.txt
+prompt="@prd-killer-features.json @progress-killer-features.txt
 
 # OBJECTIVE
-Identify the highest priority task from progress.txt and PRD.md. Work on ONLY ONE task.
+Identify the highest priority task from progress-killer-features.txt and prd-killer-features.json. Work on ONLY ONE task.
 
 # WORKFLOW
 1. **Select Task**: Prioritize in this order:
@@ -28,12 +28,13 @@ Identify the highest priority task from progress.txt and PRD.md. Work on ONLY ON
    - UI (if UI changes): use Chrome MCP to verify UI on web via \`npm run web\`
    *Do NOT commit if any feedback loop fails. Fix issues first.*
 
-4. **Document**: Append to \`progress.txt\`:
+4. **Document**: Append to \`progress-killer-features.txt\`:
    - Task completed and PRD item reference
    - Key decisions made and reasoning
    - Files changed
    - Any blockers or notes for next iteration
    *Keep entries concise. Sacrifice grammar for the sake of concision.*
+   - update the status of the task in prd-killer-features.json to passes: true
 
 5. **Commit**: Make a git commit of that feature.
 
