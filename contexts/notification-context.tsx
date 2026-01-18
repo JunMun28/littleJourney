@@ -65,6 +65,13 @@ interface NotificationContextValue {
   ) => Promise<void>;
   // Time capsule unlock notification (CAPSULE-005)
   sendCapsuleUnlockedNotification: (capsuleCount: number) => Promise<void>;
+  // Growth milestone alert (GROWTH-008)
+  sendGrowthAlertNotification: (
+    measurementType: "height" | "weight" | "head_circumference",
+    direction: "below" | "above",
+    percentile: number,
+    childName: string,
+  ) => Promise<void>;
   // Smart frequency (PRD Section 7.3)
   promptFrequency: PromptFrequency;
   consecutiveIgnoredDays: number;
@@ -430,6 +437,37 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     [],
   );
 
+  // Growth milestone alert notification (GROWTH-008)
+  const sendGrowthAlertNotification = useCallback(
+    async (
+      measurementType: "height" | "weight" | "head_circumference",
+      direction: "below" | "above",
+      percentile: number,
+      childName: string,
+    ) => {
+      // Format measurement type for display
+      const typeLabel =
+        measurementType === "head_circumference"
+          ? "head circumference"
+          : measurementType;
+
+      // Create informational, non-alarmist message per PRD requirement
+      const directionText =
+        direction === "below" ? "below the 3rd" : "above the 97th";
+      const body = `${childName}'s ${typeLabel} measurement is ${directionText} percentile. Consider discussing with your pediatrician at your next visit.`;
+
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "📊 Growth Update",
+          body,
+          data: { type: "growth_alert", measurementType, direction },
+        },
+        trigger: null, // Send immediately
+      });
+    },
+    [],
+  );
+
   // Smart frequency methods (PRD Section 7.3)
   const recordIgnoredPrompt = useCallback(() => {
     setConsecutiveIgnoredDays((prev) => {
@@ -470,6 +508,8 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     sendFamilyActivityNotification,
     // Time capsule unlock
     sendCapsuleUnlockedNotification,
+    // Growth milestone alert
+    sendGrowthAlertNotification,
     // Smart frequency
     promptFrequency,
     consecutiveIgnoredDays,

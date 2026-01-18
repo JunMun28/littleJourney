@@ -6,6 +6,8 @@ import {
   type MeasurementType,
   type PercentileStandard,
 } from "@/contexts/growth-tracking-context";
+import { NotificationProvider } from "@/contexts/notification-context";
+import { ChildProvider, useChild } from "@/contexts/child-context";
 
 // Extended test consumer for Singapore standards tests
 function TestConsumerWithSingapore() {
@@ -87,9 +89,7 @@ function TestConsumer() {
       <Text testID="first-childId">{measurements[0]?.childId ?? "none"}</Text>
       <Text testID="latest-height">{latestHeight?.value ?? 0}</Text>
       <Text testID="latest-weight">{latestWeight?.value ?? 0}</Text>
-      <Text testID="percentile">
-        {percentileResult?.percentile ?? "none"}
-      </Text>
+      <Text testID="percentile">{percentileResult?.percentile ?? "none"}</Text>
       <Text testID="percentile-normal">
         {percentileResult?.isWithinNormalRange?.toString() ?? "none"}
       </Text>
@@ -208,12 +208,49 @@ function TestConsumer() {
   );
 }
 
+// Mock expo-notifications
+jest.mock("expo-notifications", () => ({
+  setNotificationHandler: jest.fn(),
+  getPermissionsAsync: jest.fn(() =>
+    Promise.resolve({ status: "undetermined" }),
+  ),
+  requestPermissionsAsync: jest.fn(() =>
+    Promise.resolve({ status: "granted" }),
+  ),
+  getExpoPushTokenAsync: jest.fn(() =>
+    Promise.resolve({ data: "ExponentPushToken[mock-token]" }),
+  ),
+  scheduleNotificationAsync: jest.fn(() => Promise.resolve("notification-id")),
+  cancelAllScheduledNotificationsAsync: jest.fn(() => Promise.resolve()),
+  cancelScheduledNotificationAsync: jest.fn(() => Promise.resolve()),
+  addNotificationReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  addNotificationResponseReceivedListener: jest.fn(() => ({
+    remove: jest.fn(),
+  })),
+  SchedulableTriggerInputTypes: {
+    DAILY: "daily",
+    TIME_INTERVAL: "timeInterval",
+  },
+}));
+
+// Mock expo-device
+jest.mock("expo-device", () => ({
+  isDevice: true,
+}));
+
 describe("GrowthTrackingContext", () => {
+  // Wrapper for tests that need NotificationProvider
+  const TestWrapper = ({ children }: { children: React.ReactNode }) => (
+    <NotificationProvider>
+      <GrowthTrackingProvider>{children}</GrowthTrackingProvider>
+    </NotificationProvider>
+  );
+
   it("provides empty measurements initially", () => {
     render(
-      <GrowthTrackingProvider>
+      <TestWrapper>
         <TestConsumer />
-      </GrowthTrackingProvider>
+      </TestWrapper>,
     );
 
     expect(screen.getByTestId("count")).toHaveTextContent("0");
@@ -222,9 +259,9 @@ describe("GrowthTrackingContext", () => {
 
   it("adds a height measurement", async () => {
     render(
-      <GrowthTrackingProvider>
+      <TestWrapper>
         <TestConsumer />
-      </GrowthTrackingProvider>
+      </TestWrapper>,
     );
 
     await act(async () => {
@@ -241,9 +278,9 @@ describe("GrowthTrackingContext", () => {
 
   it("adds a weight measurement", async () => {
     render(
-      <GrowthTrackingProvider>
+      <TestWrapper>
         <TestConsumer />
-      </GrowthTrackingProvider>
+      </TestWrapper>,
     );
 
     await act(async () => {
@@ -258,9 +295,9 @@ describe("GrowthTrackingContext", () => {
 
   it("adds a head circumference measurement", async () => {
     render(
-      <GrowthTrackingProvider>
+      <TestWrapper>
         <TestConsumer />
-      </GrowthTrackingProvider>
+      </TestWrapper>,
     );
 
     await act(async () => {
@@ -269,7 +306,7 @@ describe("GrowthTrackingContext", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("first-type")).toHaveTextContent(
-        "head_circumference"
+        "head_circumference",
       );
     });
     expect(screen.getByTestId("first-value")).toHaveTextContent("46.2");
@@ -277,9 +314,9 @@ describe("GrowthTrackingContext", () => {
 
   it("filters measurements by childId", async () => {
     render(
-      <GrowthTrackingProvider>
+      <TestWrapper>
         <TestConsumer />
-      </GrowthTrackingProvider>
+      </TestWrapper>,
     );
 
     await act(async () => {
@@ -297,9 +334,9 @@ describe("GrowthTrackingContext", () => {
 
   it("filters measurements by type", async () => {
     render(
-      <GrowthTrackingProvider>
+      <TestWrapper>
         <TestConsumer />
-      </GrowthTrackingProvider>
+      </TestWrapper>,
     );
 
     await act(async () => {
@@ -317,9 +354,9 @@ describe("GrowthTrackingContext", () => {
 
   it("deletes a measurement", async () => {
     render(
-      <GrowthTrackingProvider>
+      <TestWrapper>
         <TestConsumer />
-      </GrowthTrackingProvider>
+      </TestWrapper>,
     );
 
     await act(async () => {
@@ -341,9 +378,9 @@ describe("GrowthTrackingContext", () => {
 
   it("calculates percentile within normal range", async () => {
     render(
-      <GrowthTrackingProvider>
+      <TestWrapper>
         <TestConsumer />
-      </GrowthTrackingProvider>
+      </TestWrapper>,
     );
 
     await act(async () => {
@@ -356,15 +393,15 @@ describe("GrowthTrackingContext", () => {
     // 75.5cm at 12 months for boy is near 50th percentile (WHO: p50=75.7)
     expect(screen.getByTestId("percentile-normal")).toHaveTextContent("true");
     expect(screen.getByTestId("percentile-desc")).toHaveTextContent(
-      "15th-50th percentile"
+      "15th-50th percentile",
     );
   });
 
   it("calculates percentile below normal range", async () => {
     render(
-      <GrowthTrackingProvider>
+      <TestWrapper>
         <TestConsumer />
-      </GrowthTrackingProvider>
+      </TestWrapper>,
     );
 
     await act(async () => {
@@ -372,18 +409,20 @@ describe("GrowthTrackingContext", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId("percentile-normal")).toHaveTextContent("false");
+      expect(screen.getByTestId("percentile-normal")).toHaveTextContent(
+        "false",
+      );
     });
     expect(screen.getByTestId("percentile-desc")).toHaveTextContent(
-      "Below 3rd percentile"
+      "Below 3rd percentile",
     );
   });
 
   it("calculates percentile above normal range", async () => {
     render(
-      <GrowthTrackingProvider>
+      <TestWrapper>
         <TestConsumer />
-      </GrowthTrackingProvider>
+      </TestWrapper>,
     );
 
     await act(async () => {
@@ -391,18 +430,20 @@ describe("GrowthTrackingContext", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId("percentile-normal")).toHaveTextContent("false");
+      expect(screen.getByTestId("percentile-normal")).toHaveTextContent(
+        "false",
+      );
     });
     expect(screen.getByTestId("percentile-desc")).toHaveTextContent(
-      "Above 97th percentile"
+      "Above 97th percentile",
     );
   });
 
   it("gets latest measurement by type", async () => {
     render(
-      <GrowthTrackingProvider>
+      <TestWrapper>
         <TestConsumer />
-      </GrowthTrackingProvider>
+      </TestWrapper>,
     );
 
     await act(async () => {
@@ -425,9 +466,9 @@ describe("GrowthTrackingContext", () => {
 
   it("changes preferred standard", async () => {
     render(
-      <GrowthTrackingProvider>
+      <TestWrapper>
         <TestConsumer />
-      </GrowthTrackingProvider>
+      </TestWrapper>,
     );
 
     expect(screen.getByTestId("preferred-standard")).toHaveTextContent("who");
@@ -438,7 +479,7 @@ describe("GrowthTrackingContext", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("preferred-standard")).toHaveTextContent(
-        "singapore"
+        "singapore",
       );
     });
   });
@@ -447,7 +488,7 @@ describe("GrowthTrackingContext", () => {
     const consoleSpy = jest.spyOn(console, "error").mockImplementation();
 
     expect(() => render(<TestConsumer />)).toThrow(
-      "useGrowthTracking must be used within a GrowthTrackingProvider"
+      "useGrowthTracking must be used within a GrowthTrackingProvider",
     );
 
     consoleSpy.mockRestore();
@@ -457,9 +498,9 @@ describe("GrowthTrackingContext", () => {
   describe("GROWTH-004: Singapore Standards", () => {
     it("defaults to WHO standard", () => {
       render(
-        <GrowthTrackingProvider>
+        <TestWrapper>
           <TestConsumer />
-        </GrowthTrackingProvider>
+        </TestWrapper>,
       );
 
       expect(screen.getByTestId("preferred-standard")).toHaveTextContent("who");
@@ -467,9 +508,9 @@ describe("GrowthTrackingContext", () => {
 
     it("can switch to Singapore standard", async () => {
       render(
-        <GrowthTrackingProvider>
+        <TestWrapper>
           <TestConsumer />
-        </GrowthTrackingProvider>
+        </TestWrapper>,
       );
 
       await act(async () => {
@@ -478,16 +519,18 @@ describe("GrowthTrackingContext", () => {
 
       await waitFor(() => {
         expect(screen.getByTestId("preferred-standard")).toHaveTextContent(
-          "singapore"
+          "singapore",
         );
       });
     });
 
     it("calculates percentile using Singapore standard when selected", async () => {
       render(
-        <GrowthTrackingProvider>
-          <TestConsumerWithSingapore />
-        </GrowthTrackingProvider>
+        <NotificationProvider>
+          <GrowthTrackingProvider>
+            <TestConsumerWithSingapore />
+          </GrowthTrackingProvider>
+        </NotificationProvider>,
       );
 
       // Switch to Singapore standard
@@ -497,7 +540,7 @@ describe("GrowthTrackingContext", () => {
 
       await waitFor(() => {
         expect(screen.getByTestId("preferred-standard")).toHaveTextContent(
-          "singapore"
+          "singapore",
         );
       });
 
@@ -509,9 +552,310 @@ describe("GrowthTrackingContext", () => {
       // Check that Singapore percentile was calculated
       await waitFor(() => {
         expect(screen.getByTestId("sg-percentile-desc")).not.toHaveTextContent(
-          "none"
+          "none",
         );
       });
+    });
+  });
+
+  // GROWTH-008: Growth milestone alerts tests
+  describe("GROWTH-008: Growth Milestone Alerts", () => {
+    // Wrapper with all required providers
+    const AlertTestWrapper = ({ children }: { children: React.ReactNode }) => (
+      <NotificationProvider>
+        <ChildProvider>
+          <GrowthTrackingProvider>{children}</GrowthTrackingProvider>
+        </ChildProvider>
+      </NotificationProvider>
+    );
+
+    // Test consumer for alert tests
+    function AlertTestConsumer() {
+      const {
+        addMeasurement,
+        checkGrowthAlert,
+        alertsEnabled,
+        setAlertsEnabled,
+      } = useGrowthTracking();
+      const { setChild, child } = useChild();
+
+      return (
+        <>
+          <Text testID="alerts-enabled">{alertsEnabled.toString()}</Text>
+          <Text testID="child-name">{child?.name ?? "none"}</Text>
+          <Text
+            testID="setup-child"
+            onPress={() =>
+              setChild({
+                id: "child-1",
+                name: "Emma",
+                dateOfBirth: "2023-06-15",
+                sex: "female",
+              })
+            }
+          >
+            Setup Child
+          </Text>
+          <Text
+            testID="toggle-alerts"
+            onPress={() => setAlertsEnabled(!alertsEnabled)}
+          >
+            Toggle Alerts
+          </Text>
+          <Text
+            testID="add-low-measurement"
+            onPress={() =>
+              addMeasurement({
+                type: "height",
+                value: 66.0, // Below 3rd percentile for 12mo girl (WHO: p3=68.9)
+                date: "2024-06-15",
+                childId: "child-1",
+              })
+            }
+          >
+            Add Low
+          </Text>
+          <Text
+            testID="add-high-measurement"
+            onPress={() =>
+              addMeasurement({
+                type: "weight",
+                value: 12.0, // Above 97th percentile for 12mo girl (WHO: p97=11.5)
+                date: "2024-06-15",
+                childId: "child-1",
+              })
+            }
+          >
+            Add High
+          </Text>
+          <Text
+            testID="add-normal-measurement"
+            onPress={() =>
+              addMeasurement({
+                type: "height",
+                value: 74.0, // Normal range for 12mo girl
+                date: "2024-06-15",
+                childId: "child-1",
+              })
+            }
+          >
+            Add Normal
+          </Text>
+          <Text
+            testID="check-alert"
+            onPress={async () => {
+              if (child && child.sex) {
+                await checkGrowthAlert(
+                  "child-1",
+                  child.name,
+                  child.dateOfBirth,
+                  child.sex,
+                );
+              }
+            }}
+          >
+            Check Alert
+          </Text>
+        </>
+      );
+    }
+
+    it("provides alertsEnabled state defaulting to true", () => {
+      render(
+        <AlertTestWrapper>
+          <AlertTestConsumer />
+        </AlertTestWrapper>,
+      );
+
+      expect(screen.getByTestId("alerts-enabled")).toHaveTextContent("true");
+    });
+
+    it("can toggle alerts enabled/disabled", async () => {
+      render(
+        <AlertTestWrapper>
+          <AlertTestConsumer />
+        </AlertTestWrapper>,
+      );
+
+      expect(screen.getByTestId("alerts-enabled")).toHaveTextContent("true");
+
+      await act(async () => {
+        screen.getByTestId("toggle-alerts").props.onPress();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId("alerts-enabled")).toHaveTextContent("false");
+      });
+    });
+
+    it("provides checkGrowthAlert method", () => {
+      const { result } = require("@testing-library/react-native").renderHook(
+        () => useGrowthTracking(),
+        {
+          wrapper: AlertTestWrapper,
+        },
+      );
+
+      expect(typeof result.current.checkGrowthAlert).toBe("function");
+    });
+
+    it("sends notification when measurement is below 3rd percentile", async () => {
+      const Notifications = require("expo-notifications");
+      Notifications.scheduleNotificationAsync.mockClear();
+
+      render(
+        <AlertTestWrapper>
+          <AlertTestConsumer />
+        </AlertTestWrapper>,
+      );
+
+      // Setup child first
+      await act(async () => {
+        screen.getByTestId("setup-child").props.onPress();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId("child-name")).toHaveTextContent("Emma");
+      });
+
+      // Add low measurement
+      await act(async () => {
+        screen.getByTestId("add-low-measurement").props.onPress();
+      });
+
+      // Trigger alert check
+      await act(async () => {
+        screen.getByTestId("check-alert").props.onPress();
+      });
+
+      // Verify notification was sent
+      await waitFor(() => {
+        expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith(
+          expect.objectContaining({
+            content: expect.objectContaining({
+              title: expect.stringContaining("Growth Update"),
+              data: expect.objectContaining({ type: "growth_alert" }),
+            }),
+          }),
+        );
+      });
+    });
+
+    it("sends notification when measurement is above 97th percentile", async () => {
+      const Notifications = require("expo-notifications");
+      Notifications.scheduleNotificationAsync.mockClear();
+
+      render(
+        <AlertTestWrapper>
+          <AlertTestConsumer />
+        </AlertTestWrapper>,
+      );
+
+      // Setup child first
+      await act(async () => {
+        screen.getByTestId("setup-child").props.onPress();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId("child-name")).toHaveTextContent("Emma");
+      });
+
+      // Add high measurement
+      await act(async () => {
+        screen.getByTestId("add-high-measurement").props.onPress();
+      });
+
+      // Trigger alert check
+      await act(async () => {
+        screen.getByTestId("check-alert").props.onPress();
+      });
+
+      // Verify notification was sent
+      await waitFor(() => {
+        expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith(
+          expect.objectContaining({
+            content: expect.objectContaining({
+              data: expect.objectContaining({
+                type: "growth_alert",
+                direction: "above",
+              }),
+            }),
+          }),
+        );
+      });
+    });
+
+    it("does not send notification for normal range measurements", async () => {
+      const Notifications = require("expo-notifications");
+      Notifications.scheduleNotificationAsync.mockClear();
+
+      render(
+        <AlertTestWrapper>
+          <AlertTestConsumer />
+        </AlertTestWrapper>,
+      );
+
+      // Setup child first
+      await act(async () => {
+        screen.getByTestId("setup-child").props.onPress();
+      });
+
+      // Add normal measurement
+      await act(async () => {
+        screen.getByTestId("add-normal-measurement").props.onPress();
+      });
+
+      // Trigger alert check
+      await act(async () => {
+        screen.getByTestId("check-alert").props.onPress();
+      });
+
+      // Wait a bit to ensure no notification
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Verify no notification was sent
+      expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
+    });
+
+    it("does not send notification when alerts are disabled", async () => {
+      const Notifications = require("expo-notifications");
+      Notifications.scheduleNotificationAsync.mockClear();
+
+      render(
+        <AlertTestWrapper>
+          <AlertTestConsumer />
+        </AlertTestWrapper>,
+      );
+
+      // Setup child first
+      await act(async () => {
+        screen.getByTestId("setup-child").props.onPress();
+      });
+
+      // Disable alerts
+      await act(async () => {
+        screen.getByTestId("toggle-alerts").props.onPress();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId("alerts-enabled")).toHaveTextContent("false");
+      });
+
+      // Add low measurement
+      await act(async () => {
+        screen.getByTestId("add-low-measurement").props.onPress();
+      });
+
+      // Trigger alert check
+      await act(async () => {
+        screen.getByTestId("check-alert").props.onPress();
+      });
+
+      // Wait a bit to ensure no notification
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Verify no notification was sent
+      expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
     });
   });
 });

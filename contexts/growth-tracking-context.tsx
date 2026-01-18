@@ -6,6 +6,7 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
+import { useNotifications } from "./notification-context";
 
 // Measurement types per PRD GROWTH-001, GROWTH-002, GROWTH-007
 export type MeasurementType = "height" | "weight" | "head_circumference";
@@ -194,7 +195,7 @@ const SG_HEAD_GIRLS: PercentileTable = {
 function getClosestAge(ageMonths: number): number {
   const ages = [0, 3, 6, 9, 12, 18, 24];
   return ages.reduce((prev, curr) =>
-    Math.abs(curr - ageMonths) < Math.abs(prev - ageMonths) ? curr : prev
+    Math.abs(curr - ageMonths) < Math.abs(prev - ageMonths) ? curr : prev,
   );
 }
 
@@ -202,7 +203,7 @@ function getClosestAge(ageMonths: number): number {
 function calculatePercentileFromTable(
   value: number,
   table: PercentileTable,
-  ageMonths: number
+  ageMonths: number,
 ): PercentileResult {
   const closestAge = getClosestAge(ageMonths);
   const ref = table[closestAge];
@@ -254,21 +255,33 @@ interface GrowthTrackingContextValue {
   preferredStandard: PercentileStandard;
   setPreferredStandard: (standard: PercentileStandard) => void;
   addMeasurement: (measurement: NewMeasurement) => GrowthMeasurement;
-  getMeasurements: (childId: string, type?: MeasurementType) => GrowthMeasurement[];
+  getMeasurements: (
+    childId: string,
+    type?: MeasurementType,
+  ) => GrowthMeasurement[];
   deleteMeasurement: (id: string) => void;
   calculatePercentile: (
     measurement: GrowthMeasurement,
     childAgeMonths: number,
-    childSex: "male" | "female"
+    childSex: "male" | "female",
   ) => PercentileResult;
   getLatestMeasurement: (
     childId: string,
-    type: MeasurementType
+    type: MeasurementType,
   ) => GrowthMeasurement | undefined;
+  // GROWTH-008: Growth milestone alerts
+  alertsEnabled: boolean;
+  setAlertsEnabled: (enabled: boolean) => void;
+  checkGrowthAlert: (
+    childId: string,
+    childName: string,
+    childDateOfBirth: string,
+    childSex: "male" | "female",
+  ) => Promise<void>;
 }
 
 const GrowthTrackingContext = createContext<GrowthTrackingContextValue | null>(
-  null
+  null,
 );
 
 interface GrowthTrackingProviderProps {
@@ -279,12 +292,30 @@ function generateId(): string {
   return `measurement_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
+// Helper to calculate child age in months from birth date
+function calculateAgeInMonths(
+  dateOfBirth: string,
+  measurementDate: string,
+): number {
+  const birth = new Date(dateOfBirth);
+  const measurement = new Date(measurementDate);
+  const months =
+    (measurement.getFullYear() - birth.getFullYear()) * 12 +
+    (measurement.getMonth() - birth.getMonth());
+  return Math.max(0, months);
+}
+
 export function GrowthTrackingProvider({
   children,
 }: GrowthTrackingProviderProps) {
   const [measurements, setMeasurements] = useState<GrowthMeasurement[]>([]);
   const [preferredStandard, setPreferredStandard] =
     useState<PercentileStandard>("who");
+  // GROWTH-008: Growth alerts state
+  const [alertsEnabled, setAlertsEnabled] = useState(true);
+
+  // Get notification context - may be null if provider not available
+  const { sendGrowthAlertNotification } = useNotifications();
 
   const addMeasurement = useCallback(
     (newMeasurement: NewMeasurement): GrowthMeasurement => {
@@ -296,21 +327,23 @@ export function GrowthTrackingProvider({
         updatedAt: now,
       };
       // TODO: Persist to backend/storage
-      setMeasurements((prev) => [...prev, measurement].sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-      ));
+      setMeasurements((prev) =>
+        [...prev, measurement].sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+        ),
+      );
       return measurement;
     },
-    []
+    [],
   );
 
   const getMeasurements = useCallback(
     (childId: string, type?: MeasurementType): GrowthMeasurement[] => {
       return measurements.filter(
-        (m) => m.childId === childId && (type === undefined || m.type === type)
+        (m) => m.childId === childId && (type === undefined || m.type === type),
       );
     },
-    [measurements]
+    [measurements],
   );
 
   const deleteMeasurement = useCallback((id: string): void => {
@@ -322,7 +355,7 @@ export function GrowthTrackingProvider({
     (
       measurement: GrowthMeasurement,
       childAgeMonths: number,
-      childSex: "male" | "female"
+      childSex: "male" | "female",
     ): PercentileResult => {
       const isBoy = childSex === "male";
       const useSingapore = preferredStandard === "singapore";
@@ -352,20 +385,109 @@ export function GrowthTrackingProvider({
           break;
       }
 
-      return calculatePercentileFromTable(measurement.value, table, childAgeMonths);
+      return calculatePercentileFromTable(
+        measurement.value,
+        table,
+        childAgeMonths,
+      );
     },
-    [preferredStandard]
+    [preferredStandard],
   );
 
   const getLatestMeasurement = useCallback(
     (childId: string, type: MeasurementType): GrowthMeasurement | undefined => {
       const filtered = measurements.filter(
-        (m) => m.childId === childId && m.type === type
+        (m) => m.childId === childId && m.type === type,
       );
       // Already sorted by date descending
       return filtered[0];
     },
-    [measurements]
+    [measurements],
+  );
+
+  // GROWTH-008: Check for growth alerts and send notification if outside normal range
+  const checkGrowthAlert = useCallback(
+    async (
+      childId: string,
+      childName: string,
+      childDateOfBirth: string,
+      childSex: "male" | "female",
+    ) => {
+      // Skip if alerts are disabled
+      if (!alertsEnabled) {
+        return;
+      }
+
+      // Check latest measurement for each type
+      const measurementTypes: MeasurementType[] = [
+        "height",
+        "weight",
+        "head_circumference",
+      ];
+
+      for (const type of measurementTypes) {
+        const latest = measurements.find(
+          (m) => m.childId === childId && m.type === type,
+        );
+
+        if (!latest) continue;
+
+        const ageMonths = calculateAgeInMonths(childDateOfBirth, latest.date);
+        const isBoy = childSex === "male";
+        const useSingapore = preferredStandard === "singapore";
+
+        let table: PercentileTable;
+        switch (type) {
+          case "height":
+            if (useSingapore) {
+              table = isBoy ? SG_HEIGHT_BOYS : SG_HEIGHT_GIRLS;
+            } else {
+              table = isBoy ? WHO_HEIGHT_BOYS : WHO_HEIGHT_GIRLS;
+            }
+            break;
+          case "weight":
+            if (useSingapore) {
+              table = isBoy ? SG_WEIGHT_BOYS : SG_WEIGHT_GIRLS;
+            } else {
+              table = isBoy ? WHO_WEIGHT_BOYS : WHO_WEIGHT_GIRLS;
+            }
+            break;
+          case "head_circumference":
+            if (useSingapore) {
+              table = isBoy ? SG_HEAD_BOYS : SG_HEAD_GIRLS;
+            } else {
+              table = isBoy ? WHO_HEAD_BOYS : WHO_HEAD_GIRLS;
+            }
+            break;
+        }
+
+        const result = calculatePercentileFromTable(
+          latest.value,
+          table,
+          ageMonths,
+        );
+
+        // Send alert if outside normal range (below 3rd or above 97th)
+        if (!result.isWithinNormalRange) {
+          const direction: "below" | "above" =
+            result.percentile < 3 ? "below" : "above";
+          await sendGrowthAlertNotification(
+            type,
+            direction,
+            result.percentile,
+            childName,
+          );
+          // Only send one alert per check to avoid overwhelming the user
+          break;
+        }
+      }
+    },
+    [
+      alertsEnabled,
+      measurements,
+      preferredStandard,
+      sendGrowthAlertNotification,
+    ],
   );
 
   const value: GrowthTrackingContextValue = useMemo(
@@ -378,6 +500,9 @@ export function GrowthTrackingProvider({
       deleteMeasurement,
       calculatePercentile,
       getLatestMeasurement,
+      alertsEnabled,
+      setAlertsEnabled,
+      checkGrowthAlert,
     }),
     [
       measurements,
@@ -387,7 +512,9 @@ export function GrowthTrackingProvider({
       deleteMeasurement,
       calculatePercentile,
       getLatestMeasurement,
-    ]
+      alertsEnabled,
+      checkGrowthAlert,
+    ],
   );
 
   return (
@@ -401,7 +528,7 @@ export function useGrowthTracking(): GrowthTrackingContextValue {
   const context = useContext(GrowthTrackingContext);
   if (context === null) {
     throw new Error(
-      "useGrowthTracking must be used within a GrowthTrackingProvider"
+      "useGrowthTracking must be used within a GrowthTrackingProvider",
     );
   }
   return context;

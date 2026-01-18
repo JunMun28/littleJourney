@@ -627,6 +627,121 @@ describe("NotificationContext", () => {
     });
   });
 
+  // Growth Alert Notification tests (GROWTH-008)
+  describe("Growth Alert Notification", () => {
+    it("provides sendGrowthAlertNotification method", () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+
+      expect(typeof result.current.sendGrowthAlertNotification).toBe(
+        "function",
+      );
+    });
+
+    it("sends notification when percentile crosses below 3rd", async () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+      const Notifications = require("expo-notifications");
+
+      Notifications.scheduleNotificationAsync.mockClear();
+
+      await act(async () => {
+        await result.current.sendGrowthAlertNotification(
+          "height",
+          "below",
+          1, // percentile
+          "Emma",
+        );
+      });
+
+      expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: expect.objectContaining({
+            title: expect.stringContaining("Growth Update"),
+            body: expect.stringContaining("height"),
+            data: {
+              type: "growth_alert",
+              measurementType: "height",
+              direction: "below",
+            },
+          }),
+          trigger: null, // Immediate notification
+        }),
+      );
+    });
+
+    it("sends notification when percentile crosses above 97th", async () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+      const Notifications = require("expo-notifications");
+
+      Notifications.scheduleNotificationAsync.mockClear();
+
+      await act(async () => {
+        await result.current.sendGrowthAlertNotification(
+          "weight",
+          "above",
+          99,
+          "Emma",
+        );
+      });
+
+      expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: expect.objectContaining({
+            title: expect.stringContaining("Growth Update"),
+            body: expect.stringContaining("weight"),
+            data: {
+              type: "growth_alert",
+              measurementType: "weight",
+              direction: "above",
+            },
+          }),
+        }),
+      );
+    });
+
+    it("uses informational non-alarmist tone", async () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+      const Notifications = require("expo-notifications");
+
+      Notifications.scheduleNotificationAsync.mockClear();
+
+      await act(async () => {
+        await result.current.sendGrowthAlertNotification(
+          "height",
+          "below",
+          1,
+          "Emma",
+        );
+      });
+
+      const call = Notifications.scheduleNotificationAsync.mock.calls[0][0];
+      // Should suggest consulting pediatrician but not be alarming
+      expect(call.content.body).toContain("pediatrician");
+      // Should NOT contain alarming words
+      expect(call.content.body.toLowerCase()).not.toContain("urgent");
+      expect(call.content.body.toLowerCase()).not.toContain("danger");
+      expect(call.content.body.toLowerCase()).not.toContain("warning");
+    });
+
+    it("includes child name in notification", async () => {
+      const { result } = renderHook(() => useNotifications(), { wrapper });
+      const Notifications = require("expo-notifications");
+
+      Notifications.scheduleNotificationAsync.mockClear();
+
+      await act(async () => {
+        await result.current.sendGrowthAlertNotification(
+          "height",
+          "below",
+          1,
+          "Emma",
+        );
+      });
+
+      const call = Notifications.scheduleNotificationAsync.mock.calls[0][0];
+      expect(call.content.body).toContain("Emma");
+    });
+  });
+
   // Photo Book Birthday Prompt tests (PRD Section 10.1)
   describe("Photo Book Birthday Prompt", () => {
     it("provides sendPhotoBookBirthdayPrompt method", () => {

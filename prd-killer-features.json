@@ -595,7 +595,7 @@
         "Verify not alarmist, informational only"
       ],
       "acceptanceCriteria": "Alert parents to significant percentile changes",
-      "passes": false
+      "passes": true
     },
     {
       "id": "VOICE-001",

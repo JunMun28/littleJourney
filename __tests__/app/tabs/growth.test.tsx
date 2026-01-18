@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import GrowthScreen from "@/app/(tabs)/growth";
 import { GrowthTrackingProvider } from "@/contexts/growth-tracking-context";
 import { ChildProvider, useChild } from "@/contexts/child-context";
+import { NotificationProvider } from "@/contexts/notification-context";
 import { useEffect } from "react";
 
 // Mock DateTimePicker
@@ -54,7 +55,9 @@ jest.mock("expo-image-picker", () => ({
 
 // Mock expo-print for export functionality
 jest.mock("expo-print", () => ({
-  printToFileAsync: jest.fn().mockResolvedValue({ uri: "file:///test-report.pdf" }),
+  printToFileAsync: jest
+    .fn()
+    .mockResolvedValue({ uri: "file:///test-report.pdf" }),
 }));
 
 // Mock expo-sharing for export functionality
@@ -68,38 +71,95 @@ jest.mock("react-native-svg", () => {
   const React = require("react");
   const { View, Text } = require("react-native");
 
-  const Svg = React.forwardRef(({ children, testID, ...props }: { children?: React.ReactNode; testID?: string }, ref: React.Ref<unknown>) =>
-    React.createElement(View, { testID: testID || "svg-container", ref, ...props }, children)
+  const Svg = React.forwardRef(
+    (
+      {
+        children,
+        testID,
+        ...props
+      }: { children?: React.ReactNode; testID?: string },
+      ref: React.Ref<unknown>,
+    ) =>
+      React.createElement(
+        View,
+        { testID: testID || "svg-container", ref, ...props },
+        children,
+      ),
   );
   Svg.displayName = "Svg";
 
-  const G = React.forwardRef(({ children, ...props }: { children?: React.ReactNode }, ref: React.Ref<unknown>) =>
-    React.createElement(View, { ref, ...props }, children)
+  const G = React.forwardRef(
+    (
+      { children, ...props }: { children?: React.ReactNode },
+      ref: React.Ref<unknown>,
+    ) => React.createElement(View, { ref, ...props }, children),
   );
   G.displayName = "G";
 
-  const Path = React.forwardRef(({ testID, d, stroke, ...props }: { testID?: string; d?: string; stroke?: string }, ref: React.Ref<unknown>) =>
-    React.createElement(View, { testID, accessibilityLabel: d, ref, ...props })
+  const Path = React.forwardRef(
+    (
+      {
+        testID,
+        d,
+        stroke,
+        ...props
+      }: { testID?: string; d?: string; stroke?: string },
+      ref: React.Ref<unknown>,
+    ) =>
+      React.createElement(View, {
+        testID,
+        accessibilityLabel: d,
+        ref,
+        ...props,
+      }),
   );
   Path.displayName = "Path";
 
-  const Circle = React.forwardRef(({ testID, cx, cy, r, ...props }: { testID?: string; cx?: number; cy?: number; r?: number }, ref: React.Ref<unknown>) =>
-    React.createElement(View, { testID, accessibilityLabel: `circle-${cx}-${cy}`, ref, ...props })
+  const Circle = React.forwardRef(
+    (
+      {
+        testID,
+        cx,
+        cy,
+        r,
+        ...props
+      }: { testID?: string; cx?: number; cy?: number; r?: number },
+      ref: React.Ref<unknown>,
+    ) =>
+      React.createElement(View, {
+        testID,
+        accessibilityLabel: `circle-${cx}-${cy}`,
+        ref,
+        ...props,
+      }),
   );
   Circle.displayName = "Circle";
 
-  const Line = React.forwardRef(({ x1, y1, x2, y2, ...props }: { x1?: number; y1?: number; x2?: number; y2?: number }, ref: React.Ref<unknown>) =>
-    React.createElement(View, { ref, ...props })
+  const Line = React.forwardRef(
+    (
+      {
+        x1,
+        y1,
+        x2,
+        y2,
+        ...props
+      }: { x1?: number; y1?: number; x2?: number; y2?: number },
+      ref: React.Ref<unknown>,
+    ) => React.createElement(View, { ref, ...props }),
   );
   Line.displayName = "Line";
 
-  const SvgText = React.forwardRef(({ children, ...props }: { children?: React.ReactNode }, ref: React.Ref<unknown>) =>
-    React.createElement(Text, { ref, ...props }, children)
+  const SvgText = React.forwardRef(
+    (
+      { children, ...props }: { children?: React.ReactNode },
+      ref: React.Ref<unknown>,
+    ) => React.createElement(Text, { ref, ...props }, children),
   );
   SvgText.displayName = "SvgText";
 
-  const Rect = React.forwardRef((props: Record<string, unknown>, ref: React.Ref<unknown>) =>
-    React.createElement(View, { ref, ...props })
+  const Rect = React.forwardRef(
+    (props: Record<string, unknown>, ref: React.Ref<unknown>) =>
+      React.createElement(View, { ref, ...props }),
   );
   Rect.displayName = "Rect";
 
@@ -145,11 +205,13 @@ function TestWrapper({ children }: { children: React.ReactNode }) {
   const queryClient = createTestQueryClient();
   return (
     <QueryClientProvider client={queryClient}>
-      <ChildProvider>
-        <ChildSetup>
-          <GrowthTrackingProvider>{children}</GrowthTrackingProvider>
-        </ChildSetup>
-      </ChildProvider>
+      <NotificationProvider>
+        <ChildProvider>
+          <ChildSetup>
+            <GrowthTrackingProvider>{children}</GrowthTrackingProvider>
+          </ChildSetup>
+        </ChildProvider>
+      </NotificationProvider>
     </QueryClientProvider>
   );
 }
@@ -164,7 +226,7 @@ describe("GrowthScreen", () => {
     render(
       <TestWrapper>
         <GrowthScreen />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
@@ -178,7 +240,7 @@ describe("GrowthScreen", () => {
     render(
       <TestWrapper>
         <GrowthScreen />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
@@ -198,7 +260,7 @@ describe("GrowthScreen", () => {
     render(
       <TestWrapper>
         <GrowthScreen />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
@@ -223,7 +285,7 @@ describe("GrowthScreen", () => {
     render(
       <TestWrapper>
         <GrowthScreen />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
@@ -252,7 +314,7 @@ describe("GrowthScreen", () => {
     render(
       <TestWrapper>
         <GrowthScreen />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
@@ -285,7 +347,7 @@ describe("GrowthScreen", () => {
     render(
       <TestWrapper>
         <GrowthScreen />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
@@ -323,7 +385,7 @@ describe("GrowthScreen", () => {
     render(
       <TestWrapper>
         <GrowthScreen />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // Add first measurement
@@ -376,7 +438,7 @@ describe("GrowthScreen", () => {
     render(
       <TestWrapper>
         <GrowthScreen />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
@@ -406,7 +468,7 @@ describe("GrowthScreen", () => {
     render(
       <TestWrapper>
         <GrowthScreen />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
@@ -440,7 +502,7 @@ describe("GrowthScreen", () => {
       render(
         <TestWrapper>
           <GrowthScreen />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       await waitFor(() => {
@@ -460,7 +522,7 @@ describe("GrowthScreen", () => {
       render(
         <TestWrapper>
           <GrowthScreen />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       await waitFor(() => {
@@ -485,7 +547,7 @@ describe("GrowthScreen", () => {
       render(
         <TestWrapper>
           <GrowthScreen />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       await waitFor(() => {
@@ -514,7 +576,7 @@ describe("GrowthScreen", () => {
       render(
         <TestWrapper>
           <GrowthScreen />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       await waitFor(() => {
@@ -546,7 +608,7 @@ describe("GrowthScreen", () => {
       render(
         <TestWrapper>
           <GrowthScreen />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       await waitFor(() => {
@@ -578,7 +640,7 @@ describe("GrowthScreen", () => {
       render(
         <TestWrapper>
           <GrowthScreen />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // First add a measurement
@@ -613,7 +675,7 @@ describe("GrowthScreen", () => {
       render(
         <TestWrapper>
           <GrowthScreen />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Add a measurement
@@ -653,7 +715,7 @@ describe("GrowthScreen", () => {
       render(
         <TestWrapper>
           <GrowthScreen />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Add height measurement
@@ -690,7 +752,7 @@ describe("GrowthScreen", () => {
       render(
         <TestWrapper>
           <GrowthScreen />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Add height measurement
@@ -731,7 +793,7 @@ describe("GrowthScreen", () => {
       render(
         <TestWrapper>
           <GrowthScreen />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Add height measurement
@@ -771,7 +833,7 @@ describe("GrowthScreen", () => {
       render(
         <TestWrapper>
           <GrowthScreen />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Add measurement first
@@ -808,7 +870,7 @@ describe("GrowthScreen", () => {
       render(
         <TestWrapper>
           <GrowthScreen />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Add measurement first
@@ -849,7 +911,7 @@ describe("GrowthScreen", () => {
       render(
         <TestWrapper>
           <GrowthScreen />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Add measurement first
@@ -896,7 +958,7 @@ describe("GrowthScreen", () => {
       render(
         <TestWrapper>
           <GrowthScreen />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       await waitFor(() => {
@@ -915,7 +977,7 @@ describe("GrowthScreen", () => {
       render(
         <TestWrapper>
           <GrowthScreen />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       await waitFor(() => {
@@ -940,7 +1002,7 @@ describe("GrowthScreen", () => {
       render(
         <TestWrapper>
           <GrowthScreen />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       await waitFor(() => {
@@ -956,12 +1018,14 @@ describe("GrowthScreen", () => {
       fireEvent.press(screen.getByText("Head Circumference"));
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText("Head circumference in cm")).toBeTruthy();
+        expect(
+          screen.getByPlaceholderText("Head circumference in cm"),
+        ).toBeTruthy();
       });
 
       fireEvent.changeText(
         screen.getByPlaceholderText("Head circumference in cm"),
-        "45.5"
+        "45.5",
       );
 
       expect(screen.getByDisplayValue("45.5")).toBeTruthy();
@@ -972,7 +1036,7 @@ describe("GrowthScreen", () => {
       render(
         <TestWrapper>
           <GrowthScreen />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       await waitFor(() => {
@@ -988,12 +1052,14 @@ describe("GrowthScreen", () => {
       fireEvent.press(screen.getByText("Head Circumference"));
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText("Head circumference in cm")).toBeTruthy();
+        expect(
+          screen.getByPlaceholderText("Head circumference in cm"),
+        ).toBeTruthy();
       });
 
       fireEvent.changeText(
         screen.getByPlaceholderText("Head circumference in cm"),
-        "45.5"
+        "45.5",
       );
       fireEvent.press(screen.getByText("Save"));
 
@@ -1007,7 +1073,7 @@ describe("GrowthScreen", () => {
       render(
         <TestWrapper>
           <GrowthScreen />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       await waitFor(() => {
@@ -1021,11 +1087,13 @@ describe("GrowthScreen", () => {
       });
       fireEvent.press(screen.getByText("Head Circumference"));
       await waitFor(() => {
-        expect(screen.getByPlaceholderText("Head circumference in cm")).toBeTruthy();
+        expect(
+          screen.getByPlaceholderText("Head circumference in cm"),
+        ).toBeTruthy();
       });
       fireEvent.changeText(
         screen.getByPlaceholderText("Head circumference in cm"),
-        "45.5"
+        "45.5",
       );
       fireEvent.press(screen.getByText("Save"));
 
@@ -1039,7 +1107,7 @@ describe("GrowthScreen", () => {
       render(
         <TestWrapper>
           <GrowthScreen />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Add measurement first
@@ -1053,11 +1121,13 @@ describe("GrowthScreen", () => {
       });
       fireEvent.press(screen.getByText("Head Circumference"));
       await waitFor(() => {
-        expect(screen.getByPlaceholderText("Head circumference in cm")).toBeTruthy();
+        expect(
+          screen.getByPlaceholderText("Head circumference in cm"),
+        ).toBeTruthy();
       });
       fireEvent.changeText(
         screen.getByPlaceholderText("Head circumference in cm"),
-        "45.5"
+        "45.5",
       );
       fireEvent.press(screen.getByText("Save"));
 
@@ -1083,7 +1153,7 @@ describe("GrowthScreen", () => {
       render(
         <TestWrapper>
           <GrowthScreen />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Add head circumference measurement
@@ -1097,11 +1167,13 @@ describe("GrowthScreen", () => {
       });
       fireEvent.press(screen.getByText("Head Circumference"));
       await waitFor(() => {
-        expect(screen.getByPlaceholderText("Head circumference in cm")).toBeTruthy();
+        expect(
+          screen.getByPlaceholderText("Head circumference in cm"),
+        ).toBeTruthy();
       });
       fireEvent.changeText(
         screen.getByPlaceholderText("Head circumference in cm"),
-        "45.5"
+        "45.5",
       );
       fireEvent.press(screen.getByText("Save"));
 
@@ -1133,7 +1205,7 @@ describe("GrowthScreen", () => {
       render(
         <TestWrapper>
           <GrowthScreen />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Add measurement first
@@ -1167,7 +1239,7 @@ describe("GrowthScreen", () => {
       render(
         <TestWrapper>
           <GrowthScreen />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Add measurement first
@@ -1204,7 +1276,7 @@ describe("GrowthScreen", () => {
       render(
         <TestWrapper>
           <GrowthScreen />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Add measurement first
@@ -1246,7 +1318,7 @@ describe("GrowthScreen", () => {
       render(
         <TestWrapper>
           <GrowthScreen />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Add measurement first
@@ -1286,7 +1358,7 @@ describe("GrowthScreen", () => {
       render(
         <TestWrapper>
           <GrowthScreen />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Add measurement first
@@ -1325,7 +1397,7 @@ describe("GrowthScreen", () => {
       render(
         <TestWrapper>
           <GrowthScreen />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Add measurement first

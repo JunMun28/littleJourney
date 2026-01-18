@@ -1409,3 +1409,47 @@ Reasoning: CommunityContext exists with opt-in. Quick win with simulated communi
 
 ---
 
+### Task Selection
+Selected: GROWTH-008 (Growth milestone alerts) - Full implementation
+Priority: 2 (Integration points between modules)
+Reasoning: GrowthTrackingContext exists with percentile calculations. NotificationContext exists. Need integration to detect percentile threshold crossing (<3rd or >97th) and send notification.
+
+### Implementation Complete
+
+**Task:** GROWTH-008 Growth milestone alerts
+**PRD Ref:** Growth Tracking - GROWTH-008
+
+**Key Decisions:**
+- Added sendGrowthAlertNotification() to NotificationContext for GROWTH-008
+- Notification uses informational, non-alarmist tone per PRD requirement
+- Title: "📊 Growth Update" (neutral, not alarming)
+- Body suggests discussing with pediatrician at next visit (not urgent)
+- Added checkGrowthAlert() to GrowthTrackingContext
+- Checks latest measurement against percentile thresholds (3rd and 97th)
+- Triggers notification when outside normal range
+- Added alertsEnabled state to control notifications
+- Added calculateAgeInMonths() helper function
+- Uses child sex to determine correct percentile reference
+
+**Files Changed:**
+- MODIFIED: contexts/notification-context.tsx (+sendGrowthAlertNotification)
+- MODIFIED: contexts/growth-tracking-context.tsx (+checkGrowthAlert, +alertsEnabled, +calculateAgeInMonths)
+- MODIFIED: __tests__/contexts/notification-context.test.tsx (+4 growth alert tests)
+- MODIFIED: __tests__/contexts/growth-tracking-context.test.tsx (+6 GROWTH-008 tests, +NotificationProvider wrapper)
+- MODIFIED: __tests__/app/tabs/growth.test.tsx (+NotificationProvider wrapper for provider dependency)
+- MODIFIED: prd-killer-features.json (GROWTH-008 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- tsc --noEmit: PASS
+- npm run lint: PASS (pre-existing expo-blur issue)
+- npm test: 1011/1011 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- GROWTH-008 complete: Set growth tracking active, child crosses percentile threshold, notification sent, suggested action shown
+- Notification tone is informational only per PRD requirement
+- Growth Tracking category now 8/8 complete (all features implemented)
+
+---
+
