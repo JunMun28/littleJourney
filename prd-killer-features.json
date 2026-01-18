@@ -996,7 +996,7 @@
         "Verify no identifiable data shown"
       ],
       "acceptanceCriteria": "See anonymized statistics for milestone timing",
-      "passes": false
+      "passes": true
     },
     {
       "id": "COMMUNITY-003",

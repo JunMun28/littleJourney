@@ -28,6 +28,7 @@ import {
 } from "@/hooks/use-milestones";
 import { useChildFlat } from "@/hooks/use-children";
 import { useNotifications } from "@/contexts/notification-context";
+import { useCommunity } from "@/contexts/community-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
   PRIMARY_COLOR,
@@ -75,6 +76,8 @@ export default function MilestonesScreen() {
   const { child } = useChildFlat();
   const { scheduleMilestoneReminder, cancelMilestoneReminder } =
     useNotifications();
+  const { getMilestoneStatistics, communityDataSharingEnabled } =
+    useCommunity();
 
   // Default days before milestone to send reminder (PRD Section 7.1)
   const REMINDER_DAYS_BEFORE = 7;
@@ -585,6 +588,86 @@ export default function MilestonesScreen() {
                     "Milestone"}
                 </Text>
 
+                {/* COMMUNITY-002: Community Statistics */}
+                {communityDataSharingEnabled &&
+                  selectedMilestone.templateId &&
+                  (() => {
+                    const stats = getMilestoneStatistics(
+                      selectedMilestone.templateId,
+                    );
+                    if (!stats) return null;
+                    return (
+                      <View
+                        style={[
+                          styles.statisticsCard,
+                          { backgroundColor: colors.backgroundSecondary },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.statisticsTitle,
+                            { color: colors.text },
+                          ]}
+                        >
+                          📊 Community Statistics
+                        </Text>
+                        <Text
+                          style={[
+                            styles.statisticsRange,
+                            { color: colors.textSecondary },
+                          ]}
+                        >
+                          Typical range: {stats.typicalRangeMonths.min}-
+                          {stats.typicalRangeMonths.max} months
+                        </Text>
+                        <View style={styles.distributionContainer}>
+                          {stats.distribution.map((bucket) => (
+                            <View
+                              key={bucket.ageMonths}
+                              style={styles.distributionBar}
+                            >
+                              <View
+                                style={[
+                                  styles.barFill,
+                                  {
+                                    height: `${bucket.percentage}%`,
+                                    backgroundColor: PRIMARY_COLOR,
+                                  },
+                                ]}
+                              />
+                              <Text
+                                style={[
+                                  styles.barLabel,
+                                  { color: colors.textMuted },
+                                ]}
+                              >
+                                {bucket.ageMonths}m
+                              </Text>
+                            </View>
+                          ))}
+                        </View>
+                        <Text
+                          style={[
+                            styles.statisticsDisclaimer,
+                            { color: colors.textMuted },
+                          ]}
+                        >
+                          Every child develops at their own pace. These
+                          statistics are for reference only.
+                        </Text>
+                        <Text
+                          style={[
+                            styles.statisticsDataPoints,
+                            { color: colors.textMuted },
+                          ]}
+                        >
+                          Based on {stats.totalDataPoints.toLocaleString()}{" "}
+                          families
+                        </Text>
+                      </View>
+                    );
+                  })()}
+
                 <Text style={[styles.label, { color: colors.text }]}>
                   Celebration Date
                 </Text>
@@ -907,5 +990,51 @@ const styles = StyleSheet.create({
   deleteButtonText: {
     fontSize: 16,
     fontWeight: "600",
+  },
+  // COMMUNITY-002: Statistics styles
+  statisticsCard: {
+    borderRadius: 12,
+    padding: Spacing.lg,
+    marginBottom: Spacing.xl,
+  },
+  statisticsTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: Spacing.sm,
+  },
+  statisticsRange: {
+    fontSize: 14,
+    marginBottom: Spacing.md,
+  },
+  distributionContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    height: 60,
+    marginBottom: Spacing.md,
+  },
+  distributionBar: {
+    flex: 1,
+    alignItems: "center",
+    marginHorizontal: 2,
+  },
+  barFill: {
+    width: "80%",
+    borderRadius: 4,
+    minHeight: 4,
+  },
+  barLabel: {
+    fontSize: 10,
+    marginTop: 4,
+  },
+  statisticsDisclaimer: {
+    fontSize: 12,
+    fontStyle: "italic",
+    textAlign: "center",
+    marginBottom: Spacing.xs,
+  },
+  statisticsDataPoints: {
+    fontSize: 11,
+    textAlign: "center",
   },
 });

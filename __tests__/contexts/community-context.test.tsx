@@ -97,4 +97,138 @@ describe("CommunityContext", () => {
       consoleSpy.mockRestore();
     });
   });
+
+  // COMMUNITY-002: Milestone statistics
+  describe("getMilestoneStatistics", () => {
+    it("should return null when community sharing is disabled", () => {
+      let contextValues: ReturnType<typeof useCommunity> | null = null;
+      renderWithProvider((values) => {
+        contextValues = values;
+      });
+
+      expect(contextValues!.communityDataSharingEnabled).toBe(false);
+      const stats = contextValues!.getMilestoneStatistics("first_steps");
+      expect(stats).toBeNull();
+    });
+
+    it("should return statistics when community sharing is enabled", async () => {
+      let contextValues: ReturnType<typeof useCommunity> | null = null;
+      renderWithProvider((values) => {
+        contextValues = values;
+      });
+
+      await act(async () => {
+        contextValues!.setCommunityDataSharingEnabled(true);
+      });
+
+      await waitFor(() => {
+        const stats = contextValues!.getMilestoneStatistics("first_steps");
+        expect(stats).not.toBeNull();
+        expect(stats!.templateId).toBe("first_steps");
+        expect(stats!.distribution).toBeDefined();
+        expect(stats!.typicalRangeMonths).toBeDefined();
+      });
+    });
+
+    it("should include distribution data with age buckets", async () => {
+      let contextValues: ReturnType<typeof useCommunity> | null = null;
+      renderWithProvider((values) => {
+        contextValues = values;
+      });
+
+      await act(async () => {
+        contextValues!.setCommunityDataSharingEnabled(true);
+      });
+
+      await waitFor(() => {
+        const stats = contextValues!.getMilestoneStatistics("first_steps");
+        expect(stats!.distribution.length).toBeGreaterThan(0);
+        // Each bucket should have ageMonths and percentage
+        expect(stats!.distribution[0].ageMonths).toBeDefined();
+        expect(stats!.distribution[0].percentage).toBeDefined();
+      });
+    });
+
+    it("should include typical range in months", async () => {
+      let contextValues: ReturnType<typeof useCommunity> | null = null;
+      renderWithProvider((values) => {
+        contextValues = values;
+      });
+
+      await act(async () => {
+        contextValues!.setCommunityDataSharingEnabled(true);
+      });
+
+      await waitFor(() => {
+        const stats = contextValues!.getMilestoneStatistics("first_steps");
+        expect(stats!.typicalRangeMonths.min).toBeDefined();
+        expect(stats!.typicalRangeMonths.max).toBeDefined();
+        expect(stats!.typicalRangeMonths.min).toBeLessThan(
+          stats!.typicalRangeMonths.max,
+        );
+      });
+    });
+
+    it("should return null for unknown milestone template", async () => {
+      let contextValues: ReturnType<typeof useCommunity> | null = null;
+      renderWithProvider((values) => {
+        contextValues = values;
+      });
+
+      await act(async () => {
+        contextValues!.setCommunityDataSharingEnabled(true);
+      });
+
+      await waitFor(() => {
+        const stats = contextValues!.getMilestoneStatistics("unknown_template");
+        expect(stats).toBeNull();
+      });
+    });
+  });
+
+  describe("isWithinNormalRange", () => {
+    it("should return null when community sharing is disabled", () => {
+      let contextValues: ReturnType<typeof useCommunity> | null = null;
+      renderWithProvider((values) => {
+        contextValues = values;
+      });
+
+      const result = contextValues!.isWithinNormalRange("first_steps", 12);
+      expect(result).toBeNull();
+    });
+
+    it("should return true when child age is within typical range", async () => {
+      let contextValues: ReturnType<typeof useCommunity> | null = null;
+      renderWithProvider((values) => {
+        contextValues = values;
+      });
+
+      await act(async () => {
+        contextValues!.setCommunityDataSharingEnabled(true);
+      });
+
+      await waitFor(() => {
+        // First Steps typical range is 9-15 months per PRD
+        const result = contextValues!.isWithinNormalRange("first_steps", 12);
+        expect(result).toBe(true);
+      });
+    });
+
+    it("should return false when child age is outside typical range", async () => {
+      let contextValues: ReturnType<typeof useCommunity> | null = null;
+      renderWithProvider((values) => {
+        contextValues = values;
+      });
+
+      await act(async () => {
+        contextValues!.setCommunityDataSharingEnabled(true);
+      });
+
+      await waitFor(() => {
+        // 6 months is very early for first steps
+        const result = contextValues!.isWithinNormalRange("first_steps", 6);
+        expect(result).toBe(false);
+      });
+    });
+  });
 });

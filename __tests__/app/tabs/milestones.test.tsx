@@ -3,15 +3,18 @@ import {
   screen,
   fireEvent,
   waitFor,
+  act,
 } from "@testing-library/react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import MilestonesScreen from "@/app/(tabs)/milestones";
 import { NotificationProvider } from "@/contexts/notification-context";
+import { CommunityProvider, useCommunity } from "@/contexts/community-context";
 import {
   milestoneApi,
   childApi,
   clearAllMockData,
 } from "@/services/api-client";
+import { Text, Pressable } from "react-native";
 
 // Mock expo-notifications
 const mockScheduleMilestoneReminder = jest.fn();
@@ -111,8 +114,26 @@ function TestWrapper({ children }: { children: React.ReactNode }) {
   const queryClient = createTestQueryClient();
   return (
     <QueryClientProvider client={queryClient}>
-      <NotificationProvider>{children}</NotificationProvider>
+      <NotificationProvider>
+        <CommunityProvider>{children}</CommunityProvider>
+      </NotificationProvider>
     </QueryClientProvider>
+  );
+}
+
+// Helper component to enable community sharing for tests
+function CommunityEnabler({ children }: { children: React.ReactNode }) {
+  const { setCommunityDataSharingEnabled } = useCommunity();
+  return (
+    <>
+      <Pressable
+        testID="enable-community"
+        onPress={() => setCommunityDataSharingEnabled(true)}
+      >
+        <Text>Enable Community</Text>
+      </Pressable>
+      {children}
+    </>
   );
 }
 
@@ -541,6 +562,152 @@ describe("MilestonesScreen", () => {
       await waitFor(() => {
         expect(mockCancelNotification).toHaveBeenCalled();
       });
+    });
+  });
+
+  // COMMUNITY-002: Milestone statistics
+  describe("community milestone statistics", () => {
+    it("does not show statistics when community sharing is disabled", async () => {
+      const child = await createTestChild();
+      await addTestMilestone(child.id!);
+
+      render(
+        <TestWrapper>
+          <MilestonesScreen />
+        </TestWrapper>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("First Smile")).toBeTruthy();
+      });
+
+      // Open completion modal
+      fireEvent.press(screen.getByText("First Smile"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Mark as Completed")).toBeTruthy();
+      });
+
+      // Should not show community statistics
+      expect(screen.queryByText(/Community Statistics/i)).toBeNull();
+      expect(screen.queryByText(/typical range/i)).toBeNull();
+    });
+
+    it("shows community statistics when sharing is enabled", async () => {
+      const child = await createTestChild();
+      await addTestMilestone(child.id!);
+
+      render(
+        <TestWrapper>
+          <CommunityEnabler>
+            <MilestonesScreen />
+          </CommunityEnabler>
+        </TestWrapper>,
+      );
+
+      // Enable community sharing
+      fireEvent.press(screen.getByTestId("enable-community"));
+
+      await waitFor(() => {
+        expect(screen.getByText("First Smile")).toBeTruthy();
+      });
+
+      // Open completion modal
+      fireEvent.press(screen.getByText("First Smile"));
+
+      await waitFor(() => {
+        expect(screen.getByText("Mark as Completed")).toBeTruthy();
+      });
+
+      // Should show community statistics section
+      await waitFor(() => {
+        expect(screen.getByText(/Community Statistics/i)).toBeTruthy();
+      });
+    });
+
+    it("shows typical range for milestone", async () => {
+      const child = await createTestChild();
+      await addTestMilestone(child.id!);
+
+      render(
+        <TestWrapper>
+          <CommunityEnabler>
+            <MilestonesScreen />
+          </CommunityEnabler>
+        </TestWrapper>,
+      );
+
+      // Enable community sharing
+      fireEvent.press(screen.getByTestId("enable-community"));
+
+      await waitFor(() => {
+        expect(screen.getByText("First Smile")).toBeTruthy();
+      });
+
+      // Open completion modal
+      fireEvent.press(screen.getByText("First Smile"));
+
+      await waitFor(() => {
+        expect(screen.getByText(/Typical range/i)).toBeTruthy();
+      });
+    });
+
+    it("shows disclaimer about individual variation", async () => {
+      const child = await createTestChild();
+      await addTestMilestone(child.id!);
+
+      render(
+        <TestWrapper>
+          <CommunityEnabler>
+            <MilestonesScreen />
+          </CommunityEnabler>
+        </TestWrapper>,
+      );
+
+      // Enable community sharing
+      fireEvent.press(screen.getByTestId("enable-community"));
+
+      await waitFor(() => {
+        expect(screen.getByText("First Smile")).toBeTruthy();
+      });
+
+      // Open completion modal
+      fireEvent.press(screen.getByText("First Smile"));
+
+      await waitFor(() => {
+        // PRD: "Verify disclaimer about individual variation"
+        expect(screen.getByText(/Every child develops/i)).toBeTruthy();
+      });
+    });
+
+    it("does not show identifiable data", async () => {
+      const child = await createTestChild();
+      await addTestMilestone(child.id!);
+
+      render(
+        <TestWrapper>
+          <CommunityEnabler>
+            <MilestonesScreen />
+          </CommunityEnabler>
+        </TestWrapper>,
+      );
+
+      // Enable community sharing
+      fireEvent.press(screen.getByTestId("enable-community"));
+
+      await waitFor(() => {
+        expect(screen.getByText("First Smile")).toBeTruthy();
+      });
+
+      // Open completion modal
+      fireEvent.press(screen.getByText("First Smile"));
+
+      await waitFor(() => {
+        expect(screen.getByText(/Community Statistics/i)).toBeTruthy();
+      });
+
+      // Should not show any identifiable data (names, specific dates, etc.)
+      expect(screen.queryByText(/Test Baby/i)).toBeNull();
     });
   });
 });
