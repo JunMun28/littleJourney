@@ -13,12 +13,14 @@ import {
   ActivityIndicator,
   Alert,
   useColorScheme,
+  ScrollView,
 } from "react-native";
 import { router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import {
   usePhotoBook,
   type PhotoBookPage,
+  BOOK_LAYOUTS,
 } from "@/contexts/photo-book-context";
 import {
   Colors,
@@ -181,6 +183,7 @@ function PageCard({
 export default function PhotoBookScreen() {
   const {
     pages,
+    selectedLayout,
     isGenerating,
     isExporting,
     canExportPdf,
@@ -189,6 +192,7 @@ export default function PhotoBookScreen() {
     removePage,
     addPage,
     updatePageCaption,
+    setSelectedLayout,
     clearPhotoBook,
     exportPdf,
   } = usePhotoBook();
@@ -373,6 +377,61 @@ export default function PhotoBookScreen() {
         </Pressable>
       </View>
 
+      {/* Layout Template Selector */}
+      <View
+        style={[styles.layoutSection, { backgroundColor: colors.background }]}
+      >
+        <Text style={[styles.layoutSectionTitle, { color: colors.text }]}>
+          Layout Template
+        </Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.layoutScrollContent}
+        >
+          {BOOK_LAYOUTS.map((layout) => (
+            <Pressable
+              key={layout.id}
+              testID={`layout-${layout.id}`}
+              style={[
+                styles.layoutCard,
+                {
+                  backgroundColor: colors.card,
+                  borderColor:
+                    selectedLayout === layout.id
+                      ? PRIMARY_COLOR
+                      : colors.cardBorder,
+                  borderWidth: selectedLayout === layout.id ? 2 : 1,
+                },
+              ]}
+              onPress={() => setSelectedLayout(layout.id)}
+            >
+              <Text style={styles.layoutIcon}>{layout.icon}</Text>
+              <Text
+                style={[
+                  styles.layoutName,
+                  {
+                    color:
+                      selectedLayout === layout.id
+                        ? PRIMARY_COLOR
+                        : colors.text,
+                    fontWeight: selectedLayout === layout.id ? "600" : "400",
+                  },
+                ]}
+              >
+                {layout.name}
+              </Text>
+              <Text
+                style={[styles.layoutDescription, { color: colors.textMuted }]}
+                numberOfLines={2}
+              >
+                {layout.description}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      </View>
+
       {/* Pages List */}
       {pages.length === 0 ? (
         <View style={styles.emptyContainer}>
@@ -537,6 +596,40 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: PRIMARY_COLOR,
     fontWeight: "500",
+  },
+  layoutSection: {
+    paddingVertical: Spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "rgba(0,0,0,0.1)",
+  },
+  layoutSectionTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    paddingHorizontal: Spacing.lg,
+    marginBottom: Spacing.sm,
+  },
+  layoutScrollContent: {
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.md,
+  },
+  layoutCard: {
+    width: 130,
+    padding: Spacing.md,
+    borderRadius: Spacing.md,
+    alignItems: "center",
+  },
+  layoutIcon: {
+    fontSize: 28,
+    marginBottom: Spacing.xs,
+  },
+  layoutName: {
+    fontSize: 14,
+    marginBottom: Spacing.xs,
+  },
+  layoutDescription: {
+    fontSize: 11,
+    textAlign: "center",
+    lineHeight: 14,
   },
   loadingContainer: {
     flex: 1,

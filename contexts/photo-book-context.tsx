@@ -8,12 +8,294 @@ import { useSubscription } from "@/contexts/subscription-context";
 
 export type PhotoBookPageType = "title" | "photo" | "milestone" | "blank";
 
+export type BookLayoutTemplate = "classic" | "modern" | "playful";
+
+export interface BookLayout {
+  id: BookLayoutTemplate;
+  name: string;
+  description: string;
+  icon: string;
+}
+
+export const BOOK_LAYOUTS: BookLayout[] = [
+  {
+    id: "classic",
+    name: "Classic",
+    description: "Timeless elegance with serif fonts and clean borders",
+    icon: "📖",
+  },
+  {
+    id: "modern",
+    name: "Modern",
+    description:
+      "Minimalist design with sans-serif fonts and full-bleed photos",
+    icon: "🎨",
+  },
+  {
+    id: "playful",
+    name: "Playful",
+    description:
+      "Fun and colorful with rounded corners and decorative elements",
+    icon: "🎈",
+  },
+];
+
+/**
+ * Get CSS styles for a specific layout template
+ */
+function getLayoutStyles(layout: BookLayoutTemplate): string {
+  const baseStyles = `
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      color: #333;
+      background: #fff;
+    }
+    .page {
+      width: 100%;
+      min-height: 100vh;
+      page-break-after: always;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .page:last-child {
+      page-break-after: auto;
+    }
+  `;
+
+  switch (layout) {
+    case "classic":
+      return `
+        ${baseStyles}
+        body {
+          font-family: Georgia, 'Times New Roman', serif;
+        }
+        .title-page {
+          background: linear-gradient(135deg, #f5f0e8 0%, #e8e0d0 100%);
+          text-align: center;
+          padding: 40px;
+          border: 8px double #8b7355;
+          margin: 20px;
+        }
+        .title-page h1 {
+          font-size: 42px;
+          font-weight: 400;
+          font-style: italic;
+          margin-bottom: 16px;
+          color: #4a3728;
+        }
+        .title-page .subtitle {
+          font-size: 18px;
+          color: #6b5a4a;
+        }
+        .photo-page {
+          padding: 30px;
+          border: 4px solid #d4c4b0;
+          margin: 20px;
+        }
+        .photo {
+          max-width: 100%;
+          max-height: 55vh;
+          object-fit: contain;
+          border: 2px solid #8b7355;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        .milestone-badge {
+          background: #c9a959;
+          color: #4a3728;
+          padding: 8px 20px;
+          font-size: 14px;
+          font-style: italic;
+          margin-bottom: 16px;
+          border: 1px solid #8b7355;
+        }
+        .milestone-page h2 {
+          font-size: 26px;
+          margin-top: 16px;
+          color: #4a3728;
+          font-weight: 400;
+          font-style: italic;
+        }
+        .caption {
+          font-size: 16px;
+          color: #4a3728;
+          margin-top: 16px;
+          text-align: center;
+          max-width: 80%;
+          font-style: italic;
+        }
+        .date {
+          font-size: 14px;
+          color: #8b7355;
+          margin-top: 8px;
+        }
+        .blank-page {
+          background: #faf8f5;
+          border: 2px solid #d4c4b0;
+          margin: 20px;
+        }
+      `;
+    case "modern":
+      return `
+        ${baseStyles}
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+        }
+        .title-page {
+          background: #000;
+          text-align: center;
+          padding: 60px;
+        }
+        .title-page h1 {
+          font-size: 48px;
+          font-weight: 200;
+          letter-spacing: 4px;
+          margin-bottom: 20px;
+          color: #fff;
+          text-transform: uppercase;
+        }
+        .title-page .subtitle {
+          font-size: 16px;
+          color: #999;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+        }
+        .photo-page {
+          padding: 0;
+        }
+        .photo {
+          max-width: 100%;
+          max-height: 75vh;
+          object-fit: cover;
+          width: 100%;
+        }
+        .milestone-badge {
+          background: #222;
+          color: #fff;
+          padding: 10px 24px;
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          margin-bottom: 16px;
+        }
+        .milestone-page h2 {
+          font-size: 28px;
+          margin-top: 16px;
+          color: #000;
+          font-weight: 300;
+          letter-spacing: 1px;
+        }
+        .caption {
+          font-size: 15px;
+          color: #333;
+          margin-top: 20px;
+          text-align: center;
+          max-width: 70%;
+          line-height: 1.6;
+        }
+        .date {
+          font-size: 12px;
+          color: #999;
+          margin-top: 12px;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+        }
+        .blank-page {
+          background: #f5f5f5;
+        }
+      `;
+    case "playful":
+      return `
+        ${baseStyles}
+        body {
+          font-family: 'Comic Sans MS', 'Chalkboard', 'Marker Felt', sans-serif;
+        }
+        .title-page {
+          background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+          text-align: center;
+          padding: 40px;
+          border-radius: 30px;
+          margin: 20px;
+        }
+        .title-page h1 {
+          font-size: 38px;
+          font-weight: 700;
+          margin-bottom: 16px;
+          color: #e74c3c;
+          text-shadow: 2px 2px 0 #fff;
+        }
+        .title-page .subtitle {
+          font-size: 18px;
+          color: #c0392b;
+        }
+        .photo-page {
+          padding: 20px;
+          background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+          border-radius: 20px;
+          margin: 15px;
+        }
+        .photo {
+          max-width: 100%;
+          max-height: 55vh;
+          object-fit: contain;
+          border-radius: 20px;
+          border: 4px solid #fff;
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        .milestone-badge {
+          background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+          color: #fff;
+          padding: 10px 24px;
+          border-radius: 20px;
+          font-size: 14px;
+          font-weight: 700;
+          margin-bottom: 16px;
+          box-shadow: 0 4px 10px rgba(240, 87, 108, 0.3);
+        }
+        .milestone-page h2 {
+          font-size: 24px;
+          margin-top: 16px;
+          color: #9b59b6;
+        }
+        .caption {
+          font-size: 16px;
+          color: #2c3e50;
+          margin-top: 16px;
+          text-align: center;
+          max-width: 85%;
+          background: rgba(255,255,255,0.8);
+          padding: 12px 16px;
+          border-radius: 12px;
+        }
+        .date {
+          font-size: 14px;
+          color: #7f8c8d;
+          margin-top: 8px;
+        }
+        .blank-page {
+          background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+          border-radius: 20px;
+          margin: 15px;
+        }
+      `;
+    default:
+      return baseStyles;
+  }
+}
+
 /**
  * Generates HTML content for photo book PDF export
  */
 function generatePhotoBookHtml(
   pages: PhotoBookPage[],
   childName?: string,
+  layout: BookLayoutTemplate = "classic",
 ): string {
   const pageHtml = pages
     .map((page, index) => {
@@ -58,82 +340,7 @@ function generatePhotoBookHtml(
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>
-          * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-          }
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            color: #333;
-            background: #fff;
-          }
-          .page {
-            width: 100%;
-            min-height: 100vh;
-            padding: 40px;
-            page-break-after: always;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-          }
-          .page:last-child {
-            page-break-after: auto;
-          }
-          .title-page {
-            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
-            text-align: center;
-          }
-          .title-page h1 {
-            font-size: 36px;
-            font-weight: 700;
-            margin-bottom: 16px;
-            color: #0a7ea4;
-          }
-          .title-page .subtitle {
-            font-size: 18px;
-            color: #666;
-          }
-          .photo-page {
-            padding: 20px;
-          }
-          .photo {
-            max-width: 100%;
-            max-height: 60vh;
-            object-fit: contain;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-          }
-          .milestone-badge {
-            background: #ffd700;
-            color: #333;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 16px;
-          }
-          .milestone-page h2 {
-            font-size: 24px;
-            margin-top: 16px;
-            color: #0a7ea4;
-          }
-          .caption {
-            font-size: 16px;
-            color: #333;
-            margin-top: 16px;
-            text-align: center;
-            max-width: 80%;
-          }
-          .date {
-            font-size: 14px;
-            color: #666;
-            margin-top: 8px;
-          }
-          .blank-page {
-            background: #fafafa;
-          }
+          ${getLayoutStyles(layout)}
         </style>
       </head>
       <body>
@@ -186,6 +393,7 @@ export interface PhotoBookPage {
 
 interface PhotoBookContextType {
   pages: PhotoBookPage[];
+  selectedLayout: BookLayoutTemplate;
   isGenerating: boolean;
   isExporting: boolean;
   canExportPdf: boolean;
@@ -194,6 +402,7 @@ interface PhotoBookContextType {
   removePage: (pageId: string) => void;
   addPage: (page: Omit<PhotoBookPage, "id">) => void;
   updatePageCaption: (pageId: string, caption: string) => void;
+  setSelectedLayout: (layout: BookLayoutTemplate) => void;
   clearPhotoBook: () => void;
   exportPdf: () => Promise<void>;
 }
@@ -209,6 +418,8 @@ export function PhotoBookProvider({ children }: { children: React.ReactNode }) {
   const { currentPlan } = useSubscription();
 
   const [pages, setPages] = useState<PhotoBookPage[]>([]);
+  const [selectedLayout, setSelectedLayout] =
+    useState<BookLayoutTemplate>("classic");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -346,8 +557,8 @@ export function PhotoBookProvider({ children }: { children: React.ReactNode }) {
     setIsExporting(true);
 
     try {
-      // Generate HTML content for the photo book
-      const html = generatePhotoBookHtml(pages, child?.name);
+      // Generate HTML content for the photo book with selected layout
+      const html = generatePhotoBookHtml(pages, child?.name, selectedLayout);
 
       // Create PDF from HTML
       const { uri } = await Print.printToFileAsync({
@@ -367,12 +578,13 @@ export function PhotoBookProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsExporting(false);
     }
-  }, [canExportPdf, pages, child?.name]);
+  }, [canExportPdf, pages, child?.name, selectedLayout]);
 
   return (
     <PhotoBookContext.Provider
       value={{
         pages,
+        selectedLayout,
         isGenerating,
         isExporting,
         canExportPdf,
@@ -381,6 +593,7 @@ export function PhotoBookProvider({ children }: { children: React.ReactNode }) {
         removePage,
         addPage,
         updatePageCaption,
+        setSelectedLayout,
         clearPhotoBook,
         exportPdf,
       }}

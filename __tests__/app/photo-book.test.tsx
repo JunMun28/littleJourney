@@ -29,6 +29,7 @@ const mockGeneratePhotoBook = jest.fn();
 const mockReorderPage = jest.fn();
 const mockAddPage = jest.fn();
 const mockClearPhotoBook = jest.fn();
+const mockSetSelectedLayout = jest.fn();
 const mockUsePhotoBook = {
   pages: [
     { id: "page-1", type: "title" as const, title: "Baby's First Year" },
@@ -45,6 +46,7 @@ const mockUsePhotoBook = {
       caption: "First crawl",
     },
   ],
+  selectedLayout: "classic" as const,
   isGenerating: false,
   isExporting: false,
   canExportPdf: true,
@@ -52,6 +54,7 @@ const mockUsePhotoBook = {
   reorderPage: mockReorderPage,
   removePage: jest.fn(),
   updatePageCaption: jest.fn(),
+  setSelectedLayout: mockSetSelectedLayout,
   clearPhotoBook: mockClearPhotoBook,
   exportPdf: mockExportPdf,
   addPage: mockAddPage,
@@ -60,6 +63,26 @@ const mockUsePhotoBook = {
 jest.mock("@/contexts/photo-book-context", () => ({
   usePhotoBook: () => mockUsePhotoBook,
   PhotoBookProvider: ({ children }: { children: React.ReactNode }) => children,
+  BOOK_LAYOUTS: [
+    {
+      id: "classic",
+      name: "Classic",
+      description: "Timeless elegance",
+      icon: "📖",
+    },
+    {
+      id: "modern",
+      name: "Modern",
+      description: "Minimalist design",
+      icon: "🎨",
+    },
+    {
+      id: "playful",
+      name: "Playful",
+      description: "Fun and colorful",
+      icon: "🎈",
+    },
+  ],
 }));
 
 describe("PhotoBookScreen", () => {
@@ -225,5 +248,51 @@ describe("PhotoBookScreen", () => {
 
     expect(mockClearPhotoBook).toHaveBeenCalled();
     expect(mockGeneratePhotoBook).toHaveBeenCalled();
+  });
+
+  // BOOK-003: Book layout templates tests
+
+  it("displays Layout Template section with title", () => {
+    const { getByText } = render(<PhotoBookScreen />);
+
+    expect(getByText("Layout Template")).toBeTruthy();
+  });
+
+  it("shows all available layout templates", () => {
+    const { getByText, getByTestId } = render(<PhotoBookScreen />);
+
+    expect(getByText("Classic")).toBeTruthy();
+    expect(getByText("Modern")).toBeTruthy();
+    expect(getByText("Playful")).toBeTruthy();
+
+    expect(getByTestId("layout-classic")).toBeTruthy();
+    expect(getByTestId("layout-modern")).toBeTruthy();
+    expect(getByTestId("layout-playful")).toBeTruthy();
+  });
+
+  it("calls setSelectedLayout when layout template is pressed", () => {
+    const { getByTestId } = render(<PhotoBookScreen />);
+
+    const modernLayout = getByTestId("layout-modern");
+    fireEvent.press(modernLayout);
+
+    expect(mockSetSelectedLayout).toHaveBeenCalledWith("modern");
+  });
+
+  it("calls setSelectedLayout with playful when Playful template is pressed", () => {
+    const { getByTestId } = render(<PhotoBookScreen />);
+
+    const playfulLayout = getByTestId("layout-playful");
+    fireEvent.press(playfulLayout);
+
+    expect(mockSetSelectedLayout).toHaveBeenCalledWith("playful");
+  });
+
+  it("shows layout descriptions", () => {
+    const { getByText } = render(<PhotoBookScreen />);
+
+    expect(getByText("Timeless elegance")).toBeTruthy();
+    expect(getByText("Minimalist design")).toBeTruthy();
+    expect(getByText("Fun and colorful")).toBeTruthy();
   });
 });

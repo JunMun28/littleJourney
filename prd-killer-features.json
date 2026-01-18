@@ -62,7 +62,7 @@
         "Verify photos reflow appropriately"
       ],
       "acceptanceCriteria": "Multiple book layout templates available for selection",
-      "passes": false
+      "passes": true
     },
     {
       "id": "BOOK-004",

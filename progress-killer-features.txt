@@ -955,3 +955,44 @@ Reasoning: Photo book context exists with partial implementation. Missing: add p
 
 ---
 
+### Task Selection
+Selected: BOOK-003 (Book layout templates) - Full implementation
+Priority: 4 (Standard features and implementation)
+Reasoning: Builds on existing photo-book infrastructure. Clear PRD requirements. UI feature with no external dependencies.
+
+### Implementation Complete
+
+**Task:** BOOK-003 Book layout templates
+**PRD Ref:** Photo Book Export - BOOK-003
+
+**Key Decisions:**
+- BookLayoutTemplate type: "classic" | "modern" | "playful"
+- BOOK_LAYOUTS array with id, name, description, icon
+- Classic: serif fonts, double borders, cream tones
+- Modern: sans-serif, black title page, full-bleed photos, minimalist
+- Playful: fun fonts, gradients, rounded corners, colorful
+- selectedLayout state in context, default "classic"
+- getLayoutStyles() function generates CSS per template
+- Layout selector: horizontal ScrollView with cards
+- Selected layout highlighted with PRIMARY_COLOR border
+
+**Files Changed:**
+- MODIFIED: contexts/photo-book-context.tsx (+BookLayoutTemplate type, +BOOK_LAYOUTS, +getLayoutStyles, +selectedLayout state, +setSelectedLayout)
+- MODIFIED: app/photo-book.tsx (+layout selector UI with ScrollView, +styles)
+- MODIFIED: __tests__/app/photo-book.test.tsx (+5 BOOK-003 tests, +mock update)
+- MODIFIED: prd-killer-features.json (BOOK-003 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- tsc --noEmit: PASS
+- npm run lint: PASS (pre-existing expo-blur issue)
+- npm test: 896/896 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- BOOK-003 complete: Open book customization, view Classic/Modern/Playful templates, select different template, PDF uses selected layout
+- Each template has distinct CSS styling for title, photos, captions, milestone badges
+- Photo Book Export category now 2/9 complete
+
+---
+
