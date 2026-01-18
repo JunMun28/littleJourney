@@ -210,8 +210,18 @@ export default function TimeCapsuleScreen() {
   const colors = Colors[colorScheme];
 
   const { child } = useChild();
-  const { capsules, createCapsule, getSealedCapsules, getUnlockedCapsules } =
-    useTimeCapsules();
+  const {
+    capsules,
+    createCapsule,
+    getSealedCapsules,
+    getUnlockedCapsules,
+    checkAndUnlockCapsules,
+  } = useTimeCapsules();
+
+  // CAPSULE-005: Check and unlock capsules on mount
+  useEffect(() => {
+    checkAndUnlockCapsules();
+  }, [checkAndUnlockCapsules]);
 
   const [modalState, setModalState] = useState<ModalState>("closed");
   const [letterContent, setLetterContent] = useState("");

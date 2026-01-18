@@ -63,6 +63,8 @@ interface NotificationContextValue {
     memberName: string,
     preview?: string,
   ) => Promise<void>;
+  // Time capsule unlock notification (CAPSULE-005)
+  sendCapsuleUnlockedNotification: (capsuleCount: number) => Promise<void>;
   // Smart frequency (PRD Section 7.3)
   promptFrequency: PromptFrequency;
   consecutiveIgnoredDays: number;
@@ -404,6 +406,30 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     [settings.familyActivity],
   );
 
+  // Time capsule unlock notification (CAPSULE-005)
+  const sendCapsuleUnlockedNotification = useCallback(
+    async (capsuleCount: number) => {
+      if (capsuleCount === 0) {
+        return;
+      }
+
+      const capsuleWord = capsuleCount === 1 ? "capsule" : "capsules";
+
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: `📬 Time Capsule Unlocked!`,
+          body:
+            capsuleCount === 1
+              ? "A time capsule from your past is ready to be opened!"
+              : `${capsuleCount} time ${capsuleWord} from your past are ready to be opened!`,
+          data: { type: "capsule_unlocked" },
+        },
+        trigger: null, // Send immediately
+      });
+    },
+    [],
+  );
+
   // Smart frequency methods (PRD Section 7.3)
   const recordIgnoredPrompt = useCallback(() => {
     setConsecutiveIgnoredDays((prev) => {
@@ -442,6 +468,8 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     sendPhotoBookBirthdayPrompt,
     // Family activity
     sendFamilyActivityNotification,
+    // Time capsule unlock
+    sendCapsuleUnlockedNotification,
     // Smart frequency
     promptFrequency,
     consecutiveIgnoredDays,

@@ -9,7 +9,31 @@ import TimeCapsuleScreen from "@/app/(tabs)/time-capsule";
 import { TimeCapsuleProvider } from "@/contexts/time-capsule-context";
 import { ChildProvider, useChild } from "@/contexts/child-context";
 import { VoiceJournalProvider } from "@/contexts/voice-journal-context";
+import { NotificationProvider } from "@/contexts/notification-context";
 import { useEffect } from "react";
+
+// Mock expo-notifications (required by NotificationProvider -> TimeCapsuleProvider)
+jest.mock("expo-notifications", () => ({
+  setNotificationHandler: jest.fn(),
+  scheduleNotificationAsync: jest
+    .fn()
+    .mockResolvedValue("mock-notification-id"),
+  getPermissionsAsync: jest.fn().mockResolvedValue({ status: "granted" }),
+  requestPermissionsAsync: jest.fn().mockResolvedValue({ status: "granted" }),
+  getExpoPushTokenAsync: jest.fn().mockResolvedValue({ data: "mock-token" }),
+  setNotificationChannelAsync: jest.fn(),
+  cancelAllScheduledNotificationsAsync: jest.fn(),
+  cancelScheduledNotificationAsync: jest.fn(),
+  addNotificationReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  addNotificationResponseReceivedListener: jest.fn(() => ({
+    remove: jest.fn(),
+  })),
+  AndroidImportance: { MAX: 5 },
+  SchedulableTriggerInputTypes: {
+    DAILY: "daily",
+    TIME_INTERVAL: "timeInterval",
+  },
+}));
 
 // Mock expo-router
 const mockRouterPush = jest.fn();
@@ -131,11 +155,13 @@ function TestWrapper({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ChildProvider>
-        <ChildSetup>
-          <VoiceJournalProvider>
-            <TimeCapsuleProvider>{children}</TimeCapsuleProvider>
-          </VoiceJournalProvider>
-        </ChildSetup>
+        <NotificationProvider>
+          <ChildSetup>
+            <VoiceJournalProvider>
+              <TimeCapsuleProvider>{children}</TimeCapsuleProvider>
+            </VoiceJournalProvider>
+          </ChildSetup>
+        </NotificationProvider>
       </ChildProvider>
     </QueryClientProvider>
   );
@@ -146,7 +172,9 @@ function TestWrapperNoChild({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ChildProvider>
-        <TimeCapsuleProvider>{children}</TimeCapsuleProvider>
+        <NotificationProvider>
+          <TimeCapsuleProvider>{children}</TimeCapsuleProvider>
+        </NotificationProvider>
       </ChildProvider>
     </QueryClientProvider>
   );

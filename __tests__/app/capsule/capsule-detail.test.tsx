@@ -7,9 +7,37 @@ import {
 } from "@testing-library/react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import CapsuleDetailScreen from "@/app/capsule/[id]";
-import { TimeCapsuleProvider, useTimeCapsules, type TimeCapsule } from "@/contexts/time-capsule-context";
+import {
+  TimeCapsuleProvider,
+  useTimeCapsules,
+  type TimeCapsule,
+} from "@/contexts/time-capsule-context";
 import { ChildProvider, useChild } from "@/contexts/child-context";
+import { NotificationProvider } from "@/contexts/notification-context";
 import { useEffect, useState } from "react";
+
+// Mock expo-notifications (required by NotificationProvider -> TimeCapsuleProvider)
+jest.mock("expo-notifications", () => ({
+  setNotificationHandler: jest.fn(),
+  scheduleNotificationAsync: jest
+    .fn()
+    .mockResolvedValue("mock-notification-id"),
+  getPermissionsAsync: jest.fn().mockResolvedValue({ status: "granted" }),
+  requestPermissionsAsync: jest.fn().mockResolvedValue({ status: "granted" }),
+  getExpoPushTokenAsync: jest.fn().mockResolvedValue({ data: "mock-token" }),
+  setNotificationChannelAsync: jest.fn(),
+  cancelAllScheduledNotificationsAsync: jest.fn(),
+  cancelScheduledNotificationAsync: jest.fn(),
+  addNotificationReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  addNotificationResponseReceivedListener: jest.fn(() => ({
+    remove: jest.fn(),
+  })),
+  AndroidImportance: { MAX: 5 },
+  SchedulableTriggerInputTypes: {
+    DAILY: "daily",
+    TIME_INTERVAL: "timeInterval",
+  },
+}));
 
 // Mock expo-router
 const mockRouterBack = jest.fn();
@@ -24,7 +52,13 @@ jest.mock("expo-router", () => ({
 
 // Mock expo-blur
 jest.mock("expo-blur", () => ({
-  BlurView: ({ children, testID }: { children: React.ReactNode; testID?: string }) => {
+  BlurView: ({
+    children,
+    testID,
+  }: {
+    children: React.ReactNode;
+    testID?: string;
+  }) => {
     const { View } = require("react-native");
     return <View testID={testID}>{children}</View>;
   },
@@ -73,7 +107,14 @@ function TestWithCapsuleDetail({
       mockUseLocalSearchParams.mockReturnValue({ id: capsule.id });
       onCapsuleCreated?.(capsule);
     }
-  }, [createCapsule, capsuleId, capsules.length, unlockAge, letterContent, onCapsuleCreated]);
+  }, [
+    createCapsule,
+    capsuleId,
+    capsules.length,
+    unlockAge,
+    letterContent,
+    onCapsuleCreated,
+  ]);
 
   if (!capsuleId) {
     return null;
@@ -87,7 +128,9 @@ function TestWrapper({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ChildProvider>
-        <TimeCapsuleProvider>{children}</TimeCapsuleProvider>
+        <NotificationProvider>
+          <TimeCapsuleProvider>{children}</TimeCapsuleProvider>
+        </NotificationProvider>
       </ChildProvider>
     </QueryClientProvider>
   );
@@ -123,7 +166,7 @@ describe("CapsuleDetailScreen", () => {
         <SimpleChildSetup>
           <CapsuleDetailScreen />
         </SimpleChildSetup>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
@@ -137,7 +180,7 @@ describe("CapsuleDetailScreen", () => {
     render(
       <TestWrapper>
         <TestWithCapsuleDetail />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
@@ -151,7 +194,7 @@ describe("CapsuleDetailScreen", () => {
     render(
       <TestWrapper>
         <TestWithCapsuleDetail letterContent="This is the sealed letter content." />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
@@ -166,7 +209,7 @@ describe("CapsuleDetailScreen", () => {
     render(
       <TestWrapper>
         <TestWithCapsuleDetail />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
@@ -183,7 +226,7 @@ describe("CapsuleDetailScreen", () => {
     render(
       <TestWrapper>
         <TestWithCapsuleDetail unlockAge={18} />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // Should show years/months until unlock
@@ -200,7 +243,7 @@ describe("CapsuleDetailScreen", () => {
     render(
       <TestWrapper>
         <TestWithCapsuleDetail />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
@@ -214,7 +257,7 @@ describe("CapsuleDetailScreen", () => {
     render(
       <TestWrapper>
         <TestWithCapsuleDetail />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
@@ -235,7 +278,7 @@ describe("CapsuleDetailScreen", () => {
     render(
       <TestWrapper>
         <TestWithCapsuleDetail />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
@@ -260,7 +303,7 @@ describe("CapsuleDetailScreen", () => {
     render(
       <TestWrapper>
         <TestWithCapsuleDetail letterContent="This is my special letter to you." />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
@@ -279,7 +322,9 @@ describe("CapsuleDetailScreen", () => {
     await waitFor(() => {
       expect(screen.getByText("Opened early")).toBeTruthy();
       expect(screen.getByTestId("unlocked-content-view")).toBeTruthy();
-      expect(screen.getByText("This is my special letter to you.")).toBeTruthy();
+      expect(
+        screen.getByText("This is my special letter to you."),
+      ).toBeTruthy();
     });
   });
 
@@ -292,7 +337,7 @@ describe("CapsuleDetailScreen", () => {
         <SimpleChildSetup>
           <CapsuleDetailScreen />
         </SimpleChildSetup>
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
@@ -309,7 +354,7 @@ describe("CapsuleDetailScreen", () => {
     render(
       <TestWrapper>
         <TestWithCapsuleDetail unlockAge={21} />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
@@ -324,7 +369,7 @@ describe("CapsuleDetailScreen", () => {
     render(
       <TestWrapper>
         <TestWithCapsuleDetail />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {

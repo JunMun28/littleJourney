@@ -1284,3 +1284,47 @@ Reasoning: Notification context already has sendMemoriesNotification(). OnThisDa
 
 ---
 
+### Task Selection
+Selected: CAPSULE-005 (Time capsule delivery notification) - Full implementation
+Priority: 2 (Integration points between modules)
+Reasoning: TimeCapsuleContext exists. NotificationContext exists. Need to integrate: auto-unlock when child reaches age or date passes, send push notification on unlock.
+
+### Implementation Complete
+
+**Task:** CAPSULE-005 Time capsule delivery notification
+**PRD Ref:** Time Capsule - CAPSULE-005
+
+**Key Decisions:**
+- Added checkAndUnlockCapsules() to TimeCapsuleContext
+- Calculates child age from ChildContext.dateOfBirth
+- Checks sealed capsules: age-based (child >= unlockAge) OR custom_date (date passed)
+- Updates status to "unlocked" for due capsules
+- Added sendCapsuleUnlockedNotification() to NotificationContext
+- Notification: "📬 Time Capsule Unlocked!" with count-aware message
+- Time Capsule screen calls checkAndUnlockCapsules() on mount via useEffect
+- Refactored count logic: filter capsules first (sync), then update state, then notify
+
+**Files Changed:**
+- MODIFIED: contexts/time-capsule-context.tsx (+checkAndUnlockCapsules, +useChild, +useNotifications, +helper functions)
+- MODIFIED: contexts/notification-context.tsx (+sendCapsuleUnlockedNotification)
+- MODIFIED: app/(tabs)/time-capsule.tsx (+useEffect to check unlocks on mount)
+- MODIFIED: __tests__/contexts/time-capsule-context.test.tsx (+4 CAPSULE-005 tests, +NotificationProvider wrapper, +mocks)
+- MODIFIED: __tests__/app/tabs/time-capsule.test.tsx (+NotificationProvider wrapper, +expo-notifications mock)
+- MODIFIED: __tests__/app/capsule/capsule-detail.test.tsx (+NotificationProvider wrapper, +expo-notifications mock)
+- MODIFIED: prd-killer-features.json (CAPSULE-005 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- tsc --noEmit: PASS
+- npm run lint: PASS (pre-existing expo-blur issue)
+- npm test: 975/975 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- CAPSULE-005 complete: Set unlock date/age, capsule auto-unlocks when due, push notification sent
+- Email notification (step 4) not implemented - requires backend email service integration
+- Deep link handling for tap-to-open capsule TBD
+- Time Capsule category now 7/8 complete (CAPSULE-006 child access remaining)
+
+---
+

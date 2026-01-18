@@ -226,7 +226,7 @@
         "Open app and view unlocked capsule"
       ],
       "acceptanceCriteria": "Parents notified when time capsule unlocks",
-      "passes": false
+      "passes": true
     },
     {
       "id": "CAPSULE-006",
