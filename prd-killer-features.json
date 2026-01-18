@@ -77,7 +77,7 @@
         "Preview final cover"
       ],
       "acceptanceCriteria": "Parents can customize book cover with photo, title, and theme",
-      "passes": false
+      "passes": true
     },
     {
       "id": "BOOK-005",

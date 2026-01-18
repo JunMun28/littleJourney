@@ -10,6 +10,36 @@ export type PhotoBookPageType = "title" | "photo" | "milestone" | "blank";
 
 export type BookLayoutTemplate = "classic" | "modern" | "playful";
 
+export type CoverColorTheme =
+  | "coral"
+  | "sage"
+  | "navy"
+  | "blush"
+  | "gold"
+  | "charcoal";
+
+export interface BookCover {
+  photoUri?: string;
+  title: string;
+  childName?: string;
+  dateRange?: string;
+  colorTheme: CoverColorTheme;
+}
+
+export const COVER_COLOR_THEMES: {
+  id: CoverColorTheme;
+  name: string;
+  background: string;
+  text: string;
+}[] = [
+  { id: "coral", name: "Coral", background: "#FF6B6B", text: "#FFFFFF" },
+  { id: "sage", name: "Sage", background: "#87A878", text: "#FFFFFF" },
+  { id: "navy", name: "Navy", background: "#2C3E50", text: "#FFFFFF" },
+  { id: "blush", name: "Blush", background: "#F5B7B1", text: "#4A3728" },
+  { id: "gold", name: "Gold", background: "#C9A959", text: "#4A3728" },
+  { id: "charcoal", name: "Charcoal", background: "#36454F", text: "#FFFFFF" },
+];
+
 export interface BookLayout {
   id: BookLayoutTemplate;
   name: string;
@@ -65,6 +95,18 @@ function getLayoutStyles(layout: BookLayoutTemplate): string {
     }
     .page:last-child {
       page-break-after: auto;
+    }
+    .cover-photo {
+      max-width: 200px;
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: 50%;
+      margin-bottom: 24px;
+      border: 4px solid rgba(255,255,255,0.5);
+    }
+    .date-range {
+      font-size: 14px;
+      margin-top: 8px;
     }
   `;
 
@@ -290,21 +332,38 @@ function getLayoutStyles(layout: BookLayoutTemplate): string {
 }
 
 /**
+ * Get CSS for cover color theme
+ */
+function getCoverThemeStyles(theme: CoverColorTheme): {
+  background: string;
+  text: string;
+} {
+  const themeConfig = COVER_COLOR_THEMES.find((t) => t.id === theme);
+  return themeConfig
+    ? { background: themeConfig.background, text: themeConfig.text }
+    : { background: "#FF6B6B", text: "#FFFFFF" };
+}
+
+/**
  * Generates HTML content for photo book PDF export
  */
 function generatePhotoBookHtml(
   pages: PhotoBookPage[],
-  childName?: string,
+  cover: BookCover,
   layout: BookLayoutTemplate = "classic",
 ): string {
+  const coverTheme = getCoverThemeStyles(cover.colorTheme);
+
   const pageHtml = pages
     .map((page, index) => {
       switch (page.type) {
         case "title":
           return `
-          <div class="page title-page">
-            <h1>${escapeHtml(page.title || `${childName || "Baby"}'s First Year`)}</h1>
-            ${page.caption ? `<p class="subtitle">${escapeHtml(page.caption)}</p>` : ""}
+          <div class="page title-page" style="background: ${coverTheme.background};">
+            ${cover.photoUri ? `<img src="${cover.photoUri}" class="cover-photo" />` : ""}
+            <h1 style="color: ${coverTheme.text};">${escapeHtml(cover.title)}</h1>
+            ${cover.childName ? `<p class="subtitle" style="color: ${coverTheme.text}; opacity: 0.9;">${escapeHtml(cover.childName)}</p>` : ""}
+            ${cover.dateRange ? `<p class="date-range" style="color: ${coverTheme.text}; opacity: 0.8;">${escapeHtml(cover.dateRange)}</p>` : ""}
           </div>
         `;
         case "milestone":
@@ -394,6 +453,7 @@ export interface PhotoBookPage {
 interface PhotoBookContextType {
   pages: PhotoBookPage[];
   selectedLayout: BookLayoutTemplate;
+  cover: BookCover;
   isGenerating: boolean;
   isExporting: boolean;
   canExportPdf: boolean;
@@ -403,6 +463,7 @@ interface PhotoBookContextType {
   addPage: (page: Omit<PhotoBookPage, "id">) => void;
   updatePageCaption: (pageId: string, caption: string) => void;
   setSelectedLayout: (layout: BookLayoutTemplate) => void;
+  updateCover: (updates: Partial<BookCover>) => void;
   clearPhotoBook: () => void;
   exportPdf: () => Promise<void>;
 }
@@ -420,6 +481,11 @@ export function PhotoBookProvider({ children }: { children: React.ReactNode }) {
   const [pages, setPages] = useState<PhotoBookPage[]>([]);
   const [selectedLayout, setSelectedLayout] =
     useState<BookLayoutTemplate>("classic");
+  const [cover, setCover] = useState<BookCover>({
+    title: child?.name ? `${child.name}'s First Year` : "My First Year",
+    childName: child?.name,
+    colorTheme: "coral",
+  });
   const [isGenerating, setIsGenerating] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -545,6 +611,10 @@ export function PhotoBookProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
+  const updateCover = useCallback((updates: Partial<BookCover>) => {
+    setCover((current) => ({ ...current, ...updates }));
+  }, []);
+
   const clearPhotoBook = useCallback(() => {
     setPages([]);
   }, []);
@@ -557,8 +627,8 @@ export function PhotoBookProvider({ children }: { children: React.ReactNode }) {
     setIsExporting(true);
 
     try {
-      // Generate HTML content for the photo book with selected layout
-      const html = generatePhotoBookHtml(pages, child?.name, selectedLayout);
+      // Generate HTML content for the photo book with cover and selected layout
+      const html = generatePhotoBookHtml(pages, cover, selectedLayout);
 
       // Create PDF from HTML
       const { uri } = await Print.printToFileAsync({
@@ -578,13 +648,14 @@ export function PhotoBookProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsExporting(false);
     }
-  }, [canExportPdf, pages, child?.name, selectedLayout]);
+  }, [canExportPdf, pages, cover, selectedLayout, child?.name]);
 
   return (
     <PhotoBookContext.Provider
       value={{
         pages,
         selectedLayout,
+        cover,
         isGenerating,
         isExporting,
         canExportPdf,
@@ -594,6 +665,7 @@ export function PhotoBookProvider({ children }: { children: React.ReactNode }) {
         addPage,
         updatePageCaption,
         setSelectedLayout,
+        updateCover,
         clearPhotoBook,
         exportPdf,
       }}

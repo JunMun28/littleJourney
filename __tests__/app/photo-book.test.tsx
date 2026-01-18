@@ -30,6 +30,7 @@ const mockReorderPage = jest.fn();
 const mockAddPage = jest.fn();
 const mockClearPhotoBook = jest.fn();
 const mockSetSelectedLayout = jest.fn();
+const mockUpdateCover = jest.fn();
 const mockUsePhotoBook = {
   pages: [
     { id: "page-1", type: "title" as const, title: "Baby's First Year" },
@@ -47,6 +48,13 @@ const mockUsePhotoBook = {
     },
   ],
   selectedLayout: "classic" as const,
+  cover: {
+    title: "Baby's First Year",
+    childName: "Baby",
+    colorTheme: "coral" as const,
+    photoUri: undefined,
+    dateRange: undefined,
+  },
   isGenerating: false,
   isExporting: false,
   canExportPdf: true,
@@ -55,6 +63,7 @@ const mockUsePhotoBook = {
   removePage: jest.fn(),
   updatePageCaption: jest.fn(),
   setSelectedLayout: mockSetSelectedLayout,
+  updateCover: mockUpdateCover,
   clearPhotoBook: mockClearPhotoBook,
   exportPdf: mockExportPdf,
   addPage: mockAddPage,
@@ -81,6 +90,19 @@ jest.mock("@/contexts/photo-book-context", () => ({
       name: "Playful",
       description: "Fun and colorful",
       icon: "🎈",
+    },
+  ],
+  COVER_COLOR_THEMES: [
+    { id: "coral", name: "Coral", background: "#FF6B6B", text: "#FFFFFF" },
+    { id: "sage", name: "Sage", background: "#87A878", text: "#FFFFFF" },
+    { id: "navy", name: "Navy", background: "#2C3E50", text: "#FFFFFF" },
+    { id: "blush", name: "Blush", background: "#F5B7B1", text: "#4A3728" },
+    { id: "gold", name: "Gold", background: "#C9A959", text: "#4A3728" },
+    {
+      id: "charcoal",
+      name: "Charcoal",
+      background: "#36454F",
+      text: "#FFFFFF",
     },
   ],
 }));
@@ -294,5 +316,96 @@ describe("PhotoBookScreen", () => {
     expect(getByText("Timeless elegance")).toBeTruthy();
     expect(getByText("Minimalist design")).toBeTruthy();
     expect(getByText("Fun and colorful")).toBeTruthy();
+  });
+
+  // BOOK-004: Book cover customization tests
+
+  it("shows Cover Editor button in header", () => {
+    const { getByTestId } = render(<PhotoBookScreen />);
+
+    expect(getByTestId("cover-editor-button")).toBeTruthy();
+  });
+
+  it("opens cover editor modal when Cover Editor button is pressed", () => {
+    const { getByTestId, getByText } = render(<PhotoBookScreen />);
+
+    fireEvent.press(getByTestId("cover-editor-button"));
+
+    expect(getByText("Cover Editor")).toBeTruthy();
+  });
+
+  it("shows current cover title in cover editor", () => {
+    const { getByTestId, getByDisplayValue } = render(<PhotoBookScreen />);
+
+    fireEvent.press(getByTestId("cover-editor-button"));
+
+    expect(getByDisplayValue("Baby's First Year")).toBeTruthy();
+  });
+
+  it("shows color theme selector in cover editor", () => {
+    const { getByTestId, getByText } = render(<PhotoBookScreen />);
+
+    fireEvent.press(getByTestId("cover-editor-button"));
+
+    expect(getByText("Cover Color")).toBeTruthy();
+    expect(getByTestId("color-theme-coral")).toBeTruthy();
+    expect(getByTestId("color-theme-sage")).toBeTruthy();
+  });
+
+  it("calls updateCover when color theme is selected", () => {
+    const { getByTestId } = render(<PhotoBookScreen />);
+
+    fireEvent.press(getByTestId("cover-editor-button"));
+    fireEvent.press(getByTestId("color-theme-navy"));
+
+    expect(mockUpdateCover).toHaveBeenCalledWith({ colorTheme: "navy" });
+  });
+
+  it("calls updateCover when title is changed and saved", () => {
+    const { getByTestId, getByDisplayValue, getByText } = render(
+      <PhotoBookScreen />,
+    );
+
+    fireEvent.press(getByTestId("cover-editor-button"));
+    fireEvent.changeText(getByDisplayValue("Baby's First Year"), "My Journey");
+    fireEvent.press(getByText("Done"));
+
+    expect(mockUpdateCover).toHaveBeenCalledWith(
+      expect.objectContaining({ title: "My Journey" }),
+    );
+  });
+
+  it("opens image picker for cover photo selection", async () => {
+    mockLaunchImageLibraryAsync.mockResolvedValueOnce({
+      canceled: false,
+      assets: [{ uri: "cover-photo.jpg" }],
+    });
+
+    const { getByTestId } = render(<PhotoBookScreen />);
+
+    fireEvent.press(getByTestId("cover-editor-button"));
+    fireEvent.press(getByTestId("select-cover-photo"));
+
+    await waitFor(() => {
+      expect(mockLaunchImageLibraryAsync).toHaveBeenCalled();
+    });
+  });
+
+  it("calls updateCover with photoUri when cover photo is selected", async () => {
+    mockLaunchImageLibraryAsync.mockResolvedValueOnce({
+      canceled: false,
+      assets: [{ uri: "cover-photo.jpg" }],
+    });
+
+    const { getByTestId } = render(<PhotoBookScreen />);
+
+    fireEvent.press(getByTestId("cover-editor-button"));
+    fireEvent.press(getByTestId("select-cover-photo"));
+
+    await waitFor(() => {
+      expect(mockUpdateCover).toHaveBeenCalledWith({
+        photoUri: "cover-photo.jpg",
+      });
+    });
   });
 });

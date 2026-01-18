@@ -996,3 +996,48 @@ Reasoning: Builds on existing photo-book infrastructure. Clear PRD requirements.
 
 ---
 
+### Task Selection
+Selected: BOOK-004 (Book cover customization) - Full implementation
+Priority: 4 (Standard features and implementation)
+Reasoning: Builds on existing photo book infrastructure (BOOK-002, BOOK-003 complete). Clear PRD requirements. Standalone UI feature with no external dependencies.
+
+### Implementation Complete
+
+**Task:** BOOK-004 Book cover customization
+**PRD Ref:** Photo Book Export - BOOK-004
+
+**Key Decisions:**
+- BookCover type: photoUri, title, childName, dateRange, colorTheme
+- CoverColorTheme: coral, sage, navy, blush, gold, charcoal (6 options)
+- COVER_COLOR_THEMES array with id, name, background color, text color
+- Cover state in context with default title from child name
+- updateCover() function merges partial updates
+- Cover Editor button in header bar opens full modal
+- Modal has sections: Cover Photo, Title, Child's Name, Date Range, Color Theme, Preview
+- Cover photo uses ImagePicker with 1:1 aspect crop
+- Color theme shows colored circles with checkmark on selected
+- Live preview shows cover with current settings
+- generatePhotoBookHtml updated to use cover instead of page.title/page.caption
+- Title page in PDF styled with cover colorTheme and optional cover photo
+
+**Files Changed:**
+- MODIFIED: contexts/photo-book-context.tsx (+BookCover type, +CoverColorTheme, +COVER_COLOR_THEMES, +cover state, +updateCover, +getCoverThemeStyles, +generatePhotoBookHtml uses cover)
+- MODIFIED: app/photo-book.tsx (+cover editor modal, +cover state, +handlers, +styles)
+- MODIFIED: __tests__/app/photo-book.test.tsx (+8 BOOK-004 tests, +updateCover mock, +COVER_COLOR_THEMES mock)
+- MODIFIED: prd-killer-features.json (BOOK-004 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- tsc --noEmit: PASS
+- npm run lint: PASS (pre-existing expo-blur issue)
+- npm test: 904/904 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- BOOK-004 complete: Open cover editor, select photo, edit title, select color theme, add child's name and date range, preview final cover
+- Cover photo is optional - displays placeholder when not set
+- Cover changes immediately reflect in generatePhotoBookHtml for PDF export
+- Photo Book Export category now 3/9 complete
+
+---
+

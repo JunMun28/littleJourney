@@ -21,6 +21,8 @@ import {
   usePhotoBook,
   type PhotoBookPage,
   BOOK_LAYOUTS,
+  COVER_COLOR_THEMES,
+  type CoverColorTheme,
 } from "@/contexts/photo-book-context";
 import {
   Colors,
@@ -30,7 +32,7 @@ import {
   Spacing,
 } from "@/constants/theme";
 
-type ModalState = "closed" | "editCaption";
+type ModalState = "closed" | "editCaption" | "editCover";
 
 type ColorScheme = (typeof Colors)["light"];
 
@@ -184,6 +186,7 @@ export default function PhotoBookScreen() {
   const {
     pages,
     selectedLayout,
+    cover,
     isGenerating,
     isExporting,
     canExportPdf,
@@ -193,6 +196,7 @@ export default function PhotoBookScreen() {
     addPage,
     updatePageCaption,
     setSelectedLayout,
+    updateCover,
     clearPhotoBook,
     exportPdf,
   } = usePhotoBook();
@@ -203,6 +207,11 @@ export default function PhotoBookScreen() {
   const [modalState, setModalState] = useState<ModalState>("closed");
   const [editingPage, setEditingPage] = useState<PhotoBookPage | null>(null);
   const [editCaption, setEditCaption] = useState("");
+
+  // Cover editor state
+  const [editCoverTitle, setEditCoverTitle] = useState(cover.title);
+  const [editChildName, setEditChildName] = useState(cover.childName || "");
+  const [editDateRange, setEditDateRange] = useState(cover.dateRange || "");
 
   useEffect(() => {
     // Auto-generate on first visit if no pages
@@ -300,6 +309,39 @@ export default function PhotoBookScreen() {
     }
   };
 
+  const handleOpenCoverEditor = () => {
+    setEditCoverTitle(cover.title);
+    setEditChildName(cover.childName || "");
+    setEditDateRange(cover.dateRange || "");
+    setModalState("editCover");
+  };
+
+  const handleSaveCover = () => {
+    updateCover({
+      title: editCoverTitle,
+      childName: editChildName || undefined,
+      dateRange: editDateRange || undefined,
+    });
+    setModalState("closed");
+  };
+
+  const handleSelectCoverPhoto = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      updateCover({ photoUri: result.assets[0].uri });
+    }
+  };
+
+  const handleSelectColorTheme = (theme: CoverColorTheme) => {
+    updateCover({ colorTheme: theme });
+  };
+
   const renderPage = ({
     item,
     index,
@@ -358,13 +400,22 @@ export default function PhotoBookScreen() {
         <Text style={[styles.headerTitle, { color: colors.text }]}>
           Photo Book
         </Text>
-        <Pressable
-          testID="add-photo-button"
-          style={styles.addPhotoButton}
-          onPress={handleAddPhoto}
-        >
-          <Text style={styles.addPhotoButtonText}>+ Add</Text>
-        </Pressable>
+        <View style={styles.headerActions}>
+          <Pressable
+            testID="cover-editor-button"
+            style={styles.headerActionButton}
+            onPress={handleOpenCoverEditor}
+          >
+            <Text style={styles.headerActionText}>Cover</Text>
+          </Pressable>
+          <Pressable
+            testID="add-photo-button"
+            style={styles.addPhotoButton}
+            onPress={handleAddPhoto}
+          >
+            <Text style={styles.addPhotoButtonText}>+ Add</Text>
+          </Pressable>
+        </View>
       </View>
 
       {/* Stats Bar */}
@@ -542,6 +593,259 @@ export default function PhotoBookScreen() {
               {editCaption.length}/200
             </Text>
           </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Cover Editor Modal */}
+      <Modal
+        visible={modalState === "editCover"}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setModalState("closed")}
+      >
+        <KeyboardAvoidingView
+          style={[
+            styles.modalContainer,
+            { backgroundColor: colors.backgroundSecondary },
+          ]}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <View
+            style={[
+              styles.modalHeader,
+              {
+                backgroundColor: colors.background,
+                borderBottomColor: colors.border,
+              },
+            ]}
+          >
+            <Pressable onPress={() => setModalState("closed")}>
+              <Text style={styles.modalCancel}>Cancel</Text>
+            </Pressable>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              Cover Editor
+            </Text>
+            <Pressable onPress={handleSaveCover}>
+              <Text style={styles.modalSave}>Done</Text>
+            </Pressable>
+          </View>
+
+          <ScrollView style={styles.coverEditorContent}>
+            {/* Cover Photo */}
+            <View style={styles.coverSection}>
+              <Text style={[styles.coverSectionTitle, { color: colors.text }]}>
+                Cover Photo
+              </Text>
+              <Pressable
+                testID="select-cover-photo"
+                style={[
+                  styles.coverPhotoSelector,
+                  {
+                    backgroundColor: colors.card,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
+                onPress={handleSelectCoverPhoto}
+              >
+                {cover.photoUri ? (
+                  <Image
+                    source={{ uri: cover.photoUri }}
+                    style={styles.coverPhotoPreview}
+                  />
+                ) : (
+                  <View style={styles.coverPhotoPlaceholder}>
+                    <Text style={styles.coverPhotoPlaceholderIcon}>📷</Text>
+                    <Text
+                      style={[
+                        styles.coverPhotoPlaceholderText,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      Tap to select photo
+                    </Text>
+                  </View>
+                )}
+              </Pressable>
+            </View>
+
+            {/* Cover Title */}
+            <View style={styles.coverSection}>
+              <Text style={[styles.coverSectionTitle, { color: colors.text }]}>
+                Title
+              </Text>
+              <TextInput
+                style={[
+                  styles.coverInput,
+                  {
+                    backgroundColor: colors.background,
+                    borderColor: colors.inputBorder,
+                    color: colors.text,
+                  },
+                ]}
+                value={editCoverTitle}
+                onChangeText={setEditCoverTitle}
+                placeholder="Enter title..."
+                placeholderTextColor={colors.placeholder}
+              />
+            </View>
+
+            {/* Child's Name */}
+            <View style={styles.coverSection}>
+              <Text style={[styles.coverSectionTitle, { color: colors.text }]}>
+                Child&apos;s Name
+              </Text>
+              <TextInput
+                style={[
+                  styles.coverInput,
+                  {
+                    backgroundColor: colors.background,
+                    borderColor: colors.inputBorder,
+                    color: colors.text,
+                  },
+                ]}
+                value={editChildName}
+                onChangeText={setEditChildName}
+                placeholder="Enter child's name..."
+                placeholderTextColor={colors.placeholder}
+              />
+            </View>
+
+            {/* Date Range */}
+            <View style={styles.coverSection}>
+              <Text style={[styles.coverSectionTitle, { color: colors.text }]}>
+                Date Range
+              </Text>
+              <TextInput
+                style={[
+                  styles.coverInput,
+                  {
+                    backgroundColor: colors.background,
+                    borderColor: colors.inputBorder,
+                    color: colors.text,
+                  },
+                ]}
+                value={editDateRange}
+                onChangeText={setEditDateRange}
+                placeholder="e.g., January 2024 - December 2024"
+                placeholderTextColor={colors.placeholder}
+              />
+            </View>
+
+            {/* Cover Color Theme */}
+            <View style={styles.coverSection}>
+              <Text style={[styles.coverSectionTitle, { color: colors.text }]}>
+                Cover Color
+              </Text>
+              <View style={styles.colorThemeGrid}>
+                {COVER_COLOR_THEMES.map((theme) => (
+                  <Pressable
+                    key={theme.id}
+                    testID={`color-theme-${theme.id}`}
+                    style={[
+                      styles.colorThemeItem,
+                      {
+                        backgroundColor: theme.background,
+                        borderColor:
+                          cover.colorTheme === theme.id
+                            ? colors.text
+                            : theme.background,
+                        borderWidth: cover.colorTheme === theme.id ? 3 : 1,
+                      },
+                    ]}
+                    onPress={() => handleSelectColorTheme(theme.id)}
+                  >
+                    {cover.colorTheme === theme.id && (
+                      <Text
+                        style={[styles.colorThemeCheck, { color: theme.text }]}
+                      >
+                        ✓
+                      </Text>
+                    )}
+                  </Pressable>
+                ))}
+              </View>
+              <View style={styles.colorThemeLabels}>
+                {COVER_COLOR_THEMES.map((theme) => (
+                  <Text
+                    key={theme.id}
+                    style={[
+                      styles.colorThemeLabel,
+                      { color: colors.textMuted },
+                    ]}
+                  >
+                    {theme.name}
+                  </Text>
+                ))}
+              </View>
+            </View>
+
+            {/* Cover Preview */}
+            <View style={styles.coverSection}>
+              <Text style={[styles.coverSectionTitle, { color: colors.text }]}>
+                Preview
+              </Text>
+              <View
+                style={[
+                  styles.coverPreview,
+                  {
+                    backgroundColor:
+                      COVER_COLOR_THEMES.find((t) => t.id === cover.colorTheme)
+                        ?.background || "#FF6B6B",
+                  },
+                ]}
+              >
+                {cover.photoUri && (
+                  <Image
+                    source={{ uri: cover.photoUri }}
+                    style={styles.coverPreviewPhoto}
+                  />
+                )}
+                <Text
+                  style={[
+                    styles.coverPreviewTitle,
+                    {
+                      color:
+                        COVER_COLOR_THEMES.find(
+                          (t) => t.id === cover.colorTheme,
+                        )?.text || "#FFFFFF",
+                    },
+                  ]}
+                >
+                  {editCoverTitle || "My Photo Book"}
+                </Text>
+                {editChildName ? (
+                  <Text
+                    style={[
+                      styles.coverPreviewChildName,
+                      {
+                        color:
+                          COVER_COLOR_THEMES.find(
+                            (t) => t.id === cover.colorTheme,
+                          )?.text || "#FFFFFF",
+                      },
+                    ]}
+                  >
+                    {editChildName}
+                  </Text>
+                ) : null}
+                {editDateRange ? (
+                  <Text
+                    style={[
+                      styles.coverPreviewDateRange,
+                      {
+                        color:
+                          COVER_COLOR_THEMES.find(
+                            (t) => t.id === cover.colorTheme,
+                          )?.text || "#FFFFFF",
+                      },
+                    ]}
+                  >
+                    {editDateRange}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+          </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
     </View>
@@ -843,5 +1147,121 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: "right",
     marginTop: Spacing.sm,
+  },
+  // Header actions
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+  },
+  headerActionButton: {
+    paddingVertical: Spacing.sm,
+  },
+  headerActionText: {
+    fontSize: 16,
+    color: PRIMARY_COLOR,
+    fontWeight: "500",
+  },
+  // Cover editor styles
+  coverEditorContent: {
+    flex: 1,
+    padding: Spacing.lg,
+  },
+  coverSection: {
+    marginBottom: Spacing.xl,
+  },
+  coverSectionTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: Spacing.sm,
+  },
+  coverPhotoSelector: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 2,
+    borderStyle: "dashed",
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+  },
+  coverPhotoPreview: {
+    width: "100%",
+    height: "100%",
+  },
+  coverPhotoPlaceholder: {
+    alignItems: "center",
+  },
+  coverPhotoPlaceholderIcon: {
+    fontSize: 32,
+    marginBottom: Spacing.xs,
+  },
+  coverPhotoPlaceholderText: {
+    fontSize: 12,
+    textAlign: "center",
+  },
+  coverInput: {
+    borderRadius: Spacing.sm,
+    padding: Spacing.md,
+    fontSize: 16,
+    borderWidth: 1,
+  },
+  colorThemeGrid: {
+    flexDirection: "row",
+    gap: Spacing.md,
+  },
+  colorThemeItem: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  colorThemeCheck: {
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  colorThemeLabels: {
+    flexDirection: "row",
+    marginTop: Spacing.xs,
+    gap: Spacing.md,
+  },
+  colorThemeLabel: {
+    fontSize: 10,
+    width: 44,
+    textAlign: "center",
+  },
+  coverPreview: {
+    width: "100%",
+    aspectRatio: 1,
+    borderRadius: Spacing.md,
+    padding: Spacing.xl,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  coverPreviewPhoto: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginBottom: Spacing.md,
+    borderWidth: 3,
+    borderColor: "rgba(255,255,255,0.5)",
+  },
+  coverPreviewTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: Spacing.xs,
+  },
+  coverPreviewChildName: {
+    fontSize: 14,
+    textAlign: "center",
+    opacity: 0.9,
+  },
+  coverPreviewDateRange: {
+    fontSize: 12,
+    textAlign: "center",
+    opacity: 0.8,
+    marginTop: Spacing.xs,
   },
 });
