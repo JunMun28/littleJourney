@@ -918,3 +918,40 @@ Reasoning: Integrates photo attachment with voice recording. Builds on VOICE-001
 
 ---
 
+### Task Selection
+Selected: BOOK-002 (Edit AI-curated book selection) - Full implementation
+Priority: 4 (Standard features and implementation)
+Reasoning: Photo book context exists with partial implementation. Missing: add photo from gallery, reorder UI (move up/down), reset to AI. All UI-only changes.
+
+### Implementation Complete
+
+**Task:** BOOK-002 Edit AI-curated book selection
+**PRD Ref:** Photo Book Export - BOOK-002
+
+**Key Decisions:**
+- Added addPage() function to photo-book-context for adding new photos
+- Add Photo button in header bar opens ImagePicker.launchImageLibraryAsync
+- Move up/down buttons on each photo page card (not on title page)
+- Move buttons use reorderPage() already in context but now exposed in UI
+- Regenerate button serves as "reset to AI suggestion" per existing functionality
+- Pages can't move to position 0 (title is always first)
+- Move buttons disabled when at boundaries (first photo can't move up, last can't move down)
+
+**Files Changed:**
+- MODIFIED: contexts/photo-book-context.tsx (+addPage function, +interface update)
+- MODIFIED: app/photo-book.tsx (+Add Photo button, +move up/down UI, +handlers, +styles)
+- MODIFIED: __tests__/app/photo-book.test.tsx (+8 BOOK-002 tests, +ImagePicker mock)
+
+**Verification:**
+- tsc --noEmit: PASS
+- npm run lint: PASS (pre-existing expo-blur issue)
+- npm test (photo-book): 24/24 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- BOOK-002 complete: Open book preview, remove photo, add different photo, reorder via move buttons, changes saved, regenerate resets
+- Using move up/down buttons instead of drag-and-drop (simpler, no gesture handler lib needed)
+- Photo Book Export category now 1/9 complete
+
+---
+

@@ -15,6 +15,7 @@ import {
   useColorScheme,
 } from "react-native";
 import { router } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
 import {
   usePhotoBook,
   type PhotoBookPage,
@@ -34,18 +35,26 @@ type ColorScheme = (typeof Colors)["light"];
 function PageCard({
   page,
   index,
+  totalPages,
   onEditCaption,
   onRemove,
+  onMoveUp,
+  onMoveDown,
   colors,
 }: {
   page: PhotoBookPage;
   index: number;
+  totalPages: number;
   onEditCaption: (page: PhotoBookPage) => void;
   onRemove: (pageId: string) => void;
+  onMoveUp: (index: number) => void;
+  onMoveDown: (index: number) => void;
   colors: ColorScheme;
 }) {
   const isTitle = page.type === "title";
   const isMilestone = page.type === "milestone";
+  const canMoveUp = !isTitle && index > 1; // Can't move to position 0 (title)
+  const canMoveDown = !isTitle && index < totalPages - 1;
 
   return (
     <View
@@ -58,6 +67,31 @@ function PageCard({
       <View style={styles.pageNumber}>
         <Text style={styles.pageNumberText}>{index + 1}</Text>
       </View>
+
+      {/* Move buttons for reordering */}
+      {!isTitle && (
+        <View style={styles.moveButtons}>
+          <Pressable
+            testID={`move-up-${page.id}`}
+            style={[styles.moveButton, !canMoveUp && styles.moveButtonDisabled]}
+            onPress={() => canMoveUp && onMoveUp(index)}
+            disabled={!canMoveUp}
+          >
+            <Text style={styles.moveButtonText}>↑</Text>
+          </Pressable>
+          <Pressable
+            testID={`move-down-${page.id}`}
+            style={[
+              styles.moveButton,
+              !canMoveDown && styles.moveButtonDisabled,
+            ]}
+            onPress={() => canMoveDown && onMoveDown(index)}
+            disabled={!canMoveDown}
+          >
+            <Text style={styles.moveButtonText}>↓</Text>
+          </Pressable>
+        </View>
+      )}
 
       {isTitle ? (
         <View
@@ -151,7 +185,9 @@ export default function PhotoBookScreen() {
     isExporting,
     canExportPdf,
     generatePhotoBook,
+    reorderPage,
     removePage,
+    addPage,
     updatePageCaption,
     clearPhotoBook,
     exportPdf,
@@ -231,6 +267,35 @@ export default function PhotoBookScreen() {
     );
   };
 
+  const handleAddPhoto = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false,
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      addPage({
+        type: "photo",
+        imageUri: result.assets[0].uri,
+        date: new Date().toISOString(),
+      });
+    }
+  };
+
+  const handleMoveUp = (index: number) => {
+    if (index > 1) {
+      // Can't move to position 0 (title)
+      reorderPage(index, index - 1);
+    }
+  };
+
+  const handleMoveDown = (index: number) => {
+    if (index < pages.length - 1) {
+      reorderPage(index, index + 1);
+    }
+  };
+
   const renderPage = ({
     item,
     index,
@@ -241,8 +306,11 @@ export default function PhotoBookScreen() {
     <PageCard
       page={item}
       index={index}
+      totalPages={pages.length}
       onEditCaption={handleEditCaption}
       onRemove={handleRemovePage}
+      onMoveUp={handleMoveUp}
+      onMoveDown={handleMoveDown}
       colors={colors}
     />
   );
@@ -286,7 +354,13 @@ export default function PhotoBookScreen() {
         <Text style={[styles.headerTitle, { color: colors.text }]}>
           Photo Book
         </Text>
-        <View style={{ width: 60 }} />
+        <Pressable
+          testID="add-photo-button"
+          style={styles.addPhotoButton}
+          onPress={handleAddPhoto}
+        >
+          <Text style={styles.addPhotoButtonText}>+ Add</Text>
+        </Pressable>
       </View>
 
       {/* Stats Bar */}
@@ -440,6 +514,15 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "600",
   },
+  addPhotoButton: {
+    paddingVertical: Spacing.sm,
+    paddingLeft: Spacing.lg,
+  },
+  addPhotoButtonText: {
+    fontSize: 16,
+    color: PRIMARY_COLOR,
+    fontWeight: "500",
+  },
   statsBar: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -489,6 +572,30 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 12,
     fontWeight: "600",
+  },
+  moveButtons: {
+    position: "absolute",
+    top: Spacing.sm,
+    right: Spacing.sm,
+    flexDirection: "row",
+    gap: Spacing.xs,
+    zIndex: 1,
+  },
+  moveButton: {
+    backgroundColor: "rgba(0,0,0,0.6)",
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  moveButtonDisabled: {
+    opacity: 0.3,
+  },
+  moveButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "700",
   },
   titlePage: {
     padding: Spacing.xxl,

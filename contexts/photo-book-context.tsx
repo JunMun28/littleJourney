@@ -192,6 +192,7 @@ interface PhotoBookContextType {
   generatePhotoBook: () => Promise<void>;
   reorderPage: (fromIndex: number, toIndex: number) => void;
   removePage: (pageId: string) => void;
+  addPage: (page: Omit<PhotoBookPage, "id">) => void;
   updatePageCaption: (pageId: string, caption: string) => void;
   clearPhotoBook: () => void;
   exportPdf: () => Promise<void>;
@@ -319,6 +320,14 @@ export function PhotoBookProvider({ children }: { children: React.ReactNode }) {
     setPages((current) => current.filter((p) => p.id !== pageId));
   }, []);
 
+  const addPage = useCallback((page: Omit<PhotoBookPage, "id">) => {
+    const newPage: PhotoBookPage = {
+      ...page,
+      id: `page-${page.type}-${Date.now()}`,
+    };
+    setPages((current) => [...current, newPage]);
+  }, []);
+
   const updatePageCaption = useCallback((pageId: string, caption: string) => {
     setPages((current) =>
       current.map((p) => (p.id === pageId ? { ...p, caption } : p)),
@@ -370,6 +379,7 @@ export function PhotoBookProvider({ children }: { children: React.ReactNode }) {
         generatePhotoBook,
         reorderPage,
         removePage,
+        addPage,
         updatePageCaption,
         clearPhotoBook,
         exportPdf,

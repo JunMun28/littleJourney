@@ -48,7 +48,7 @@
         "Verify can reset to AI suggestion"
       ],
       "acceptanceCriteria": "Parents can modify AI selection before finalizing book",
-      "passes": false
+      "passes": true
     },
     {
       "id": "BOOK-003",
