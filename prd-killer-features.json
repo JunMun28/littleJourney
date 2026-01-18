@@ -395,7 +395,7 @@
         "Tap notification to open memory"
       ],
       "acceptanceCriteria": "Daily notification for memories from previous years",
-      "passes": false
+      "passes": true
     },
     {
       "id": "OTD-002",

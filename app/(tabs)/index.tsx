@@ -415,12 +415,16 @@ export default function FeedScreen() {
   const { canUpload, canUploadVideo, addUsage, tier, usedBytes } = useStorage();
   const {
     recordEntryPosted,
-    sendMemoriesNotification,
     sendStorageWarningNotification,
     sendPhotoBookBirthdayPrompt,
     settings,
   } = useNotifications();
-  const { memories: onThisDayMemories, dismissMemory } = useOnThisDay();
+  const {
+    memories: onThisDayMemories,
+    dismissMemory,
+    sendMemoriesNotificationIfNeeded,
+    notificationSentToday,
+  } = useOnThisDay();
   const {
     draft,
     hasDraft,
@@ -479,17 +483,23 @@ export default function FeedScreen() {
   const hasSentMemoriesNotification = useRef(false);
   const hasSentBirthdayPrompt = useRef(false);
 
-  // Send "On This Day" memories notification once per session (PRD Section 4.5)
+  // OTD-001: Send "On This Day" memories notification once per session
   useEffect(() => {
     if (
       !hasSentMemoriesNotification.current &&
+      !notificationSentToday &&
       onThisDayMemories.length > 0 &&
       settings.memories
     ) {
       hasSentMemoriesNotification.current = true;
-      sendMemoriesNotification(onThisDayMemories.length);
+      sendMemoriesNotificationIfNeeded();
     }
-  }, [onThisDayMemories.length, settings.memories, sendMemoriesNotification]);
+  }, [
+    onThisDayMemories.length,
+    settings.memories,
+    notificationSentToday,
+    sendMemoriesNotificationIfNeeded,
+  ]);
 
   // Check for child's first birthday and prompt photo book creation (PRD Section 10.1)
   useEffect(() => {

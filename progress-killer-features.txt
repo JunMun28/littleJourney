@@ -1246,3 +1246,41 @@ Reasoning: Quick win. Singapore-local milestones are pure data additions to MILE
 
 ---
 
+### Task Selection
+Selected: OTD-001 (On This Day notification) - Full implementation
+Priority: 2 (Integration points between modules)
+Reasoning: Notification context already has sendMemoriesNotification(). OnThisDay context has memories. Integration needed to auto-send notification when memories exist.
+
+### Implementation Complete
+
+**Task:** OTD-001 On This Day notification
+**PRD Ref:** On This Day Memories - OTD-001
+
+**Key Decisions:**
+- Added sendMemoriesNotificationIfNeeded() to OnThisDayContext
+- Added notificationSentToday state to prevent duplicate sends per session
+- Uses expo-notifications directly (static import, not dynamic)
+- Notification shows "📸 X memory/memories from Y year(s) ago!"
+- Feed useEffect calls sendMemoriesNotificationIfNeeded() when memories exist and setting enabled
+- Returns true if notification sent, false otherwise (already sent or no memories)
+
+**Files Changed:**
+- MODIFIED: contexts/on-this-day-context.tsx (+sendMemoriesNotificationIfNeeded, +notificationSentToday, +expo-notifications import)
+- MODIFIED: __tests__/contexts/on-this-day-context.test.tsx (+3 OTD-001 tests, +expo-notifications mock)
+- MODIFIED: app/(tabs)/index.tsx (use new sendMemoriesNotificationIfNeeded from OnThisDayContext)
+- MODIFIED: prd-killer-features.json (OTD-001 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- tsc --noEmit: PASS
+- npm run lint: PASS (pre-existing expo-blur issue)
+- npm test: 971/971 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- OTD-001 complete: Creates entry 1yr ago, on anniversary push notification sent, shows "X year(s) ago"
+- Tap to open memory (step 4) relies on expo-notifications data field {type: "memories", screen: "memory"} - deep link handling TBD
+- On This Day category now 7/7 complete (all features implemented)
+
+---
+

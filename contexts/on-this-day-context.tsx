@@ -6,6 +6,7 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
+import * as Notifications from "expo-notifications";
 import { useEntries, type Entry } from "@/contexts/entry-context";
 
 /**
@@ -84,6 +85,10 @@ interface OnThisDayContextValue {
   sharedMemories: SharedMemory[];
   /** Check if a memory has been shared */
   isMemoryShared: (memoryId: string) => boolean;
+  /** OTD-001: Send memories notification if needed (returns true if sent) */
+  sendMemoriesNotificationIfNeeded: () => Promise<boolean>;
+  /** OTD-001: Whether notification was already sent today */
+  notificationSentToday: boolean;
 }
 
 const OnThisDayContext = createContext<OnThisDayContextValue | null>(null);
@@ -107,6 +112,8 @@ export function OnThisDayProvider({ children }: OnThisDayProviderProps) {
   const [sharedMemoriesState, setSharedMemoriesState] = useState<
     SharedMemory[]
   >([]);
+  // OTD-001: Track if notification was sent today
+  const [notificationSentToday, setNotificationSentToday] = useState(false);
 
   // Build memories from entries, calculating years ago for each
   const allMemories = useMemo(() => {
@@ -240,6 +247,42 @@ export function OnThisDayProvider({ children }: OnThisDayProviderProps) {
     [sharedMemoriesState],
   );
 
+  // OTD-001: Send memories notification if needed
+  // Returns true if notification was sent, false otherwise
+  const sendMemoriesNotificationIfNeeded =
+    useCallback(async (): Promise<boolean> => {
+      // Don't send if already sent today or no memories
+      if (notificationSentToday || memories.length === 0) {
+        return false;
+      }
+
+      // Mark as sent before actually sending to prevent double-send
+      setNotificationSentToday(true);
+
+      // Schedule local notification with expo-notifications
+      try {
+        const memoriesWord = memories.length === 1 ? "memory" : "memories";
+        const yearsAgo = memories[0]?.yearsAgo ?? 1;
+        const yearsWord = yearsAgo === 1 ? "year" : "years";
+
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: `📸 ${memories.length} ${memoriesWord} from ${yearsAgo} ${yearsWord} ago!`,
+            body: "Take a trip down memory lane and see what happened on this day.",
+            data: { type: "memories", screen: "memory" },
+          },
+          trigger: null, // Send immediately
+        });
+
+        return true;
+      } catch (error) {
+        // Reset if notification failed so user can retry
+        setNotificationSentToday(false);
+        console.error("Failed to send memories notification:", error);
+        return false;
+      }
+    }, [notificationSentToday, memories]);
+
   const value: OnThisDayContextValue = {
     memories,
     hasMemoriesToday,
@@ -252,6 +295,9 @@ export function OnThisDayProvider({ children }: OnThisDayProviderProps) {
     shareMemoryWithFamily,
     sharedMemories: sharedMemoriesState,
     isMemoryShared,
+    // OTD-001
+    sendMemoriesNotificationIfNeeded,
+    notificationSentToday,
   };
 
   return (
