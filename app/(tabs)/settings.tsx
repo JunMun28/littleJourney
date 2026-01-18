@@ -1086,6 +1086,36 @@ export default function SettingsScreen() {
         </Text>
       </View>
 
+      {/* Community Section - COMMUNITY-001 */}
+      <View style={[styles.section, { backgroundColor: colors.card }]}>
+        <Text style={[styles.sectionHeader, { color: colors.textSecondary }]}>
+          Community
+        </Text>
+
+        <Pressable
+          style={[styles.settingRow, { borderBottomColor: colors.border }]}
+          onPress={() => router.push("/community")}
+          testID="community-questions-link"
+        >
+          <View style={styles.settingInfo}>
+            <Text style={[styles.settingLabel, { color: colors.text }]}>
+              💬 Ask Community
+            </Text>
+            <Text
+              style={[
+                styles.settingDescription,
+                { color: colors.textSecondary },
+              ]}
+            >
+              Ask anonymous questions to other parents
+            </Text>
+          </View>
+          <Text style={[styles.legalLinkArrow, { color: colors.textMuted }]}>
+            →
+          </Text>
+        </Pressable>
+      </View>
+
       {/* Legal Section */}
       <View style={[styles.section, { backgroundColor: colors.card }]}>
         <Text style={[styles.sectionHeader, { color: colors.textSecondary }]}>

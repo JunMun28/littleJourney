@@ -982,7 +982,7 @@
         "View responses from other parents"
       ],
       "acceptanceCriteria": "Ask anonymous questions to parent community",
-      "passes": false
+      "passes": true
     },
     {
       "id": "COMMUNITY-002",

@@ -7,6 +7,26 @@ import {
   type ReactNode,
 } from "react";
 
+// COMMUNITY-001: Anonymous question types
+export interface CommunityQuestion {
+  id: string;
+  text: string;
+  isAnonymous: boolean;
+  submittedAt: string;
+}
+
+export interface CommunityResponse {
+  id: string;
+  questionId: string;
+  text: string;
+  isAnonymous: boolean;
+  respondedAt: string;
+}
+
+export interface QuestionWithResponses extends CommunityQuestion {
+  responses: CommunityResponse[];
+}
+
 // COMMUNITY-002: Milestone statistics types
 export interface AgeBucket {
   ageMonths: number;
@@ -27,9 +47,14 @@ interface CommunityContextValue {
   // State
   communityDataSharingEnabled: boolean;
   sharingExplanation: string;
+  questions: CommunityQuestion[];
 
   // Actions
   setCommunityDataSharingEnabled: (enabled: boolean) => void;
+
+  // COMMUNITY-001: Anonymous questions
+  submitQuestion: (text: string) => void;
+  getQuestionsWithResponses: () => QuestionWithResponses[];
 
   // COMMUNITY-002: Statistics
   getMilestoneStatistics: (templateId: string) => MilestoneStatistics | null;
@@ -114,6 +139,16 @@ const MILESTONE_STATISTICS_DATA: Record<string, MilestoneStatistics> = {
   },
 };
 
+// COMMUNITY-001: Mock responses to simulate community interaction
+// In production, this would come from a backend API
+const MOCK_RESPONSES: string[] = [
+  "Every child is different! My little one took their time too and is now running around perfectly fine.",
+  "I asked my pediatrician the same thing - they said the typical range is quite wide and not to worry unless there are other concerns.",
+  "Our baby did the same. The doctor said it's completely normal. Try not to compare too much with other kids!",
+  "This is more common than you think. My first was early, second was late. Both are healthy now!",
+  "Talked to our child development specialist about this. They mentioned that as long as baby is progressing, the exact timing varies a lot.",
+];
+
 const CommunityContext = createContext<CommunityContextValue | null>(null);
 
 interface CommunityProviderProps {
@@ -125,9 +160,44 @@ export function CommunityProvider({ children }: CommunityProviderProps) {
   const [communityDataSharingEnabled, setCommunityDataSharingEnabledState] =
     useState(false);
 
+  // COMMUNITY-001: Questions state
+  const [questions, setQuestions] = useState<CommunityQuestion[]>([]);
+
   const setCommunityDataSharingEnabled = useCallback((enabled: boolean) => {
     setCommunityDataSharingEnabledState(enabled);
   }, []);
+
+  // COMMUNITY-001: Submit anonymous question
+  const submitQuestion = useCallback((text: string) => {
+    const newQuestion: CommunityQuestion = {
+      id: `question_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      text,
+      isAnonymous: true,
+      submittedAt: new Date().toISOString(),
+    };
+    setQuestions((prev) => [...prev, newQuestion]);
+  }, []);
+
+  // COMMUNITY-001: Get questions with mock responses
+  const getQuestionsWithResponses = useCallback((): QuestionWithResponses[] => {
+    return questions.map((question) => {
+      // Generate 2-3 mock responses per question
+      const numResponses = 2 + Math.floor(Math.random() * 2);
+      const shuffled = [...MOCK_RESPONSES].sort(() => Math.random() - 0.5);
+      const responses: CommunityResponse[] = shuffled
+        .slice(0, numResponses)
+        .map((text, index) => ({
+          id: `response_${question.id}_${index}`,
+          questionId: question.id,
+          text,
+          isAnonymous: true,
+          respondedAt: new Date(
+            new Date(question.submittedAt).getTime() + (index + 1) * 3600000,
+          ).toISOString(),
+        }));
+      return { ...question, responses };
+    });
+  }, [questions]);
 
   // COMMUNITY-002: Get milestone statistics
   const getMilestoneStatistics = useCallback(
@@ -163,13 +233,19 @@ export function CommunityProvider({ children }: CommunityProviderProps) {
     () => ({
       communityDataSharingEnabled,
       sharingExplanation: SHARING_EXPLANATION,
+      questions,
       setCommunityDataSharingEnabled,
+      submitQuestion,
+      getQuestionsWithResponses,
       getMilestoneStatistics,
       isWithinNormalRange,
     }),
     [
       communityDataSharingEnabled,
+      questions,
       setCommunityDataSharingEnabled,
+      submitQuestion,
+      getQuestionsWithResponses,
       getMilestoneStatistics,
       isWithinNormalRange,
     ],

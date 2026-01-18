@@ -724,6 +724,34 @@ describe("SettingsScreen - COMMUNITY-003 Community Data Sharing", () => {
     });
   });
 
+  // COMMUNITY-001: Community questions link
+  it("shows community questions link in settings", async () => {
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("community-questions-link")).toBeTruthy();
+    });
+  });
+
+  it("displays Ask Community text in community link", async () => {
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("💬 Ask Community")).toBeTruthy();
+    });
+  });
+
+  it("renders community questions link", async () => {
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("community-questions-link")).toBeTruthy();
+      expect(
+        screen.getByText("Ask anonymous questions to other parents"),
+      ).toBeTruthy();
+    });
+  });
+
   // PAY-006: Upgrade tier with proration tests
   describe("subscription upgrade", () => {
     it("shows upgrade button in settings when on free tier", async () => {

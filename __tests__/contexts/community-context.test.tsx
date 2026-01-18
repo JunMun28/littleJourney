@@ -231,4 +231,137 @@ describe("CommunityContext", () => {
       });
     });
   });
+
+  // COMMUNITY-001: Anonymous milestone questions
+  describe("submitQuestion", () => {
+    it("should submit an anonymous question", async () => {
+      let contextValues: ReturnType<typeof useCommunity> | null = null;
+      renderWithProvider((values) => {
+        contextValues = values;
+      });
+
+      await act(async () => {
+        contextValues!.setCommunityDataSharingEnabled(true);
+      });
+
+      await act(async () => {
+        contextValues!.submitQuestion("Is 14 months late for first steps?");
+      });
+
+      await waitFor(() => {
+        expect(contextValues!.questions.length).toBe(1);
+        expect(contextValues!.questions[0].text).toBe(
+          "Is 14 months late for first steps?",
+        );
+        expect(contextValues!.questions[0].isAnonymous).toBe(true);
+      });
+    });
+
+    it("should assign a unique id to each question", async () => {
+      let contextValues: ReturnType<typeof useCommunity> | null = null;
+      renderWithProvider((values) => {
+        contextValues = values;
+      });
+
+      await act(async () => {
+        contextValues!.setCommunityDataSharingEnabled(true);
+      });
+
+      await act(async () => {
+        contextValues!.submitQuestion("Question 1");
+        contextValues!.submitQuestion("Question 2");
+      });
+
+      await waitFor(() => {
+        expect(contextValues!.questions.length).toBe(2);
+        expect(contextValues!.questions[0].id).not.toBe(
+          contextValues!.questions[1].id,
+        );
+      });
+    });
+
+    it("should include timestamp in question", async () => {
+      let contextValues: ReturnType<typeof useCommunity> | null = null;
+      renderWithProvider((values) => {
+        contextValues = values;
+      });
+
+      const beforeSubmit = new Date().toISOString();
+
+      await act(async () => {
+        contextValues!.setCommunityDataSharingEnabled(true);
+      });
+
+      await act(async () => {
+        contextValues!.submitQuestion("Test question");
+      });
+
+      await waitFor(() => {
+        expect(contextValues!.questions[0].submittedAt).toBeDefined();
+        expect(
+          new Date(contextValues!.questions[0].submittedAt).getTime(),
+        ).toBeGreaterThanOrEqual(new Date(beforeSubmit).getTime());
+      });
+    });
+  });
+
+  describe("getQuestionsWithResponses", () => {
+    it("should return questions with mock responses", async () => {
+      let contextValues: ReturnType<typeof useCommunity> | null = null;
+      renderWithProvider((values) => {
+        contextValues = values;
+      });
+
+      await act(async () => {
+        contextValues!.setCommunityDataSharingEnabled(true);
+      });
+
+      await act(async () => {
+        contextValues!.submitQuestion("When should baby start walking?");
+      });
+
+      await waitFor(() => {
+        const questionsWithResponses =
+          contextValues!.getQuestionsWithResponses();
+        expect(questionsWithResponses.length).toBe(1);
+        // Should have mock responses
+        expect(questionsWithResponses[0].responses.length).toBeGreaterThan(0);
+      });
+    });
+
+    it("should return responses as anonymous", async () => {
+      let contextValues: ReturnType<typeof useCommunity> | null = null;
+      renderWithProvider((values) => {
+        contextValues = values;
+      });
+
+      await act(async () => {
+        contextValues!.setCommunityDataSharingEnabled(true);
+      });
+
+      await act(async () => {
+        contextValues!.submitQuestion("Test question");
+      });
+
+      await waitFor(() => {
+        const questionsWithResponses =
+          contextValues!.getQuestionsWithResponses();
+        const responses = questionsWithResponses[0].responses;
+        responses.forEach((response) => {
+          expect(response.isAnonymous).toBe(true);
+        });
+      });
+    });
+  });
+
+  describe("questions state", () => {
+    it("should start with empty questions array", () => {
+      let contextValues: ReturnType<typeof useCommunity> | null = null;
+      renderWithProvider((values) => {
+        contextValues = values;
+      });
+
+      expect(contextValues!.questions).toEqual([]);
+    });
+  });
 });
