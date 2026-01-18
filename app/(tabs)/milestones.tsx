@@ -11,6 +11,7 @@ import {
   Platform,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { useRouter } from "expo-router";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -62,6 +63,7 @@ function getCountdownText(milestoneDate: string): string {
 export default function MilestonesScreen() {
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
+  const router = useRouter();
 
   // TanStack Query hooks for milestone operations
   const { milestones, upcomingMilestones, completedMilestones } =
@@ -302,6 +304,23 @@ export default function MilestonesScreen() {
 
   return (
     <ThemedView style={styles.container}>
+      {/* Badges button */}
+      <Pressable
+        style={[styles.badgesButton, { backgroundColor: colors.card }]}
+        onPress={() => router.push("/badges")}
+        testID="badges-button"
+      >
+        <Text style={styles.badgesButtonIcon}>🏆</Text>
+        <Text style={[styles.badgesButtonText, { color: colors.text }]}>
+          View Badges
+        </Text>
+        <Text
+          style={[styles.badgesButtonArrow, { color: colors.textSecondary }]}
+        >
+          →
+        </Text>
+      </Pressable>
+
       {milestones.length === 0 ? (
         renderEmptyState()
       ) : (
@@ -650,6 +669,26 @@ export default function MilestonesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  badgesButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    margin: Spacing.md,
+    marginBottom: 0,
+    padding: Spacing.md,
+    borderRadius: 12,
+  },
+  badgesButtonIcon: {
+    fontSize: 24,
+    marginRight: Spacing.sm,
+  },
+  badgesButtonText: {
+    fontSize: 16,
+    fontWeight: "500",
+    flex: 1,
+  },
+  badgesButtonArrow: {
+    fontSize: 18,
   },
   scrollView: {
     flex: 1,

@@ -924,7 +924,7 @@
         "Share badge to social media"
       ],
       "acceptanceCriteria": "Earn collectible badges for completing milestones",
-      "passes": false
+      "passes": true
     },
     {
       "id": "GAME-002",

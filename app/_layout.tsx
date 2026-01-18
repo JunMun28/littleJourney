@@ -42,6 +42,7 @@ import { GrowthTrackingProvider } from "@/contexts/growth-tracking-context";
 import { TimeCapsuleProvider } from "@/contexts/time-capsule-context";
 import { OnThisDayProvider } from "@/contexts/on-this-day-context";
 import { VoiceJournalProvider } from "@/contexts/voice-journal-context";
+import { GamificationProvider } from "@/contexts/gamification-context";
 
 function RootLayoutNav() {
   const { isAuthenticated, isLoading, hasCompletedOnboarding, user } =
@@ -154,20 +155,22 @@ export default function RootLayout() {
                                 <TimeCapsuleProvider>
                                   <OnThisDayProvider>
                                     <VoiceJournalProvider>
-                                      <ExportProvider>
-                                        <PhotoBookProvider>
-                                          <ThemeProvider
-                                            value={
-                                              colorScheme === "dark"
-                                                ? DarkTheme
-                                                : DefaultTheme
-                                            }
-                                          >
-                                            <RootLayoutNav />
-                                            <StatusBar style="auto" />
-                                          </ThemeProvider>
-                                        </PhotoBookProvider>
-                                      </ExportProvider>
+                                      <GamificationProvider>
+                                        <ExportProvider>
+                                          <PhotoBookProvider>
+                                            <ThemeProvider
+                                              value={
+                                                colorScheme === "dark"
+                                                  ? DarkTheme
+                                                  : DefaultTheme
+                                              }
+                                            >
+                                              <RootLayoutNav />
+                                              <StatusBar style="auto" />
+                                            </ThemeProvider>
+                                          </PhotoBookProvider>
+                                        </ExportProvider>
+                                      </GamificationProvider>
                                     </VoiceJournalProvider>
                                   </OnThisDayProvider>
                                 </TimeCapsuleProvider>
