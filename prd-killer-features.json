@@ -881,7 +881,7 @@
         "Check 'First Zoo Visit' milestone"
       ],
       "acceptanceCriteria": "Singapore-specific milestone templates available",
-      "passes": false
+      "passes": true
     },
     {
       "id": "SGLOCAL-004",

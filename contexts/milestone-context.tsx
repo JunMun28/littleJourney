@@ -164,6 +164,26 @@ export const MILESTONE_TEMPLATES: MilestoneTemplate[] = [
     description: "Starting preschool or childcare",
     culturalTradition: "universal",
   },
+
+  // Singapore Local Milestones (SGLOCAL-003)
+  {
+    id: "first_hawker_food",
+    title: "First Hawker Food",
+    description: "Baby's first meal at a hawker centre",
+    culturalTradition: "universal",
+  },
+  {
+    id: "first_mrt_ride",
+    title: "First MRT Ride",
+    description: "Baby's first ride on the MRT",
+    culturalTradition: "universal",
+  },
+  {
+    id: "first_zoo_visit",
+    title: "First Zoo Visit",
+    description: "Baby's first visit to Singapore Zoo",
+    culturalTradition: "universal",
+  },
 ];
 
 interface MilestoneContextValue {

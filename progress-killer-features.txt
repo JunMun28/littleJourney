@@ -1209,3 +1209,40 @@ Reasoning: Completes Gamification category (4/4). Child context already has date
 
 ---
 
+### Task Selection
+Selected: SGLOCAL-003 (Local milestone suggestions)
+Priority: 5 (Polish, cleanup, and quick wins)
+Reasoning: Quick win. Singapore-local milestones are pure data additions to MILESTONE_TEMPLATES. No architectural changes or external dependencies.
+
+### Implementation Complete
+
+**Task:** SGLOCAL-003 Local milestone suggestions
+**PRD Ref:** Singapore Local - SGLOCAL-003
+
+**Key Decisions:**
+- Added 3 Singapore-specific milestones to MILESTONE_TEMPLATES
+- First Hawker Food: Baby's first meal at a hawker centre
+- First MRT Ride: Baby's first ride on the MRT
+- First Zoo Visit: Baby's first visit to Singapore Zoo
+- All marked as culturalTradition: "universal" so they appear for all families
+- Follows existing milestone template pattern
+
+**Files Changed:**
+- MODIFIED: contexts/milestone-context.tsx (+20 lines for 3 SG milestones)
+- MODIFIED: __tests__/contexts/milestone-context.test.tsx (+4 SGLOCAL-003 tests)
+- MODIFIED: prd-killer-features.json (SGLOCAL-003 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- tsc --noEmit: PASS
+- npm run lint: PASS (pre-existing expo-blur issue)
+- npm test: 968/968 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- SGLOCAL-003 complete: View milestone suggestions, SG-specific milestones appear
+- Milestones visible to all families since marked as universal
+- Singapore Local category now 1/5 complete
+
+---
+

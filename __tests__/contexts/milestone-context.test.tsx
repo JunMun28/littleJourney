@@ -237,4 +237,47 @@ describe("MilestoneContext", () => {
       MILESTONE_TEMPLATES.find((t) => t.id === "first_steps"),
     ).toBeDefined();
   });
+
+  // SGLOCAL-003: Singapore-specific milestone templates
+  describe("Singapore Local milestones (SGLOCAL-003)", () => {
+    it("includes First Hawker Food milestone", () => {
+      const template = MILESTONE_TEMPLATES.find(
+        (t) => t.id === "first_hawker_food",
+      );
+      expect(template).toBeDefined();
+      expect(template?.title).toBe("First Hawker Food");
+      expect(template?.culturalTradition).toBe("universal");
+    });
+
+    it("includes First MRT Ride milestone", () => {
+      const template = MILESTONE_TEMPLATES.find(
+        (t) => t.id === "first_mrt_ride",
+      );
+      expect(template).toBeDefined();
+      expect(template?.title).toBe("First MRT Ride");
+      expect(template?.culturalTradition).toBe("universal");
+    });
+
+    it("includes First Zoo Visit milestone", () => {
+      const template = MILESTONE_TEMPLATES.find(
+        (t) => t.id === "first_zoo_visit",
+      );
+      expect(template).toBeDefined();
+      expect(template?.title).toBe("First Zoo Visit");
+      expect(template?.culturalTradition).toBe("universal");
+    });
+
+    it("all SG local milestones are shown for any cultural tradition", () => {
+      const sgMilestones = [
+        "first_hawker_food",
+        "first_mrt_ride",
+        "first_zoo_visit",
+      ];
+      sgMilestones.forEach((id) => {
+        const template = MILESTONE_TEMPLATES.find((t) => t.id === id);
+        // Universal milestones appear for all cultural traditions
+        expect(template?.culturalTradition).toBe("universal");
+      });
+    });
+  });
 });
