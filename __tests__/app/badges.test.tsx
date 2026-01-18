@@ -40,6 +40,13 @@ jest.mock("@/contexts/entry-context", () => ({
   }),
 }));
 
+// Mock child context
+jest.mock("@/contexts/child-context", () => ({
+  useChild: () => ({
+    child: null,
+  }),
+}));
+
 // Mock Share
 jest
   .spyOn(Share, "share")

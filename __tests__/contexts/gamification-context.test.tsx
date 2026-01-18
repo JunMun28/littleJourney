@@ -47,6 +47,14 @@ jest.mock("@/contexts/entry-context", () => ({
   }),
 }));
 
+// Mock child context - default no child
+let mockChild: { dateOfBirth: string } | null = null;
+jest.mock("@/contexts/child-context", () => ({
+  useChild: () => ({
+    child: mockChild,
+  }),
+}));
+
 // Import after mocks
 import {
   GamificationProvider,
@@ -57,7 +65,9 @@ import {
 import {
   calculateStreak,
   calculateMonthlyGoal,
+  calculateFirstYearComplete,
   type StreakData,
+  type FirstYearData,
 } from "@/contexts/gamification-context";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -346,6 +356,92 @@ describe("GamificationContext", () => {
     it("uses default goal of 10 if not specified", () => {
       const result = calculateMonthlyGoal([]);
       expect(result.goalCount).toBe(10);
+    });
+  });
+
+  describe("First year completion (GAME-004)", () => {
+    beforeEach(() => {
+      mockChild = null;
+    });
+
+    it("returns incomplete when no child", () => {
+      const result = calculateFirstYearComplete(null);
+      expect(result.isComplete).toBe(false);
+      expect(result.hasDiscount).toBe(false);
+      expect(result.childAge).toBeNull();
+    });
+
+    it("returns incomplete when child is under 1 year old", () => {
+      const today = new Date();
+      const sixMonthsAgo = new Date(today);
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+      const result = calculateFirstYearComplete({
+        dateOfBirth: sixMonthsAgo.toISOString().split("T")[0],
+      });
+      expect(result.isComplete).toBe(false);
+      expect(result.hasDiscount).toBe(true); // Discount available when not yet claimed
+      expect(result.childAge).toBe(0);
+    });
+
+    it("returns complete when child is exactly 1 year old", () => {
+      const today = new Date();
+      const oneYearAgo = new Date(today);
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+      const result = calculateFirstYearComplete({
+        dateOfBirth: oneYearAgo.toISOString().split("T")[0],
+      });
+      expect(result.isComplete).toBe(true);
+      expect(result.childAge).toBe(1);
+    });
+
+    it("returns complete when child is over 1 year old", () => {
+      const today = new Date();
+      const twoYearsAgo = new Date(today);
+      twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
+
+      const result = calculateFirstYearComplete({
+        dateOfBirth: twoYearsAgo.toISOString().split("T")[0],
+      });
+      expect(result.isComplete).toBe(true);
+      expect(result.childAge).toBe(2);
+    });
+
+    it("calculates days until first birthday", () => {
+      const today = new Date();
+      const elevenMonthsAgo = new Date(today);
+      elevenMonthsAgo.setMonth(elevenMonthsAgo.getMonth() - 11);
+
+      const result = calculateFirstYearComplete({
+        dateOfBirth: elevenMonthsAgo.toISOString().split("T")[0],
+      });
+      expect(result.isComplete).toBe(false);
+      expect(result.daysUntilFirstBirthday).toBeDefined();
+      expect(result.daysUntilFirstBirthday).toBeGreaterThan(0);
+      expect(result.daysUntilFirstBirthday).toBeLessThanOrEqual(31);
+    });
+
+    it("unlocks first_year badge when child is 1+", () => {
+      // Set up mock for child over 1 year
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+      mockChild = { dateOfBirth: oneYearAgo.toISOString().split("T")[0] };
+
+      const { result } = renderHook(() => useGamification(), { wrapper });
+
+      expect(result.current.isBadgeUnlocked("badge_first_year")).toBe(true);
+    });
+
+    it("does not unlock first_year badge when child is under 1", () => {
+      // Set up mock for child under 1 year
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      mockChild = { dateOfBirth: sixMonthsAgo.toISOString().split("T")[0] };
+
+      const { result } = renderHook(() => useGamification(), { wrapper });
+
+      expect(result.current.isBadgeUnlocked("badge_first_year")).toBe(false);
     });
   });
 });

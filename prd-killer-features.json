@@ -968,7 +968,7 @@
         "Receive discount on first photo book"
       ],
       "acceptanceCriteria": "Special reward for completing first year journey",
-      "passes": false
+      "passes": true
     },
     {
       "id": "COMMUNITY-001",

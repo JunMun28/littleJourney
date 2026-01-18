@@ -8,6 +8,7 @@ import {
 } from "react";
 import { useMilestones, MILESTONE_TEMPLATES } from "./milestone-context";
 import { useEntries } from "./entry-context";
+import { useChild } from "./child-context";
 
 // Badge types
 export type BadgeType = "milestone" | "achievement" | "streak" | "special";
@@ -26,6 +27,14 @@ export interface MonthlyGoalData {
   isGoalMet: boolean;
   progressPercent: number;
   monthName: string;
+}
+
+// First year completion data (GAME-004)
+export interface FirstYearData {
+  isComplete: boolean;
+  hasDiscount: boolean;
+  childAge: number | null;
+  daysUntilFirstBirthday?: number;
 }
 
 // Helper to format date as YYYY-MM-DD in local timezone
@@ -124,6 +133,57 @@ export function calculateStreak(entries: { date: string }[]): StreakData {
 
 // Default monthly goal (GAME-003)
 export const DEFAULT_MONTHLY_GOAL = 10;
+
+// Pure function to calculate first year completion (GAME-004)
+export function calculateFirstYearComplete(
+  child: { dateOfBirth: string } | null,
+): FirstYearData {
+  if (!child || !child.dateOfBirth) {
+    return {
+      isComplete: false,
+      hasDiscount: false,
+      childAge: null,
+    };
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const [year, month, day] = child.dateOfBirth.split("-").map(Number);
+  const birthDate = new Date(year, month - 1, day);
+  birthDate.setHours(0, 0, 0, 0);
+
+  // Calculate age in years
+  let ageYears = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < birthDate.getDate())
+  ) {
+    ageYears--;
+  }
+
+  const isComplete = ageYears >= 1;
+
+  // Calculate days until first birthday if not yet 1
+  let daysUntilFirstBirthday: number | undefined;
+  if (!isComplete) {
+    const firstBirthday = new Date(
+      birthDate.getFullYear() + 1,
+      birthDate.getMonth(),
+      birthDate.getDate(),
+    );
+    const diffMs = firstBirthday.getTime() - today.getTime();
+    daysUntilFirstBirthday = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  }
+
+  return {
+    isComplete,
+    hasDiscount: true, // Discount always available for first book
+    childAge: ageYears >= 0 ? ageYears : null,
+    daysUntilFirstBirthday,
+  };
+}
 
 // Pure function to calculate monthly goal progress
 export function calculateMonthlyGoal(
@@ -308,6 +368,8 @@ interface GamificationContextValue {
   streakData: StreakData;
   // Monthly goal data (GAME-003)
   monthlyGoalData: MonthlyGoalData;
+  // First year data (GAME-004)
+  firstYearData: FirstYearData;
   // Methods
   getBadgeById: (id: string) => Badge | undefined;
   isBadgeUnlocked: (badgeId: string) => boolean;
@@ -325,6 +387,7 @@ interface GamificationProviderProps {
 export function GamificationProvider({ children }: GamificationProviderProps) {
   const { completedMilestones } = useMilestones();
   const { entries } = useEntries();
+  const { child } = useChild();
 
   // Track which badges user has seen (for "new" indicator)
   const [seenBadgeIds, setSeenBadgeIds] = useState<string[]>([]);
@@ -336,6 +399,12 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
   const monthlyGoalData = useMemo(
     () => calculateMonthlyGoal(entries),
     [entries],
+  );
+
+  // Calculate first year data (GAME-004)
+  const firstYearData = useMemo(
+    () => calculateFirstYearComplete(child),
+    [child],
   );
 
   // Calculate unlocked badges based on completed milestones and achievements
@@ -368,10 +437,17 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
     // Monthly goal badge (GAME-003)
     if (monthlyGoalData.isGoalMet) unlocked.push("badge_monthly_goal");
 
-    // TODO: First year badge requires child birth date comparison (GAME-004)
+    // First year badge (GAME-004)
+    if (firstYearData.isComplete) unlocked.push("badge_first_year");
 
     return unlocked;
-  }, [completedMilestones, entries, streakData, monthlyGoalData]);
+  }, [
+    completedMilestones,
+    entries,
+    streakData,
+    monthlyGoalData,
+    firstYearData,
+  ]);
 
   const unlockedBadges = useMemo(
     () => BADGE_DEFINITIONS.filter((b) => unlockedBadgeIds.includes(b.id)),
@@ -416,6 +492,7 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
     unlockedCount: unlockedBadges.length,
     streakData,
     monthlyGoalData,
+    firstYearData,
     getBadgeById,
     isBadgeUnlocked,
     markBadgeAsSeen,
