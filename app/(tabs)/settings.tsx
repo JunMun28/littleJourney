@@ -987,6 +987,36 @@ export default function SettingsScreen() {
         </View>
       </View>
 
+      {/* Singapore Local Section - SGLOCAL-001 */}
+      <View style={[styles.section, { backgroundColor: colors.card }]}>
+        <Text style={[styles.sectionHeader, { color: colors.textSecondary }]}>
+          Singapore Local
+        </Text>
+
+        <Pressable
+          style={[styles.settingRow, { borderBottomColor: colors.border }]}
+          onPress={() => router.push("/red-packet")}
+          testID="red-packet-link"
+        >
+          <View style={styles.settingInfo}>
+            <Text style={[styles.settingLabel, { color: colors.text }]}>
+              🧧 Ang Bao Tracker
+            </Text>
+            <Text
+              style={[
+                styles.settingDescription,
+                { color: colors.textSecondary },
+              ]}
+            >
+              Track CNY red packet collections
+            </Text>
+          </View>
+          <Text style={[styles.legalLinkArrow, { color: colors.textMuted }]}>
+            →
+          </Text>
+        </Pressable>
+      </View>
+
       {/* Data & Privacy Section */}
       <View style={[styles.section, { backgroundColor: colors.card }]}>
         <Text style={[styles.sectionHeader, { color: colors.textSecondary }]}>

@@ -768,3 +768,34 @@ describe("SettingsScreen - COMMUNITY-003 Community Data Sharing", () => {
     });
   });
 });
+
+describe("SettingsScreen - SGLOCAL-001 Singapore Local", () => {
+  beforeEach(() => {
+    clearAllMockData();
+  });
+
+  it("renders Singapore Local section", async () => {
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Singapore Local")).toBeTruthy();
+    });
+  });
+
+  it("renders Ang Bao Tracker link", async () => {
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Ang Bao Tracker/)).toBeTruthy();
+    });
+    expect(screen.getByText(/Track CNY red packet collections/)).toBeTruthy();
+  });
+
+  it("has testID for Ang Bao Tracker link", async () => {
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("red-packet-link")).toBeTruthy();
+    });
+  });
+});

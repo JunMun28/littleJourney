@@ -44,6 +44,7 @@ import { OnThisDayProvider } from "@/contexts/on-this-day-context";
 import { VoiceJournalProvider } from "@/contexts/voice-journal-context";
 import { GamificationProvider } from "@/contexts/gamification-context";
 import { CommunityProvider } from "@/contexts/community-context";
+import { RedPacketProvider } from "@/contexts/red-packet-context";
 
 function RootLayoutNav() {
   const { isAuthenticated, isLoading, hasCompletedOnboarding, user } =
@@ -158,20 +159,22 @@ export default function RootLayout() {
                                     <VoiceJournalProvider>
                                       <GamificationProvider>
                                         <CommunityProvider>
-                                          <ExportProvider>
-                                            <PhotoBookProvider>
-                                              <ThemeProvider
-                                                value={
-                                                  colorScheme === "dark"
-                                                    ? DarkTheme
-                                                    : DefaultTheme
-                                                }
-                                              >
-                                                <RootLayoutNav />
-                                                <StatusBar style="auto" />
-                                              </ThemeProvider>
-                                            </PhotoBookProvider>
-                                          </ExportProvider>
+                                          <RedPacketProvider>
+                                            <ExportProvider>
+                                              <PhotoBookProvider>
+                                                <ThemeProvider
+                                                  value={
+                                                    colorScheme === "dark"
+                                                      ? DarkTheme
+                                                      : DefaultTheme
+                                                  }
+                                                >
+                                                  <RootLayoutNav />
+                                                  <StatusBar style="auto" />
+                                                </ThemeProvider>
+                                              </PhotoBookProvider>
+                                            </ExportProvider>
+                                          </RedPacketProvider>
                                         </CommunityProvider>
                                       </GamificationProvider>
                                     </VoiceJournalProvider>

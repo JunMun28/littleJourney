@@ -852,7 +852,7 @@
         "Verify private (not shared with family)"
       ],
       "acceptanceCriteria": "Private tracking of CNY red packet amounts",
-      "passes": false
+      "passes": true
     },
     {
       "id": "SGLOCAL-002",
