@@ -238,6 +238,57 @@ describe("MilestoneContext", () => {
     ).toBeDefined();
   });
 
+  // SGLOCAL-002: Bilingual first words
+  describe("bilingual first words (SGLOCAL-002)", () => {
+    it("provides LANGUAGE_LABELS constant", () => {
+      const { LANGUAGE_LABELS } = require("@/contexts/milestone-context");
+      expect(LANGUAGE_LABELS).toBeDefined();
+      expect(LANGUAGE_LABELS.english).toBe("English");
+      expect(LANGUAGE_LABELS.mandarin).toBe("Mandarin (华语)");
+      expect(LANGUAGE_LABELS.malay).toBe("Malay (Bahasa Melayu)");
+      expect(LANGUAGE_LABELS.tamil).toBe("Tamil (தமிழ்)");
+    });
+
+    it("includes first_words template", () => {
+      const template = MILESTONE_TEMPLATES.find((t) => t.id === "first_words");
+      expect(template).toBeDefined();
+      expect(template?.title).toBe("First Words");
+      expect(template?.culturalTradition).toBe("universal");
+    });
+
+    it("supports FirstWordLanguage type", () => {
+      // TypeScript compile-time check - this will fail to compile if types are wrong
+      const languages: Array<
+        import("@/contexts/milestone-context").FirstWordLanguage
+      > = ["english", "mandarin", "malay", "tamil"];
+      expect(languages).toHaveLength(4);
+    });
+
+    it("supports FirstWordData in milestone", () => {
+      // Type check - FirstWordData structure
+      const mockFirstWordData: import("@/contexts/milestone-context").FirstWordData =
+        {
+          word: "妈妈",
+          romanization: "māmā",
+          language: "mandarin",
+        };
+      expect(mockFirstWordData.word).toBe("妈妈");
+      expect(mockFirstWordData.romanization).toBe("māmā");
+      expect(mockFirstWordData.language).toBe("mandarin");
+    });
+
+    it("allows FirstWordData without romanization", () => {
+      const mockFirstWordData: import("@/contexts/milestone-context").FirstWordData =
+        {
+          word: "Mama",
+          language: "english",
+        };
+      expect(mockFirstWordData.word).toBe("Mama");
+      expect(mockFirstWordData.romanization).toBeUndefined();
+      expect(mockFirstWordData.language).toBe("english");
+    });
+  });
+
   // SGLOCAL-003: Singapore-specific milestone templates
   describe("Singapore Local milestones (SGLOCAL-003)", () => {
     it("includes First Hawker Food milestone", () => {

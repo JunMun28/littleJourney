@@ -710,4 +710,268 @@ describe("MilestonesScreen", () => {
       expect(screen.queryByText(/Test Baby/i)).toBeNull();
     });
   });
+
+  // SGLOCAL-002: Bilingual first words
+  describe("bilingual first words (SGLOCAL-002)", () => {
+    // Helper to open First Words modal (waits for child to load)
+    const openFirstWordsModal = async () => {
+      // Open template selection
+      await waitFor(() => {
+        expect(screen.getByText("Add First Milestone")).toBeTruthy();
+      });
+      fireEvent.press(screen.getByText("Add First Milestone"));
+
+      // Wait for child-specific templates to appear (Full Month requires child with chinese tradition)
+      // This ensures the child data is fully loaded before selecting First Words
+      await waitFor(() => {
+        expect(screen.getByText(/Full Month/)).toBeTruthy();
+      });
+
+      // Select First Words template - should open special modal
+      fireEvent.press(screen.getByTestId("template-first_words"));
+
+      // Wait for First Words modal to appear
+      await waitFor(() => {
+        expect(screen.getByText("Language *")).toBeTruthy();
+      });
+    };
+
+    it("opens First Words modal when selecting First Words template", async () => {
+      await createTestChild("chinese"); // Use chinese so we can wait for Full Month
+
+      render(
+        <TestWrapper>
+          <MilestonesScreen />
+        </TestWrapper>,
+      );
+
+      await openFirstWordsModal();
+
+      expect(screen.getByText("The Word *")).toBeTruthy();
+    });
+
+    it("shows all four language options", async () => {
+      await createTestChild("chinese");
+
+      render(
+        <TestWrapper>
+          <MilestonesScreen />
+        </TestWrapper>,
+      );
+
+      await openFirstWordsModal();
+
+      // Check all language options are displayed
+      expect(screen.getByTestId("language-option-english")).toBeTruthy();
+      expect(screen.getByTestId("language-option-mandarin")).toBeTruthy();
+      expect(screen.getByTestId("language-option-malay")).toBeTruthy();
+      expect(screen.getByTestId("language-option-tamil")).toBeTruthy();
+    });
+
+    it("shows romanization field for Mandarin", async () => {
+      await createTestChild("chinese");
+
+      render(
+        <TestWrapper>
+          <MilestonesScreen />
+        </TestWrapper>,
+      );
+
+      await openFirstWordsModal();
+
+      // Select Mandarin
+      fireEvent.press(screen.getByTestId("language-option-mandarin"));
+
+      // Should show romanization field with Pinyin label
+      await waitFor(() => {
+        expect(screen.getByText(/Pinyin/)).toBeTruthy();
+      });
+      expect(screen.getByTestId("first-word-romanization-input")).toBeTruthy();
+    });
+
+    it("shows romanization field for Tamil", async () => {
+      await createTestChild("chinese");
+
+      render(
+        <TestWrapper>
+          <MilestonesScreen />
+        </TestWrapper>,
+      );
+
+      await openFirstWordsModal();
+
+      // Select Tamil
+      fireEvent.press(screen.getByTestId("language-option-tamil"));
+
+      // Should show romanization field
+      await waitFor(() => {
+        expect(
+          screen.getByTestId("first-word-romanization-input"),
+        ).toBeTruthy();
+      });
+    });
+
+    it("does not show romanization field for English", async () => {
+      await createTestChild("chinese");
+
+      render(
+        <TestWrapper>
+          <MilestonesScreen />
+        </TestWrapper>,
+      );
+
+      await openFirstWordsModal();
+
+      // English is default - romanization field should NOT be shown
+      expect(screen.queryByTestId("first-word-romanization-input")).toBeNull();
+    });
+
+    it("does not show romanization field for Malay", async () => {
+      await createTestChild("chinese");
+
+      render(
+        <TestWrapper>
+          <MilestonesScreen />
+        </TestWrapper>,
+      );
+
+      await openFirstWordsModal();
+
+      // Select Malay
+      fireEvent.press(screen.getByTestId("language-option-malay"));
+
+      // Should NOT show romanization field for Malay
+      expect(screen.queryByTestId("first-word-romanization-input")).toBeNull();
+    });
+
+    it("creates milestone with firstWordData when submitted", async () => {
+      const child = await createTestChild("chinese");
+
+      render(
+        <TestWrapper>
+          <MilestonesScreen />
+        </TestWrapper>,
+      );
+
+      await openFirstWordsModal();
+
+      // Select Mandarin
+      fireEvent.press(screen.getByTestId("language-option-mandarin"));
+
+      // Wait for romanization field to appear
+      await waitFor(() => {
+        expect(
+          screen.getByTestId("first-word-romanization-input"),
+        ).toBeTruthy();
+      });
+
+      // Enter word data
+      fireEvent.changeText(screen.getByTestId("first-word-input"), "妈妈");
+      fireEvent.changeText(
+        screen.getByTestId("first-word-romanization-input"),
+        "māmā",
+      );
+
+      // Submit
+      fireEvent.press(screen.getByTestId("add-first-words-button"));
+
+      // Verify milestone was created with firstWordData
+      await waitFor(async () => {
+        const result = await milestoneApi.getMilestones();
+        if (!("data" in result) || !result.data) {
+          throw new Error("Expected data in result");
+        }
+        const milestones = result.data;
+        const firstWordsMilestone = milestones.find(
+          (m) => m.templateId === "first_words",
+        );
+        expect(firstWordsMilestone).toBeTruthy();
+        expect(firstWordsMilestone?.firstWordData).toBeDefined();
+        expect(firstWordsMilestone?.firstWordData?.word).toBe("妈妈");
+        expect(firstWordsMilestone?.firstWordData?.romanization).toBe("māmā");
+        expect(firstWordsMilestone?.firstWordData?.language).toBe("mandarin");
+      });
+    });
+
+    it("shows first word with language tag on milestone card", async () => {
+      const child = await createTestChild();
+
+      // Create milestone with firstWordData directly via API
+      await milestoneApi.createMilestone({
+        templateId: "first_words",
+        childId: child.id,
+        milestoneDate: "2024-07-15",
+        firstWordData: {
+          word: "Mama",
+          language: "english",
+        },
+      });
+
+      render(
+        <TestWrapper>
+          <MilestonesScreen />
+        </TestWrapper>,
+      );
+
+      // Wait for milestone to appear
+      await waitFor(() => {
+        expect(screen.getByText(/First Words/)).toBeTruthy();
+      });
+
+      // Should show the word in quotes
+      expect(screen.getByText(/"Mama"/)).toBeTruthy();
+
+      // Should show language tag
+      expect(screen.getByText("English")).toBeTruthy();
+    });
+
+    it("shows first word with romanization when present", async () => {
+      const child = await createTestChild();
+
+      // Create milestone with firstWordData including romanization
+      await milestoneApi.createMilestone({
+        templateId: "first_words",
+        childId: child.id,
+        milestoneDate: "2024-07-15",
+        firstWordData: {
+          word: "妈妈",
+          romanization: "māmā",
+          language: "mandarin",
+        },
+      });
+
+      render(
+        <TestWrapper>
+          <MilestonesScreen />
+        </TestWrapper>,
+      );
+
+      // Wait for milestone to appear
+      await waitFor(() => {
+        expect(screen.getByText(/First Words/)).toBeTruthy();
+      });
+
+      // Should show word with romanization in parentheses
+      expect(screen.getByText(/"妈妈" \(māmā\)/)).toBeTruthy();
+
+      // Should show Mandarin language tag
+      expect(screen.getByText("Mandarin")).toBeTruthy();
+    });
+
+    it("disables Add button when word is empty", async () => {
+      await createTestChild("chinese");
+
+      render(
+        <TestWrapper>
+          <MilestonesScreen />
+        </TestWrapper>,
+      );
+
+      await openFirstWordsModal();
+
+      // Button should be disabled when word is empty
+      const addButton = screen.getByTestId("add-first-words-button");
+      expect(addButton.props.accessibilityState?.disabled).toBe(true);
+    });
+  });
 });

@@ -17,6 +17,15 @@ export interface MilestoneTemplate {
   daysFromBirth?: number; // For auto-calculating milestone date
 }
 
+// Supported languages for bilingual first words (SGLOCAL-002)
+export type FirstWordLanguage = "english" | "mandarin" | "malay" | "tamil";
+
+export interface FirstWordData {
+  word: string; // The word in original language
+  romanization?: string; // Romanization for non-Latin scripts (e.g., pinyin)
+  language: FirstWordLanguage;
+}
+
 export interface Milestone {
   id: string;
   templateId?: string; // Reference to template, undefined for custom
@@ -28,6 +37,8 @@ export interface Milestone {
   isCompleted: boolean;
   photoUri?: string;
   notes?: string;
+  // Bilingual first words support (SGLOCAL-002)
+  firstWordData?: FirstWordData;
   createdAt: string;
   updatedAt: string;
 }
@@ -38,6 +49,8 @@ export interface AddMilestoneInput {
   milestoneDate: string;
   customTitle?: string;
   customDescription?: string;
+  // Bilingual first words support (SGLOCAL-002)
+  firstWordData?: FirstWordData;
 }
 
 export interface CompleteMilestoneInput {
@@ -45,6 +58,14 @@ export interface CompleteMilestoneInput {
   photoUri?: string;
   notes?: string;
 }
+
+// SGLOCAL-002: Language labels for display
+export const LANGUAGE_LABELS: Record<FirstWordLanguage, string> = {
+  english: "English",
+  mandarin: "Mandarin (华语)",
+  malay: "Malay (Bahasa Melayu)",
+  tamil: "Tamil (தமிழ்)",
+};
 
 // PRD Section 5.1 - Milestone Templates by Culture
 export const MILESTONE_TEMPLATES: MilestoneTemplate[] = [
@@ -225,6 +246,7 @@ export function MilestoneProvider({ children }: MilestoneProviderProps) {
       customTitle: input.customTitle,
       customDescription: input.customDescription,
       isCompleted: false,
+      firstWordData: input.firstWordData, // SGLOCAL-002: Bilingual first words
       createdAt: now,
       updatedAt: now,
     };

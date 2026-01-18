@@ -867,7 +867,7 @@
         "View in timeline with language tag"
       ],
       "acceptanceCriteria": "Track first words in multiple languages",
-      "passes": false
+      "passes": true
     },
     {
       "id": "SGLOCAL-003",

@@ -1497,3 +1497,45 @@ Reasoning: Standalone feature for Singapore market. No AI or external integratio
 
 ---
 
+### Task Selection
+Selected: SGLOCAL-002 (Bilingual first words) - Full implementation
+Priority: 4 (Standard features)
+Reasoning: Singapore multi-lingual context. Extends milestone system to capture first words in multiple languages (English, Mandarin, Malay, Tamil) with optional romanization.
+
+### Implementation Complete
+
+**Task:** SGLOCAL-002 Bilingual first words
+**PRD Ref:** Singapore Local - SGLOCAL-002
+
+**Key Decisions:**
+- Extended Milestone type with FirstWordData: word, romanization?, language
+- FirstWordLanguage type: "english" | "mandarin" | "malay" | "tamil"
+- LANGUAGE_LABELS constant for display names including native script
+- Romanization field shown only for Mandarin (pinyin) and Tamil
+- First Words template triggers special modal instead of direct add
+- Modal has: language selector, word input, romanization input (conditional), date picker
+- Milestone card displays word in quotes with language tag
+- Language-specific placeholders in word input
+
+**Files Changed:**
+- MODIFIED: contexts/milestone-context.tsx (+FirstWordLanguage type, +FirstWordData interface, +LANGUAGE_LABELS)
+- MODIFIED: services/api-client.ts (+firstWordData in CreateMilestoneRequest)
+- MODIFIED: app/(tabs)/milestones.tsx (+firstWords modal state, +language selection UI, +firstWordData handling, +display in card, +styles)
+- MODIFIED: __tests__/contexts/milestone-context.test.tsx (+5 SGLOCAL-002 type tests)
+- MODIFIED: __tests__/app/tabs/milestones.test.tsx (+10 SGLOCAL-002 UI tests, +testID for template items)
+- MODIFIED: prd-killer-features.json (SGLOCAL-002 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- tsc --noEmit: PASS
+- npm run lint: PASS (pre-existing expo-blur issue)
+- npm test: 1046/1046 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- SGLOCAL-002 complete: Select First Words milestone, choose language, enter word with romanization, save, view with language tag
+- Romanization field conditionally shown for Mandarin and Tamil only
+- Singapore Local category now 3/5 complete (SGLOCAL-001, SGLOCAL-002, SGLOCAL-003)
+
+---
+

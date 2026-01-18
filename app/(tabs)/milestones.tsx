@@ -17,8 +17,11 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import {
   MILESTONE_TEMPLATES,
+  LANGUAGE_LABELS,
   type Milestone,
   type MilestoneTemplate,
+  type FirstWordLanguage,
+  type FirstWordData,
 } from "@/contexts/milestone-context";
 import {
   useMilestonesFlat,
@@ -38,7 +41,12 @@ import {
   Spacing,
 } from "@/constants/theme";
 
-type ModalState = "closed" | "selectTemplate" | "addCustom" | "complete";
+type ModalState =
+  | "closed"
+  | "selectTemplate"
+  | "addCustom"
+  | "complete"
+  | "firstWords"; // SGLOCAL-002: Bilingual first words
 
 // Calculate days until milestone and format countdown text (PRD Section 5.3)
 function getCountdownText(milestoneDate: string): string {
@@ -97,6 +105,15 @@ export default function MilestonesScreen() {
     useState(false);
   const [completionNotes, setCompletionNotes] = useState("");
 
+  // SGLOCAL-002: First words state
+  const [firstWord, setFirstWord] = useState("");
+  const [firstWordRomanization, setFirstWordRomanization] = useState("");
+  const [firstWordLanguage, setFirstWordLanguage] =
+    useState<FirstWordLanguage>("english");
+  const [showFirstWordsDatePicker, setShowFirstWordsDatePicker] =
+    useState(false);
+  const [firstWordsDate, setFirstWordsDate] = useState(new Date());
+
   // Filter templates by child's cultural tradition
   const relevantTemplates = useMemo(() => {
     const tradition = child?.culturalTradition;
@@ -110,6 +127,16 @@ export default function MilestonesScreen() {
 
   const handleAddFromTemplate = async (template: MilestoneTemplate) => {
     if (!child?.id) return;
+
+    // SGLOCAL-002: Show special modal for First Words to capture language
+    if (template.id === "first_words") {
+      setFirstWord("");
+      setFirstWordRomanization("");
+      setFirstWordLanguage("english");
+      setFirstWordsDate(new Date());
+      setModalState("firstWords");
+      return;
+    }
 
     // Calculate date if daysFromBirth is specified
     let date = milestoneDate;
@@ -175,6 +202,44 @@ export default function MilestonesScreen() {
     setMilestoneDate(new Date());
   };
 
+  // SGLOCAL-002: Handle adding first words milestone with language
+  const handleAddFirstWords = () => {
+    if (!firstWord.trim() || !child?.id) return;
+
+    const milestoneDateStr = firstWordsDate.toISOString().split("T")[0];
+    const firstWordData: FirstWordData = {
+      word: firstWord.trim(),
+      romanization: firstWordRomanization.trim() || undefined,
+      language: firstWordLanguage,
+    };
+
+    createMilestone.mutate(
+      {
+        templateId: "first_words",
+        childId: child.id,
+        milestoneDate: milestoneDateStr,
+        firstWordData,
+      },
+      {
+        onSuccess: async (newMilestone) => {
+          // Schedule reminder notification (PRD 7.1)
+          await scheduleMilestoneReminder(
+            newMilestone.id,
+            "First Words",
+            milestoneDateStr,
+            REMINDER_DAYS_BEFORE,
+          );
+        },
+      },
+    );
+
+    setModalState("closed");
+    setFirstWord("");
+    setFirstWordRomanization("");
+    setFirstWordLanguage("english");
+    setFirstWordsDate(new Date());
+  };
+
   const handleOpenCompletion = (milestone: Milestone) => {
     setSelectedMilestone(milestone);
     setCelebrationDate(new Date());
@@ -229,6 +294,14 @@ export default function MilestonesScreen() {
     const description = item.customDescription ?? template?.description ?? "";
     const localTitle = template?.titleLocal;
 
+    // SGLOCAL-002: Format first word display with language tag
+    const firstWordDisplay = item.firstWordData
+      ? `"${item.firstWordData.word}"${item.firstWordData.romanization ? ` (${item.firstWordData.romanization})` : ""}`
+      : null;
+    const languageTag = item.firstWordData
+      ? LANGUAGE_LABELS[item.firstWordData.language].split(" ")[0] // Just use first word like "English", "Mandarin"
+      : null;
+
     return (
       <Pressable
         style={[
@@ -261,7 +334,27 @@ export default function MilestonesScreen() {
             </View>
           )}
         </View>
-        {description && (
+        {/* SGLOCAL-002: Display first word with language tag */}
+        {firstWordDisplay && (
+          <View style={styles.firstWordContainer}>
+            <Text style={[styles.firstWordText, { color: colors.text }]}>
+              {firstWordDisplay}
+            </Text>
+            {languageTag && (
+              <View
+                style={[
+                  styles.languageTag,
+                  { backgroundColor: colors.backgroundSecondary },
+                ]}
+              >
+                <Text style={[styles.languageTagText, { color: colors.text }]}>
+                  {languageTag}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
+        {description && !firstWordDisplay && (
           <Text
             style={[
               styles.milestoneDescription,
@@ -431,6 +524,7 @@ export default function MilestonesScreen() {
                     { backgroundColor: colors.backgroundSecondary },
                   ]}
                   onPress={() => handleAddFromTemplate(template)}
+                  testID={`template-${template.id}`}
                 >
                   <Text style={[styles.templateTitle, { color: colors.text }]}>
                     {template.title}
@@ -745,6 +839,159 @@ export default function MilestonesScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* SGLOCAL-002: First Words Modal with Language Selection */}
+      <Modal visible={modalState === "firstWords"} animationType="slide">
+        <KeyboardAvoidingView
+          style={[styles.fullModal, { backgroundColor: colors.background }]}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <View
+            style={[
+              styles.fullModalHeader,
+              { borderBottomColor: colors.border },
+            ]}
+          >
+            <Pressable onPress={() => setModalState("selectTemplate")}>
+              <Text style={styles.backButton}>← Back</Text>
+            </Pressable>
+            <ThemedText type="subtitle">First Words</ThemedText>
+            <View style={{ width: 60 }} />
+          </View>
+
+          <ScrollView style={styles.formContainer}>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Language *
+            </Text>
+            <View style={styles.languageOptions}>
+              {(
+                Object.entries(LANGUAGE_LABELS) as [FirstWordLanguage, string][]
+              ).map(([key, label]) => (
+                <Pressable
+                  key={key}
+                  style={[
+                    styles.languageOption,
+                    {
+                      borderColor:
+                        firstWordLanguage === key
+                          ? PRIMARY_COLOR
+                          : colors.inputBorder,
+                      backgroundColor:
+                        firstWordLanguage === key
+                          ? `${PRIMARY_COLOR}15`
+                          : colors.background,
+                    },
+                  ]}
+                  onPress={() => setFirstWordLanguage(key)}
+                  testID={`language-option-${key}`}
+                >
+                  <Text
+                    style={[
+                      styles.languageOptionText,
+                      {
+                        color:
+                          firstWordLanguage === key
+                            ? PRIMARY_COLOR
+                            : colors.text,
+                        fontWeight: firstWordLanguage === key ? "600" : "400",
+                      },
+                    ]}
+                  >
+                    {label}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <Text style={[styles.label, { color: colors.text }]}>
+              The Word *
+            </Text>
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  borderColor: colors.inputBorder,
+                  backgroundColor: colors.background,
+                  color: colors.text,
+                },
+              ]}
+              value={firstWord}
+              onChangeText={setFirstWord}
+              placeholder={
+                firstWordLanguage === "english"
+                  ? 'e.g., "Mama"'
+                  : firstWordLanguage === "mandarin"
+                    ? 'e.g., "妈妈"'
+                    : firstWordLanguage === "malay"
+                      ? 'e.g., "Mak"'
+                      : 'e.g., "அம்மா"'
+              }
+              placeholderTextColor={colors.placeholder}
+              testID="first-word-input"
+            />
+
+            {(firstWordLanguage === "mandarin" ||
+              firstWordLanguage === "tamil") && (
+              <>
+                <Text style={[styles.label, { color: colors.text }]}>
+                  Romanization{" "}
+                  {firstWordLanguage === "mandarin" ? "(Pinyin)" : "(Optional)"}
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      borderColor: colors.inputBorder,
+                      backgroundColor: colors.background,
+                      color: colors.text,
+                    },
+                  ]}
+                  value={firstWordRomanization}
+                  onChangeText={setFirstWordRomanization}
+                  placeholder={
+                    firstWordLanguage === "mandarin" ? "e.g., māmā" : ""
+                  }
+                  placeholderTextColor={colors.placeholder}
+                  testID="first-word-romanization-input"
+                />
+              </>
+            )}
+
+            <Text style={[styles.label, { color: colors.text }]}>Date</Text>
+            <Pressable
+              style={[styles.dateButton, { borderColor: colors.inputBorder }]}
+              onPress={() => setShowFirstWordsDatePicker(true)}
+            >
+              <Text style={[styles.dateButtonText, { color: colors.text }]}>
+                {firstWordsDate.toLocaleDateString("en-SG")}
+              </Text>
+            </Pressable>
+            {showFirstWordsDatePicker && (
+              <DateTimePicker
+                value={firstWordsDate}
+                mode="date"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                onChange={(_, date) => {
+                  setShowFirstWordsDatePicker(Platform.OS === "ios");
+                  if (date) setFirstWordsDate(date);
+                }}
+              />
+            )}
+
+            <Pressable
+              style={[
+                styles.submitButton,
+                !firstWord.trim() && styles.submitButtonDisabled,
+              ]}
+              onPress={handleAddFirstWords}
+              disabled={!firstWord.trim()}
+              testID="add-first-words-button"
+            >
+              <Text style={styles.submitButtonText}>Add First Words</Text>
+            </Pressable>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </Modal>
     </ThemedView>
   );
 }
@@ -1036,5 +1283,41 @@ const styles = StyleSheet.create({
   statisticsDataPoints: {
     fontSize: 11,
     textAlign: "center",
+  },
+  // SGLOCAL-002: Language selection styles
+  languageOptions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.sm,
+    marginBottom: Spacing.lg,
+  },
+  languageOption: {
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  languageOptionText: {
+    fontSize: 14,
+  },
+  // SGLOCAL-002: First word display styles
+  firstWordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    marginTop: Spacing.xs,
+  },
+  firstWordText: {
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  languageTag: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  languageTagText: {
+    fontSize: 11,
+    fontWeight: "500",
   },
 });

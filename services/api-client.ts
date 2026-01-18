@@ -101,6 +101,12 @@ export interface CreateMilestoneRequest {
   customTitle?: string;
   customDescription?: string;
   milestoneDate: string;
+  // SGLOCAL-002: Bilingual first words support
+  firstWordData?: {
+    word: string;
+    romanization?: string;
+    language: "english" | "mandarin" | "malay" | "tamil";
+  };
 }
 
 export interface CompleteMilestoneRequest {
@@ -540,6 +546,7 @@ export const milestoneApi = {
         customTitle: request.customTitle,
         customDescription: request.customDescription,
         isCompleted: false,
+        firstWordData: request.firstWordData, // SGLOCAL-002: Bilingual first words
         createdAt: now,
         updatedAt: now,
       };
