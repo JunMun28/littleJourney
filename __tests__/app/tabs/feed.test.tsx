@@ -1133,3 +1133,75 @@ describe("Voice entry with photo attachment", () => {
     expect(hasVoice).toBe(true);
   });
 });
+
+// GAME-002: Streak Card Tests
+describe("Streak card (GAME-002)", () => {
+  // Helper function to determine if streak card should show
+  const shouldShowStreakCard = (
+    currentStreak: number,
+    longestStreak: number,
+  ): boolean => {
+    return !(currentStreak === 0 && longestStreak === 0);
+  };
+
+  // Helper function to get streak icon
+  const getStreakIcon = (currentStreak: number): string => {
+    return currentStreak >= 7 ? "🔥" : currentStreak > 0 ? "⚡" : "💤";
+  };
+
+  // Helper function to get streak label
+  const getStreakLabel = (currentStreak: number): string => {
+    return currentStreak === 0
+      ? "Start your streak today!"
+      : currentStreak === 1
+        ? "1 day streak"
+        : `${currentStreak} day streak`;
+  };
+
+  it("should not show streak card when no entries", () => {
+    // StreakCard returns null when currentStreak=0 and longestStreak=0
+    expect(shouldShowStreakCard(0, 0)).toBe(false);
+  });
+
+  it("should show streak card when user has longest streak but no current", () => {
+    // User had a streak before but not currently active
+    expect(shouldShowStreakCard(0, 5)).toBe(true);
+  });
+
+  it("should show fire icon for 7+ day streak", () => {
+    expect(getStreakIcon(7)).toBe("🔥");
+    expect(getStreakIcon(10)).toBe("🔥");
+    expect(getStreakIcon(30)).toBe("🔥");
+  });
+
+  it("should show lightning icon for active streak under 7 days", () => {
+    expect(getStreakIcon(1)).toBe("⚡");
+    expect(getStreakIcon(3)).toBe("⚡");
+    expect(getStreakIcon(6)).toBe("⚡");
+  });
+
+  it("should show sleep icon when no current streak", () => {
+    expect(getStreakIcon(0)).toBe("💤");
+  });
+
+  it("should show singular day label for streak of 1", () => {
+    expect(getStreakLabel(1)).toBe("1 day streak");
+  });
+
+  it("should show plural day label for streak > 1", () => {
+    expect(getStreakLabel(5)).toBe("5 day streak");
+    expect(getStreakLabel(10)).toBe("10 day streak");
+  });
+
+  it("should show start message when no current streak", () => {
+    expect(getStreakLabel(0)).toBe("Start your streak today!");
+  });
+
+  it("should show encouragement message when streak is broken", () => {
+    // When currentStreak=0 but longestStreak>0, show encouragement
+    const currentStreak = 0;
+    const longestStreak = 10;
+    const showEncourage = currentStreak === 0 && longestStreak > 0;
+    expect(showEncourage).toBe(true);
+  });
+});

@@ -54,6 +54,11 @@ import {
   BADGE_DEFINITIONS,
 } from "@/contexts/gamification-context";
 
+import {
+  calculateStreak,
+  type StreakData,
+} from "@/contexts/gamification-context";
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 type Badge = (typeof BADGE_DEFINITIONS)[number];
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -160,6 +165,104 @@ describe("GamificationContext", () => {
       expect(result.current.totalBadges).toBe(BADGE_DEFINITIONS.length);
       // first_smile, first_steps, and badge_first_entry (from having entries)
       expect(result.current.unlockedCount).toBe(3);
+    });
+  });
+
+  describe("Streak calculation (GAME-002)", () => {
+    it("calculates 0 streak for no entries", () => {
+      const result = calculateStreak([]);
+      expect(result.currentStreak).toBe(0);
+      expect(result.longestStreak).toBe(0);
+      expect(result.lastEntryDate).toBeNull();
+    });
+
+    it("calculates streak of 1 for entry today", () => {
+      const today = new Date().toISOString().split("T")[0];
+      const entries = [{ date: today }];
+      const result = calculateStreak(entries);
+      expect(result.currentStreak).toBe(1);
+      expect(result.longestStreak).toBe(1);
+    });
+
+    it("calculates streak of 1 for entry yesterday", () => {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const entries = [{ date: yesterday.toISOString().split("T")[0] }];
+      const result = calculateStreak(entries);
+      expect(result.currentStreak).toBe(1);
+      expect(result.longestStreak).toBe(1);
+    });
+
+    it("calculates 0 current streak for old entry (more than 1 day ago)", () => {
+      const oldDate = new Date();
+      oldDate.setDate(oldDate.getDate() - 3);
+      const entries = [{ date: oldDate.toISOString().split("T")[0] }];
+      const result = calculateStreak(entries);
+      expect(result.currentStreak).toBe(0);
+      expect(result.longestStreak).toBe(1);
+    });
+
+    it("calculates consecutive day streak", () => {
+      const today = new Date();
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const dayBefore = new Date();
+      dayBefore.setDate(dayBefore.getDate() - 2);
+
+      const entries = [
+        { date: today.toISOString().split("T")[0] },
+        { date: yesterday.toISOString().split("T")[0] },
+        { date: dayBefore.toISOString().split("T")[0] },
+      ];
+      const result = calculateStreak(entries);
+      expect(result.currentStreak).toBe(3);
+      expect(result.longestStreak).toBe(3);
+    });
+
+    it("handles multiple entries on same day", () => {
+      const today = new Date();
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      const entries = [
+        { date: today.toISOString().split("T")[0] },
+        { date: today.toISOString().split("T")[0] }, // Duplicate
+        { date: yesterday.toISOString().split("T")[0] },
+      ];
+      const result = calculateStreak(entries);
+      expect(result.currentStreak).toBe(2); // Not 3
+      expect(result.longestStreak).toBe(2);
+    });
+
+    it("tracks longest streak separately from current", () => {
+      // Old streak of 5 days, current streak of 2
+      const today = new Date();
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      // Gap, then old 5-day streak
+      const oldStreak: { date: string }[] = [];
+      for (let i = 10; i < 15; i++) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        oldStreak.push({ date: d.toISOString().split("T")[0] });
+      }
+
+      const entries = [
+        { date: today.toISOString().split("T")[0] },
+        { date: yesterday.toISOString().split("T")[0] },
+        ...oldStreak,
+      ];
+      const result = calculateStreak(entries);
+      expect(result.currentStreak).toBe(2);
+      expect(result.longestStreak).toBe(5);
+    });
+
+    it("returns lastEntryDate as most recent entry date", () => {
+      const today = new Date();
+      const entries = [{ date: today.toISOString().split("T")[0] }];
+      const result = calculateStreak(entries);
+      expect(result.lastEntryDate).toBe(today.toISOString().split("T")[0]);
     });
   });
 });

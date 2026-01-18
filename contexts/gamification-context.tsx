@@ -4,7 +4,6 @@ import {
   useState,
   useCallback,
   useMemo,
-  useEffect,
   type ReactNode,
 } from "react";
 import { useMilestones, MILESTONE_TEMPLATES } from "./milestone-context";
@@ -12,6 +11,107 @@ import { useEntries } from "./entry-context";
 
 // Badge types
 export type BadgeType = "milestone" | "achievement" | "streak" | "special";
+
+// Streak data (GAME-002)
+export interface StreakData {
+  currentStreak: number;
+  longestStreak: number;
+  lastEntryDate: string | null;
+}
+
+// Helper to format date as YYYY-MM-DD in local timezone
+function formatDateLocal(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+// Pure function to calculate streak from entry dates
+export function calculateStreak(entries: { date: string }[]): StreakData {
+  if (entries.length === 0) {
+    return { currentStreak: 0, longestStreak: 0, lastEntryDate: null };
+  }
+
+  // Get unique dates sorted descending (newest first)
+  const uniqueDates = [...new Set(entries.map((e) => e.date))].sort(
+    (a, b) => new Date(b).getTime() - new Date(a).getTime(),
+  );
+
+  const lastEntryDate = uniqueDates[0];
+
+  // Get today and yesterday in local timezone
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayStr = formatDateLocal(today);
+
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = formatDateLocal(yesterday);
+
+  let longestStreak = 0;
+  let tempStreak = 0;
+
+  // Check if last entry was today or yesterday to have active streak
+  const hasActiveStreak =
+    lastEntryDate === todayStr || lastEntryDate === yesterdayStr;
+
+  // Calculate all streaks by iterating through sorted dates
+  for (let i = 0; i < uniqueDates.length; i++) {
+    if (i === 0) {
+      tempStreak = 1;
+    } else {
+      // Parse dates and check if consecutive
+      const [cY, cM, cD] = uniqueDates[i].split("-").map(Number);
+      const [pY, pM, pD] = uniqueDates[i - 1].split("-").map(Number);
+
+      const currentDate = new Date(cY, cM - 1, cD);
+      const prevDate = new Date(pY, pM - 1, pD);
+
+      // Check if this date is exactly 1 day before the previous date
+      const diffMs = prevDate.getTime() - currentDate.getTime();
+      const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 1) {
+        tempStreak++;
+      } else {
+        // Streak broken, record longest if needed
+        if (tempStreak > longestStreak) {
+          longestStreak = tempStreak;
+        }
+        tempStreak = 1;
+      }
+    }
+  }
+
+  // Final longest streak check
+  if (tempStreak > longestStreak) {
+    longestStreak = tempStreak;
+  }
+
+  // Calculate current streak (walking back from most recent)
+  let currentStreak = 0;
+  if (hasActiveStreak) {
+    currentStreak = 1;
+    const [y, m, d] = lastEntryDate.split("-").map(Number);
+    let checkDate = new Date(y, m - 1, d);
+
+    for (let i = 1; i < uniqueDates.length; i++) {
+      const expectedPrev = new Date(checkDate);
+      expectedPrev.setDate(expectedPrev.getDate() - 1);
+      const expectedPrevStr = formatDateLocal(expectedPrev);
+
+      if (uniqueDates[i] === expectedPrevStr) {
+        currentStreak++;
+        checkDate = expectedPrev;
+      } else {
+        break;
+      }
+    }
+  }
+
+  return { currentStreak, longestStreak, lastEntryDate };
+}
 
 export interface Badge {
   id: string;
@@ -154,6 +254,8 @@ interface GamificationContextValue {
   // Counts
   totalBadges: number;
   unlockedCount: number;
+  // Streak data (GAME-002)
+  streakData: StreakData;
   // Methods
   getBadgeById: (id: string) => Badge | undefined;
   isBadgeUnlocked: (badgeId: string) => boolean;
@@ -174,6 +276,9 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
 
   // Track which badges user has seen (for "new" indicator)
   const [seenBadgeIds, setSeenBadgeIds] = useState<string[]>([]);
+
+  // Calculate streak data (GAME-002)
+  const streakData = useMemo(() => calculateStreak(entries), [entries]);
 
   // Calculate unlocked badges based on completed milestones and achievements
   const unlockedBadgeIds = useMemo(() => {
@@ -198,11 +303,14 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
     if (milestoneCount >= 5) unlocked.push("badge_5_milestones");
     if (milestoneCount >= 10) unlocked.push("badge_10_milestones");
 
-    // TODO: Streak badges require date tracking (GAME-002)
+    // Streak badges (GAME-002)
+    if (streakData.longestStreak >= 7) unlocked.push("badge_week_streak");
+    if (streakData.longestStreak >= 30) unlocked.push("badge_month_streak");
+
     // TODO: First year badge requires child birth date comparison (GAME-004)
 
     return unlocked;
-  }, [completedMilestones, entries]);
+  }, [completedMilestones, entries, streakData]);
 
   const unlockedBadges = useMemo(
     () => BADGE_DEFINITIONS.filter((b) => unlockedBadgeIds.includes(b.id)),
@@ -245,6 +353,7 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
     seenBadgeIds,
     totalBadges: BADGE_DEFINITIONS.length,
     unlockedCount: unlockedBadges.length,
+    streakData,
     getBadgeById,
     isBadgeUnlocked,
     markBadgeAsSeen,

@@ -45,6 +45,7 @@ import {
 } from "@/constants/theme";
 import { trackEvent, AnalyticsEvent } from "@/services/analytics";
 import { useVoiceJournal } from "@/contexts/voice-journal-context";
+import { useGamification } from "@/contexts/gamification-context";
 
 function EmptyState() {
   return (
@@ -203,6 +204,62 @@ function OnThisDayCard({ memories, onPress, onDismiss }: OnThisDayCardProps) {
   );
 }
 
+// GAME-002: Streak Card Component
+interface StreakCardProps {
+  currentStreak: number;
+  longestStreak: number;
+}
+
+function StreakCard({ currentStreak, longestStreak }: StreakCardProps) {
+  const colorScheme = useColorScheme() ?? "light";
+  const colors = Colors[colorScheme];
+
+  // Don't show if no streak yet
+  if (currentStreak === 0 && longestStreak === 0) return null;
+
+  const streakIcon =
+    currentStreak >= 7 ? "🔥" : currentStreak > 0 ? "⚡" : "💤";
+  const streakLabel =
+    currentStreak === 0
+      ? "Start your streak today!"
+      : currentStreak === 1
+        ? "1 day streak"
+        : `${currentStreak} day streak`;
+
+  return (
+    <View
+      style={[
+        styles.streakCard,
+        { backgroundColor: colors.backgroundSecondary },
+      ]}
+      testID="streak-card"
+    >
+      <View style={styles.streakMain}>
+        <ThemedText style={styles.streakIcon}>{streakIcon}</ThemedText>
+        <View style={styles.streakInfo}>
+          <ThemedText type="subtitle" style={styles.streakLabel}>
+            {streakLabel}
+          </ThemedText>
+          {longestStreak > 0 && (
+            <ThemedText
+              style={[styles.streakBest, { color: colors.textSecondary }]}
+            >
+              Best: {longestStreak} {longestStreak === 1 ? "day" : "days"}
+            </ThemedText>
+          )}
+        </View>
+      </View>
+      {currentStreak === 0 && longestStreak > 0 && (
+        <ThemedText
+          style={[styles.streakEncourage, { color: colors.textSecondary }]}
+        >
+          Add an entry to start a new streak!
+        </ThemedText>
+      )}
+    </View>
+  );
+}
+
 interface EntryCardProps {
   entry: Entry;
   onPress: () => void;
@@ -310,6 +367,8 @@ export default function FeedScreen() {
     stopRecording,
     discardRecording,
   } = useVoiceJournal();
+  // Streak tracking (GAME-002)
+  const { streakData } = useGamification();
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
 
@@ -830,11 +889,17 @@ export default function FeedScreen() {
           />
         )}
         ListHeaderComponent={
-          <OnThisDayCard
-            memories={onThisDayMemories}
-            onPress={(memory) => router.push(`/memory/${memory.id}`)}
-            onDismiss={dismissMemory}
-          />
+          <>
+            <StreakCard
+              currentStreak={streakData.currentStreak}
+              longestStreak={streakData.longestStreak}
+            />
+            <OnThisDayCard
+              memories={onThisDayMemories}
+              onPress={(memory) => router.push(`/memory/${memory.id}`)}
+              onDismiss={dismissMemory}
+            />
+          </>
         }
         ListEmptyComponent={EmptyState}
         ListFooterComponent={<LoadingFooter isLoading={isFetchingNextPage} />}
@@ -1787,5 +1852,34 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 8,
+  },
+  // Streak card styles (GAME-002)
+  streakCard: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    flexDirection: "column",
+  },
+  streakMain: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  streakIcon: {
+    fontSize: 32,
+    marginRight: 12,
+  },
+  streakInfo: {
+    flex: 1,
+  },
+  streakLabel: {
+    fontWeight: "600",
+  },
+  streakBest: {
+    fontSize: 13,
+    marginTop: 2,
+  },
+  streakEncourage: {
+    fontSize: 13,
+    marginTop: 8,
   },
 });

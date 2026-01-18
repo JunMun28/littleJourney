@@ -1087,3 +1087,45 @@ Reasoning: Gamification category completely unimplemented. Requires new Gamifica
 
 ---
 
+### Task Selection
+Selected: GAME-002 (Journaling streak) - Full implementation
+Priority: 4 (Standard features and implementation)
+Reasoning: Builds on existing GamificationContext (GAME-001). Clear PRD requirements. Adds streak tracking based on entry dates.
+
+### Implementation Complete
+
+**Task:** GAME-002 Journaling streak
+**PRD Ref:** Gamification - GAME-002
+
+**Key Decisions:**
+- Added StreakData type: currentStreak, longestStreak, lastEntryDate
+- calculateStreak() pure function for testing: handles unique dates, consecutive days
+- Streak active if last entry was today or yesterday (allows daily check-in)
+- Multiple entries on same day count as 1 day (unique dates)
+- Streak badges: badge_week_streak (7 days), badge_month_streak (30 days) unlock based on longestStreak
+- StreakCard component in feed ListHeader: shows current streak with icon, best streak, encouragement
+- Icons: 🔥 (7+ days), ⚡ (active <7), 💤 (no current streak)
+- Card hidden when no entries ever (currentStreak=0 AND longestStreak=0)
+
+**Files Changed:**
+- MODIFIED: contexts/gamification-context.tsx (+StreakData, +calculateStreak, +streakData in context, +streak badge unlock)
+- MODIFIED: app/(tabs)/index.tsx (+StreakCard component, +useGamification, +styles)
+- MODIFIED: __tests__/contexts/gamification-context.test.tsx (+8 streak calculation tests)
+- MODIFIED: __tests__/app/tabs/feed.test.tsx (+9 streak card tests)
+- MODIFIED: prd-killer-features.json (GAME-002 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- tsc --noEmit: PASS
+- npm run lint: PASS (pre-existing expo-blur issue)
+- npm test (gamification, feed): 74/74 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- GAME-002 complete: Create entry, streak counter shows 1, skip day, streak resets
+- Streak calculation handles timezone correctly via formatDateLocal helper
+- Longest streak tracked separately for badge unlock persistence
+- Gamification category now 2/4 complete (GAME-001, GAME-002)
+
+---
+

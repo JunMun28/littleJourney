@@ -939,7 +939,7 @@
         "Verify streak resets"
       ],
       "acceptanceCriteria": "Track consecutive days of journaling",
-      "passes": false
+      "passes": true
     },
     {
       "id": "GAME-003",
