@@ -1205,3 +1205,81 @@ describe("Streak card (GAME-002)", () => {
     expect(showEncourage).toBe(true);
   });
 });
+
+// GAME-003: Monthly Goal Card Tests
+describe("Monthly goal card (GAME-003)", () => {
+  // Helper function to get goal icon
+  const getGoalIcon = (isGoalMet: boolean): string => {
+    return isGoalMet ? "🎉" : "🎯";
+  };
+
+  // Helper function to get status text
+  const getStatusText = (
+    isGoalMet: boolean,
+    currentCount: number,
+    goalCount: number,
+  ): string => {
+    return isGoalMet
+      ? "Goal reached!"
+      : `${currentCount} of ${goalCount} entries`;
+  };
+
+  // Helper function to check if celebration should show
+  const shouldShowCelebration = (isGoalMet: boolean): boolean => {
+    return isGoalMet;
+  };
+
+  it("should show target icon when goal not met", () => {
+    expect(getGoalIcon(false)).toBe("🎯");
+  });
+
+  it("should show celebration icon when goal met", () => {
+    expect(getGoalIcon(true)).toBe("🎉");
+  });
+
+  it("should show progress count when goal not met", () => {
+    expect(getStatusText(false, 3, 10)).toBe("3 of 10 entries");
+    expect(getStatusText(false, 0, 10)).toBe("0 of 10 entries");
+    expect(getStatusText(false, 9, 10)).toBe("9 of 10 entries");
+  });
+
+  it("should show 'Goal reached!' when goal met", () => {
+    expect(getStatusText(true, 10, 10)).toBe("Goal reached!");
+    expect(getStatusText(true, 15, 10)).toBe("Goal reached!");
+  });
+
+  it("should show celebration badge when goal met", () => {
+    expect(shouldShowCelebration(true)).toBe(true);
+  });
+
+  it("should not show celebration badge when goal not met", () => {
+    expect(shouldShowCelebration(false)).toBe(false);
+  });
+
+  it("should display current month name", () => {
+    const monthName = new Date().toLocaleString("en-US", { month: "long" });
+    expect(monthName).toBeTruthy();
+    expect(typeof monthName).toBe("string");
+  });
+
+  it("should cap progress bar at 100%", () => {
+    // Progress percent calculation from context
+    const currentCount = 15;
+    const goalCount = 10;
+    const progressPercent = Math.min(
+      100,
+      Math.round((currentCount / goalCount) * 100),
+    );
+    expect(progressPercent).toBe(100);
+  });
+
+  it("should calculate correct progress percent", () => {
+    // 5 of 10 = 50%
+    const percent = Math.min(100, Math.round((5 / 10) * 100));
+    expect(percent).toBe(50);
+
+    // 3 of 10 = 30%
+    const percent2 = Math.min(100, Math.round((3 / 10) * 100));
+    expect(percent2).toBe(30);
+  });
+});

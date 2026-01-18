@@ -19,6 +19,15 @@ export interface StreakData {
   lastEntryDate: string | null;
 }
 
+// Monthly goal data (GAME-003)
+export interface MonthlyGoalData {
+  currentCount: number;
+  goalCount: number;
+  isGoalMet: boolean;
+  progressPercent: number;
+  monthName: string;
+}
+
 // Helper to format date as YYYY-MM-DD in local timezone
 function formatDateLocal(date: Date): string {
   const year = date.getFullYear();
@@ -111,6 +120,38 @@ export function calculateStreak(entries: { date: string }[]): StreakData {
   }
 
   return { currentStreak, longestStreak, lastEntryDate };
+}
+
+// Default monthly goal (GAME-003)
+export const DEFAULT_MONTHLY_GOAL = 10;
+
+// Pure function to calculate monthly goal progress
+export function calculateMonthlyGoal(
+  entries: { date: string }[],
+  goalCount: number = DEFAULT_MONTHLY_GOAL,
+): MonthlyGoalData {
+  const now = new Date();
+  const currentMonth = now.toISOString().slice(0, 7); // YYYY-MM
+
+  // Count entries in current month
+  const currentCount = entries.filter((e) =>
+    e.date.startsWith(currentMonth),
+  ).length;
+
+  const isGoalMet = currentCount >= goalCount;
+  const progressPercent = Math.min(
+    100,
+    Math.round((currentCount / goalCount) * 100),
+  );
+  const monthName = now.toLocaleString("en-US", { month: "long" });
+
+  return {
+    currentCount,
+    goalCount,
+    isGoalMet,
+    progressPercent,
+    monthName,
+  };
 }
 
 export interface Badge {
@@ -208,6 +249,15 @@ const achievementBadges: Badge[] = [
     icon: "🌟",
     unlockCondition: "Complete 10 milestones",
   },
+  // Monthly goal badge (GAME-003)
+  {
+    id: "badge_monthly_goal",
+    type: "achievement",
+    title: "Monthly Champion",
+    description: "Reached monthly entry goal",
+    icon: "🎯",
+    unlockCondition: "Create 10 entries in a single month",
+  },
 ];
 
 // All badge definitions
@@ -256,6 +306,8 @@ interface GamificationContextValue {
   unlockedCount: number;
   // Streak data (GAME-002)
   streakData: StreakData;
+  // Monthly goal data (GAME-003)
+  monthlyGoalData: MonthlyGoalData;
   // Methods
   getBadgeById: (id: string) => Badge | undefined;
   isBadgeUnlocked: (badgeId: string) => boolean;
@@ -279,6 +331,12 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
 
   // Calculate streak data (GAME-002)
   const streakData = useMemo(() => calculateStreak(entries), [entries]);
+
+  // Calculate monthly goal data (GAME-003)
+  const monthlyGoalData = useMemo(
+    () => calculateMonthlyGoal(entries),
+    [entries],
+  );
 
   // Calculate unlocked badges based on completed milestones and achievements
   const unlockedBadgeIds = useMemo(() => {
@@ -307,10 +365,13 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
     if (streakData.longestStreak >= 7) unlocked.push("badge_week_streak");
     if (streakData.longestStreak >= 30) unlocked.push("badge_month_streak");
 
+    // Monthly goal badge (GAME-003)
+    if (monthlyGoalData.isGoalMet) unlocked.push("badge_monthly_goal");
+
     // TODO: First year badge requires child birth date comparison (GAME-004)
 
     return unlocked;
-  }, [completedMilestones, entries, streakData]);
+  }, [completedMilestones, entries, streakData, monthlyGoalData]);
 
   const unlockedBadges = useMemo(
     () => BADGE_DEFINITIONS.filter((b) => unlockedBadgeIds.includes(b.id)),
@@ -354,6 +415,7 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
     totalBadges: BADGE_DEFINITIONS.length,
     unlockedCount: unlockedBadges.length,
     streakData,
+    monthlyGoalData,
     getBadgeById,
     isBadgeUnlocked,
     markBadgeAsSeen,

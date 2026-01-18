@@ -56,6 +56,7 @@ import {
 
 import {
   calculateStreak,
+  calculateMonthlyGoal,
   type StreakData,
 } from "@/contexts/gamification-context";
 
@@ -263,6 +264,88 @@ describe("GamificationContext", () => {
       const entries = [{ date: today.toISOString().split("T")[0] }];
       const result = calculateStreak(entries);
       expect(result.lastEntryDate).toBe(today.toISOString().split("T")[0]);
+    });
+  });
+
+  describe("Monthly goal calculation (GAME-003)", () => {
+    it("calculates 0 progress for no entries", () => {
+      const result = calculateMonthlyGoal([], 10);
+      expect(result.currentCount).toBe(0);
+      expect(result.goalCount).toBe(10);
+      expect(result.isGoalMet).toBe(false);
+      expect(result.progressPercent).toBe(0);
+    });
+
+    it("counts only entries from current month", () => {
+      const today = new Date();
+      const currentMonth = today.toISOString().slice(0, 7); // YYYY-MM
+
+      // Entry from current month
+      const thisMonthDate = `${currentMonth}-15`;
+      // Entry from last month
+      const lastMonth = new Date(today);
+      lastMonth.setMonth(lastMonth.getMonth() - 1);
+      const lastMonthDate = lastMonth.toISOString().split("T")[0];
+
+      const entries = [{ date: thisMonthDate }, { date: lastMonthDate }];
+      const result = calculateMonthlyGoal(entries, 10);
+      expect(result.currentCount).toBe(1);
+    });
+
+    it("returns isGoalMet true when goal reached", () => {
+      const today = new Date();
+      const currentMonth = today.toISOString().slice(0, 7);
+
+      const entries: { date: string }[] = [];
+      for (let i = 1; i <= 10; i++) {
+        entries.push({ date: `${currentMonth}-${String(i).padStart(2, "0")}` });
+      }
+
+      const result = calculateMonthlyGoal(entries, 10);
+      expect(result.currentCount).toBe(10);
+      expect(result.isGoalMet).toBe(true);
+    });
+
+    it("caps progressPercent at 100", () => {
+      const today = new Date();
+      const currentMonth = today.toISOString().slice(0, 7);
+
+      const entries: { date: string }[] = [];
+      for (let i = 1; i <= 15; i++) {
+        entries.push({ date: `${currentMonth}-${String(i).padStart(2, "0")}` });
+      }
+
+      const result = calculateMonthlyGoal(entries, 10);
+      expect(result.progressPercent).toBe(100);
+    });
+
+    it("returns current month name", () => {
+      const result = calculateMonthlyGoal([], 10);
+      const expectedMonth = new Date().toLocaleString("en-US", {
+        month: "long",
+      });
+      expect(result.monthName).toBe(expectedMonth);
+    });
+
+    it("calculates correct progressPercent", () => {
+      const today = new Date();
+      const currentMonth = today.toISOString().slice(0, 7);
+
+      const entries = [
+        { date: `${currentMonth}-01` },
+        { date: `${currentMonth}-02` },
+        { date: `${currentMonth}-03` },
+        { date: `${currentMonth}-04` },
+        { date: `${currentMonth}-05` },
+      ];
+
+      const result = calculateMonthlyGoal(entries, 10);
+      expect(result.progressPercent).toBe(50);
+    });
+
+    it("uses default goal of 10 if not specified", () => {
+      const result = calculateMonthlyGoal([]);
+      expect(result.goalCount).toBe(10);
     });
   });
 });

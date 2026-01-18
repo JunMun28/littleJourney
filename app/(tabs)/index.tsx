@@ -204,6 +204,92 @@ function OnThisDayCard({ memories, onPress, onDismiss }: OnThisDayCardProps) {
   );
 }
 
+// GAME-003: Monthly Goal Card Component
+interface MonthlyGoalCardProps {
+  currentCount: number;
+  goalCount: number;
+  isGoalMet: boolean;
+  progressPercent: number;
+  monthName: string;
+}
+
+function MonthlyGoalCard({
+  currentCount,
+  goalCount,
+  isGoalMet,
+  progressPercent,
+  monthName,
+}: MonthlyGoalCardProps) {
+  const colorScheme = useColorScheme() ?? "light";
+  const colors = Colors[colorScheme];
+
+  // Show card always to encourage engagement
+  const goalIcon = isGoalMet ? "🎉" : "🎯";
+  const statusText = isGoalMet
+    ? "Goal reached!"
+    : `${currentCount} of ${goalCount} entries`;
+
+  return (
+    <View
+      style={[
+        styles.monthlyGoalCard,
+        { backgroundColor: colors.backgroundSecondary },
+        isGoalMet && styles.monthlyGoalCardComplete,
+      ]}
+      testID="monthly-goal-card"
+    >
+      <View style={styles.monthlyGoalHeader}>
+        <ThemedText style={styles.monthlyGoalIcon}>{goalIcon}</ThemedText>
+        <View style={styles.monthlyGoalInfo}>
+          <ThemedText type="subtitle" style={styles.monthlyGoalTitle}>
+            {monthName} Goal
+          </ThemedText>
+          <ThemedText
+            style={[styles.monthlyGoalStatus, { color: colors.textSecondary }]}
+          >
+            {statusText}
+          </ThemedText>
+        </View>
+      </View>
+      <View style={styles.monthlyGoalProgressContainer}>
+        <View
+          style={[
+            styles.monthlyGoalProgressBar,
+            { backgroundColor: colors.border },
+          ]}
+        >
+          <View
+            style={[
+              styles.monthlyGoalProgressFill,
+              {
+                width: `${progressPercent}%`,
+                backgroundColor: isGoalMet
+                  ? SemanticColors.success
+                  : PRIMARY_COLOR,
+              },
+            ]}
+          />
+        </View>
+        <ThemedText
+          style={[styles.monthlyGoalPercent, { color: colors.textSecondary }]}
+        >
+          {progressPercent}%
+        </ThemedText>
+      </View>
+      {isGoalMet && (
+        <ThemedText
+          style={[
+            styles.monthlyGoalCelebration,
+            { color: SemanticColors.success },
+          ]}
+        >
+          🏆 Badge unlocked!
+        </ThemedText>
+      )}
+    </View>
+  );
+}
+
 // GAME-002: Streak Card Component
 interface StreakCardProps {
   currentStreak: number;
@@ -367,8 +453,8 @@ export default function FeedScreen() {
     stopRecording,
     discardRecording,
   } = useVoiceJournal();
-  // Streak tracking (GAME-002)
-  const { streakData } = useGamification();
+  // Gamification: streak and monthly goal (GAME-002, GAME-003)
+  const { streakData, monthlyGoalData } = useGamification();
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
 
@@ -893,6 +979,13 @@ export default function FeedScreen() {
             <StreakCard
               currentStreak={streakData.currentStreak}
               longestStreak={streakData.longestStreak}
+            />
+            <MonthlyGoalCard
+              currentCount={monthlyGoalData.currentCount}
+              goalCount={monthlyGoalData.goalCount}
+              isGoalMet={monthlyGoalData.isGoalMet}
+              progressPercent={monthlyGoalData.progressPercent}
+              monthName={monthlyGoalData.monthName}
             />
             <OnThisDayCard
               memories={onThisDayMemories}
@@ -1852,6 +1945,61 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 8,
+  },
+  // Monthly goal card styles (GAME-003)
+  monthlyGoalCard: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  monthlyGoalCardComplete: {
+    borderWidth: 1,
+    borderColor: SemanticColors.success,
+  },
+  monthlyGoalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  monthlyGoalIcon: {
+    fontSize: 28,
+    marginRight: 12,
+  },
+  monthlyGoalInfo: {
+    flex: 1,
+  },
+  monthlyGoalTitle: {
+    fontWeight: "600",
+  },
+  monthlyGoalStatus: {
+    fontSize: 13,
+    marginTop: 2,
+  },
+  monthlyGoalProgressContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  monthlyGoalProgressBar: {
+    flex: 1,
+    height: 8,
+    borderRadius: 4,
+    overflow: "hidden",
+  },
+  monthlyGoalProgressFill: {
+    height: "100%",
+    borderRadius: 4,
+  },
+  monthlyGoalPercent: {
+    fontSize: 12,
+    minWidth: 32,
+    textAlign: "right",
+  },
+  monthlyGoalCelebration: {
+    fontSize: 13,
+    marginTop: 8,
+    textAlign: "center",
+    fontWeight: "500",
   },
   // Streak card styles (GAME-002)
   streakCard: {
