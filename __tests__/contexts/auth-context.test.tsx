@@ -17,11 +17,14 @@ function TestConsumer() {
     isAuthenticated,
     hasCompletedOnboarding,
     signIn,
+    signInAsChild,
     signOut,
     completeOnboarding,
     deletionScheduledAt,
     requestAccountDeletion,
     cancelAccountDeletion,
+    userRole,
+    isChildView,
   } = useAuth();
   return (
     <>
@@ -29,11 +32,19 @@ function TestConsumer() {
       <Text testID="authenticated">{isAuthenticated ? "yes" : "no"}</Text>
       <Text testID="onboarded">{hasCompletedOnboarding ? "yes" : "no"}</Text>
       <Text testID="user">{user?.email ?? "none"}</Text>
+      <Text testID="user-role">{userRole}</Text>
+      <Text testID="is-child-view">{isChildView ? "yes" : "no"}</Text>
       <Text testID="deletion-scheduled">
         {deletionScheduledAt ?? "not-scheduled"}
       </Text>
       <Text testID="sign-in" onPress={() => signIn("test@example.com")}>
         Sign In
+      </Text>
+      <Text
+        testID="sign-in-as-child"
+        onPress={() => signInAsChild("child-123", "1234")}
+      >
+        Sign In As Child
       </Text>
       <Text testID="sign-out" onPress={() => signOut()}>
         Sign Out
@@ -432,6 +443,127 @@ describe("AuthContext", () => {
           expect.stringContaining('"hasCompletedOnboarding":true'),
         );
       });
+    });
+  });
+
+  // CAPSULE-006: Child access tests
+  describe("Child access (CAPSULE-006)", () => {
+    it("provides userRole as 'parent' by default", async () => {
+      render(
+        <AuthProvider>
+          <TestConsumer />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId("loading")).toHaveTextContent("ready");
+      });
+
+      expect(screen.getByTestId("user-role")).toHaveTextContent("parent");
+      expect(screen.getByTestId("is-child-view")).toHaveTextContent("no");
+    });
+
+    it("sets userRole to 'parent' after parent signIn", async () => {
+      render(
+        <AuthProvider>
+          <TestConsumer />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId("loading")).toHaveTextContent("ready");
+      });
+
+      await act(async () => {
+        screen.getByTestId("sign-in").props.onPress();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId("authenticated")).toHaveTextContent("yes");
+      });
+
+      expect(screen.getByTestId("user-role")).toHaveTextContent("parent");
+      expect(screen.getByTestId("is-child-view")).toHaveTextContent("no");
+    });
+
+    it("sets userRole to 'child' after child signIn", async () => {
+      render(
+        <AuthProvider>
+          <TestConsumer />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId("loading")).toHaveTextContent("ready");
+      });
+
+      await act(async () => {
+        screen.getByTestId("sign-in-as-child").props.onPress();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId("authenticated")).toHaveTextContent("yes");
+      });
+
+      expect(screen.getByTestId("user-role")).toHaveTextContent("child");
+      expect(screen.getByTestId("is-child-view")).toHaveTextContent("yes");
+    });
+
+    it("resets userRole to 'parent' after signOut from child", async () => {
+      render(
+        <AuthProvider>
+          <TestConsumer />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId("loading")).toHaveTextContent("ready");
+      });
+
+      // Sign in as child
+      await act(async () => {
+        screen.getByTestId("sign-in-as-child").props.onPress();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId("user-role")).toHaveTextContent("child");
+      });
+
+      // Sign out
+      await act(async () => {
+        screen.getByTestId("sign-out").props.onPress();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId("authenticated")).toHaveTextContent("no");
+      });
+
+      expect(screen.getByTestId("user-role")).toHaveTextContent("parent");
+      expect(screen.getByTestId("is-child-view")).toHaveTextContent("no");
+    });
+
+    it("restores child role from SecureStore on mount", async () => {
+      const storedSession = JSON.stringify({
+        user: { id: "child-user-id", email: "child@example.com" },
+        hasCompletedOnboarding: true,
+        userRole: "child",
+        linkedChildId: "child-123",
+      });
+      (SecureStore.getItemAsync as jest.Mock).mockResolvedValue(storedSession);
+
+      render(
+        <AuthProvider>
+          <TestConsumer />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId("loading")).toHaveTextContent("ready");
+      });
+
+      expect(screen.getByTestId("authenticated")).toHaveTextContent("yes");
+      expect(screen.getByTestId("user-role")).toHaveTextContent("child");
+      expect(screen.getByTestId("is-child-view")).toHaveTextContent("yes");
     });
   });
 });

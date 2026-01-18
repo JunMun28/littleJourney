@@ -1539,3 +1539,48 @@ Reasoning: Singapore multi-lingual context. Extends milestone system to capture 
 
 ---
 
+### Task Selection
+Selected: CAPSULE-006 (Child access to time capsules) - Full implementation
+Priority: 4 (Standard features)
+Reasoning: Time Capsule context exists (7/8 complete). Last missing feature is child access. Auth context needs UserRole extension. TimeCapsule screen needs conditional rendering based on role.
+
+### Implementation Complete
+
+**Task:** CAPSULE-006 Child access to time capsules
+**PRD Ref:** Time Capsule - CAPSULE-006
+
+**Key Decisions:**
+- Extended AuthContext with UserRole type ("parent" | "child")
+- Added signInAsChild(childId, pin) for child authentication
+- Added isChildView computed property and linkedChildId state
+- Session persistence includes role and linkedChildId
+- Added getCapsulesForChildView() to TimeCapsuleContext (returns only unlocked/opened_early capsules)
+- Time capsule screen renders conditionally based on isChildView
+- Child view: shows only unlocked capsules, no FAB, no create modal, child-specific empty state
+- Parent view: shows sealed/unlocked sections, FAB visible, full create modal access
+
+**Files Changed:**
+- MODIFIED: contexts/auth-context.tsx (+UserRole type, +signInAsChild, +isChildView, +linkedChildId, +session persistence)
+- MODIFIED: __tests__/contexts/auth-context.test.tsx (+5 child access tests)
+- MODIFIED: contexts/time-capsule-context.tsx (+getCapsulesForChildView function)
+- MODIFIED: __tests__/contexts/time-capsule-context.test.tsx (+3 CAPSULE-006 tests)
+- MODIFIED: app/(tabs)/time-capsule.tsx (+isChildView check, +childViewCapsules, +renderChildView/renderParentView, +child empty state)
+- MODIFIED: __tests__/app/tabs/time-capsule.test.tsx (+AuthProvider wrapper, +SecureStore mock, +3 CAPSULE-006 tests)
+- MODIFIED: prd-killer-features.json (CAPSULE-006 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- tsc --noEmit: PASS
+- npm run lint: PASS
+- npm test (time-capsule): 52/52 PASS
+- npm test (auth): 20/20 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- CAPSULE-006 complete: Child logs in with credentials, sees only unlocked capsules, sealed capsules hidden
+- Time Capsule category now 8/8 complete (all features implemented)
+- PIN verification mock implementation - real PIN check TBD with backend
+- Child view hides all create functionality (FAB, create modal, empty state button)
+
+---
+

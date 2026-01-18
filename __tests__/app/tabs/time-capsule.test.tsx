@@ -10,6 +10,7 @@ import { TimeCapsuleProvider } from "@/contexts/time-capsule-context";
 import { ChildProvider, useChild } from "@/contexts/child-context";
 import { VoiceJournalProvider } from "@/contexts/voice-journal-context";
 import { NotificationProvider } from "@/contexts/notification-context";
+import { AuthProvider } from "@/contexts/auth-context";
 import { useEffect } from "react";
 
 // Mock expo-notifications (required by NotificationProvider -> TimeCapsuleProvider)
@@ -98,6 +99,13 @@ jest.mock("expo-image-picker", () => ({
   },
 }));
 
+// Mock expo-secure-store (required by AuthProvider)
+jest.mock("expo-secure-store", () => ({
+  getItemAsync: jest.fn().mockResolvedValue(null),
+  setItemAsync: jest.fn().mockResolvedValue(undefined),
+  deleteItemAsync: jest.fn().mockResolvedValue(undefined),
+}));
+
 // Mock DateTimePicker
 jest.mock("@react-native-community/datetimepicker", () => {
   const MockDateTimePicker = ({
@@ -154,15 +162,17 @@ function TestWrapper({ children }: { children: React.ReactNode }) {
   const queryClient = createTestQueryClient();
   return (
     <QueryClientProvider client={queryClient}>
-      <ChildProvider>
-        <NotificationProvider>
-          <ChildSetup>
-            <VoiceJournalProvider>
-              <TimeCapsuleProvider>{children}</TimeCapsuleProvider>
-            </VoiceJournalProvider>
-          </ChildSetup>
-        </NotificationProvider>
-      </ChildProvider>
+      <AuthProvider>
+        <ChildProvider>
+          <NotificationProvider>
+            <ChildSetup>
+              <VoiceJournalProvider>
+                <TimeCapsuleProvider>{children}</TimeCapsuleProvider>
+              </VoiceJournalProvider>
+            </ChildSetup>
+          </NotificationProvider>
+        </ChildProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
@@ -171,11 +181,13 @@ function TestWrapperNoChild({ children }: { children: React.ReactNode }) {
   const queryClient = createTestQueryClient();
   return (
     <QueryClientProvider client={queryClient}>
-      <ChildProvider>
-        <NotificationProvider>
-          <TimeCapsuleProvider>{children}</TimeCapsuleProvider>
-        </NotificationProvider>
-      </ChildProvider>
+      <AuthProvider>
+        <ChildProvider>
+          <NotificationProvider>
+            <TimeCapsuleProvider>{children}</TimeCapsuleProvider>
+          </NotificationProvider>
+        </ChildProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
@@ -1111,6 +1123,79 @@ describe("TimeCapsuleScreen", () => {
       await waitFor(() => {
         expect(screen.getByText("Up to 2 minutes")).toBeTruthy();
       });
+    });
+  });
+
+  // CAPSULE-006: Child access to time capsules
+  describe("CAPSULE-006: Child access", () => {
+    // CAPSULE-006: Parent view shows empty state with create button
+    it("renders parent empty state with create button", async () => {
+      render(
+        <TestWrapper>
+          <TimeCapsuleScreen />
+        </TestWrapper>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId("parent-empty-state")).toBeTruthy();
+      });
+
+      expect(screen.getByTestId("empty-state-create-button")).toBeTruthy();
+    });
+
+    // CAPSULE-006: Parent view shows FAB when capsules exist
+    it("shows FAB to create capsules in parent view", async () => {
+      render(
+        <TestWrapper>
+          <TimeCapsuleScreen />
+        </TestWrapper>,
+      );
+
+      // Create a capsule
+      fireEvent.press(screen.getByText("Write New Letter"));
+      await waitFor(() => {
+        expect(screen.getByTestId("letter-content-input")).toBeTruthy();
+      });
+      fireEvent.changeText(
+        screen.getByTestId("letter-content-input"),
+        "Parent letter test",
+      );
+      fireEvent.press(screen.getByTestId("save-capsule-button"));
+
+      // Wait for capsule to appear
+      await waitFor(() => {
+        expect(screen.getByText("Sealed (1)")).toBeTruthy();
+      });
+
+      // FAB should be visible for parent
+      expect(screen.getByTestId("create-capsule-fab")).toBeTruthy();
+    });
+
+    // CAPSULE-006: Parent view shows sealed and opened sections
+    it("shows sealed and opened sections in parent view", async () => {
+      render(
+        <TestWrapper>
+          <TimeCapsuleScreen />
+        </TestWrapper>,
+      );
+
+      // Create a capsule
+      fireEvent.press(screen.getByText("Write New Letter"));
+      await waitFor(() => {
+        expect(screen.getByTestId("letter-content-input")).toBeTruthy();
+      });
+      fireEvent.changeText(
+        screen.getByTestId("letter-content-input"),
+        "Parent letter test",
+      );
+      fireEvent.press(screen.getByTestId("save-capsule-button"));
+
+      // Wait for sealed section
+      await waitFor(() => {
+        expect(screen.getByTestId("parent-capsule-list")).toBeTruthy();
+      });
+
+      expect(screen.getByText("Sealed (1)")).toBeTruthy();
     });
   });
 });

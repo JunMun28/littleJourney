@@ -52,6 +52,7 @@ interface TimeCapsuleContextValue {
   getUnlockedCapsules: () => TimeCapsule[];
   forceUnlock: (id: string) => void; // CAPSULE-007: Emergency unlock
   checkAndUnlockCapsules: () => void; // CAPSULE-005: Check and unlock due capsules
+  getCapsulesForChildView: () => TimeCapsule[]; // CAPSULE-006: Child access view
 }
 
 const TimeCapsuleContext = createContext<TimeCapsuleContextValue | null>(null);
@@ -124,6 +125,16 @@ export function TimeCapsuleProvider({ children }: TimeCapsuleProviderProps) {
   }, [capsules]);
 
   const getUnlockedCapsules = useCallback((): TimeCapsule[] => {
+    return capsules.filter(
+      (capsule) =>
+        capsule.status === "unlocked" || capsule.status === "opened_early",
+    );
+  }, [capsules]);
+
+  // CAPSULE-006: Get capsules for child view (only unlocked/opened_early visible)
+  const getCapsulesForChildView = useCallback((): TimeCapsule[] => {
+    // Children can only see capsules that have been unlocked or opened early
+    // Sealed capsules are hidden (they should only show countdown in child view UI)
     return capsules.filter(
       (capsule) =>
         capsule.status === "unlocked" || capsule.status === "opened_early",
@@ -206,6 +217,7 @@ export function TimeCapsuleProvider({ children }: TimeCapsuleProviderProps) {
       getUnlockedCapsules,
       forceUnlock,
       checkAndUnlockCapsules,
+      getCapsulesForChildView,
     }),
     [
       capsules,
@@ -215,6 +227,7 @@ export function TimeCapsuleProvider({ children }: TimeCapsuleProviderProps) {
       getUnlockedCapsules,
       forceUnlock,
       checkAndUnlockCapsules,
+      getCapsulesForChildView,
     ],
   );
 

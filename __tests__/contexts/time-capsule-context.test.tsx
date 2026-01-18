@@ -449,3 +449,120 @@ describe("CAPSULE-005: Time capsule delivery notification", () => {
     );
   });
 });
+
+// Test component for CAPSULE-006 child access
+function ChildAccessTestConsumer() {
+  const { capsules, createCapsule, forceUnlock, getCapsulesForChildView } =
+    useTimeCapsules();
+
+  const childViewCapsules = getCapsulesForChildView();
+
+  return (
+    <>
+      <Text testID="total-count">{capsules.length}</Text>
+      <Text testID="child-view-count">{childViewCapsules.length}</Text>
+      <Text testID="child-view-first-status">
+        {childViewCapsules[0]?.status ?? "none"}
+      </Text>
+      <Text
+        testID="create-sealed"
+        onPress={() =>
+          createCapsule({
+            letterContent: "Sealed letter",
+            unlockType: "age",
+            unlockAge: 21,
+          })
+        }
+      >
+        Create Sealed
+      </Text>
+      <Text
+        testID="create-and-force-unlock"
+        onPress={() => {
+          const c = createCapsule({
+            letterContent: "Force unlocked letter",
+            unlockType: "age",
+            unlockAge: 21,
+          });
+          forceUnlock(c.id);
+        }}
+      >
+        Create and Force Unlock
+      </Text>
+    </>
+  );
+}
+
+describe("CAPSULE-006: Child access to time capsules", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("provides getCapsulesForChildView function", () => {
+    render(
+      <TestWrapper>
+        <ChildAccessTestConsumer />
+      </TestWrapper>,
+    );
+
+    expect(screen.getByTestId("child-view-count")).toHaveTextContent("0");
+  });
+
+  it("getCapsulesForChildView returns only unlocked/opened_early capsules", async () => {
+    render(
+      <TestWrapper>
+        <ChildAccessTestConsumer />
+      </TestWrapper>,
+    );
+
+    // Create a sealed capsule
+    await act(async () => {
+      screen.getByTestId("create-sealed").props.onPress();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("total-count")).toHaveTextContent("1");
+    });
+
+    // Child view should not see sealed capsules
+    expect(screen.getByTestId("child-view-count")).toHaveTextContent("0");
+
+    // Create and force unlock a capsule
+    await act(async () => {
+      screen.getByTestId("create-and-force-unlock").props.onPress();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("total-count")).toHaveTextContent("2");
+    });
+
+    // Child view should see the unlocked capsule
+    expect(screen.getByTestId("child-view-count")).toHaveTextContent("1");
+    expect(screen.getByTestId("child-view-first-status")).toHaveTextContent(
+      "opened_early",
+    );
+  });
+
+  it("getCapsulesForChildView excludes sealed capsules", async () => {
+    render(
+      <TestWrapper>
+        <ChildAccessTestConsumer />
+      </TestWrapper>,
+    );
+
+    // Create multiple sealed capsules
+    await act(async () => {
+      screen.getByTestId("create-sealed").props.onPress();
+    });
+    await act(async () => {
+      screen.getByTestId("create-sealed").props.onPress();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("total-count")).toHaveTextContent("2");
+    });
+
+    // Child view should not show any sealed capsules
+    expect(screen.getByTestId("child-view-count")).toHaveTextContent("0");
+  });
+});

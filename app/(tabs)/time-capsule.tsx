@@ -23,6 +23,7 @@ import {
   PRESET_UNLOCK_AGES,
 } from "@/contexts/time-capsule-context";
 import { useChild } from "@/contexts/child-context";
+import { useAuth } from "@/contexts/auth-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
   PRIMARY_COLOR,
@@ -210,11 +211,13 @@ export default function TimeCapsuleScreen() {
   const colors = Colors[colorScheme];
 
   const { child } = useChild();
+  const { isChildView } = useAuth();
   const {
     capsules,
     createCapsule,
     getSealedCapsules,
     getUnlockedCapsules,
+    getCapsulesForChildView,
     checkAndUnlockCapsules,
   } = useTimeCapsules();
 
@@ -264,7 +267,15 @@ export default function TimeCapsuleScreen() {
     [getUnlockedCapsules],
   );
 
-  const hasCapsules = capsules.length > 0;
+  // CAPSULE-006: Child view only sees unlocked capsules
+  const childViewCapsules = useMemo(
+    () => getCapsulesForChildView(),
+    [getCapsulesForChildView],
+  );
+
+  const hasCapsules = isChildView
+    ? childViewCapsules.length > 0
+    : capsules.length > 0;
 
   // CAPSULE-002: Cleanup on unmount
   useEffect(() => {
@@ -687,8 +698,24 @@ export default function TimeCapsuleScreen() {
     );
   };
 
+  // CAPSULE-006: Child view empty state
+  const renderChildEmptyState = () => (
+    <View testID="child-empty-state" style={styles.emptyState}>
+      <Text style={styles.emptyStateIcon}>⏳</Text>
+      <ThemedText type="subtitle" style={styles.emptyStateTitle}>
+        No Letters Yet
+      </ThemedText>
+      <ThemedText
+        style={[styles.emptyStateText, { color: colors.textSecondary }]}
+      >
+        Your parents have written special letters for you! They will appear here
+        when it&apos;s time to read them.
+      </ThemedText>
+    </View>
+  );
+
   const renderEmptyState = () => (
-    <View style={styles.emptyState}>
+    <View testID="parent-empty-state" style={styles.emptyState}>
       <Text style={styles.emptyStateIcon}>💌</Text>
       <ThemedText type="subtitle" style={styles.emptyStateTitle}>
         No Time Capsules Yet
@@ -735,37 +762,63 @@ export default function TimeCapsuleScreen() {
     </View>
   );
 
+  // CAPSULE-006: Render child view (only unlocked capsules visible)
+  const renderChildView = () => {
+    if (!hasCapsules) {
+      return renderChildEmptyState();
+    }
+
+    return (
+      <ScrollView testID="child-capsule-list" style={styles.scrollView}>
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
+            Your Letters ({childViewCapsules.length})
+          </Text>
+          {childViewCapsules.map(renderCapsuleCard)}
+        </View>
+      </ScrollView>
+    );
+  };
+
+  // CAPSULE-006: Render parent view (sealed and unlocked sections)
+  const renderParentView = () => {
+    if (!hasCapsules) {
+      return renderEmptyState();
+    }
+
+    return (
+      <ScrollView testID="parent-capsule-list" style={styles.scrollView}>
+        {sealedCapsules.length > 0 && (
+          <View style={styles.section}>
+            <Text
+              style={[styles.sectionTitle, { color: colors.textSecondary }]}
+            >
+              Sealed ({sealedCapsules.length})
+            </Text>
+            {sealedCapsules.map(renderCapsuleCard)}
+          </View>
+        )}
+        {unlockedCapsules.length > 0 && (
+          <View style={styles.section}>
+            <Text
+              style={[styles.sectionTitle, { color: colors.textSecondary }]}
+            >
+              Opened ({unlockedCapsules.length})
+            </Text>
+            {unlockedCapsules.map(renderCapsuleCard)}
+          </View>
+        )}
+      </ScrollView>
+    );
+  };
+
   return (
     <ThemedView style={styles.container}>
-      {!hasCapsules ? (
-        renderEmptyState()
-      ) : (
-        <ScrollView style={styles.scrollView}>
-          {sealedCapsules.length > 0 && (
-            <View style={styles.section}>
-              <Text
-                style={[styles.sectionTitle, { color: colors.textSecondary }]}
-              >
-                Sealed ({sealedCapsules.length})
-              </Text>
-              {sealedCapsules.map(renderCapsuleCard)}
-            </View>
-          )}
-          {unlockedCapsules.length > 0 && (
-            <View style={styles.section}>
-              <Text
-                style={[styles.sectionTitle, { color: colors.textSecondary }]}
-              >
-                Opened ({unlockedCapsules.length})
-              </Text>
-              {unlockedCapsules.map(renderCapsuleCard)}
-            </View>
-          )}
-        </ScrollView>
-      )}
+      {/* CAPSULE-006: Conditional rendering based on user role */}
+      {isChildView ? renderChildView() : renderParentView()}
 
-      {/* FAB to create new capsule */}
-      {hasCapsules && (
+      {/* FAB to create new capsule - hidden for child view */}
+      {!isChildView && hasCapsules && (
         <Pressable
           testID="create-capsule-fab"
           style={[styles.fab, Shadows.large]}

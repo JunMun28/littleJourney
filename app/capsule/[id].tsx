@@ -12,7 +12,10 @@ import { BlurView } from "expo-blur";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { useTimeCapsules, type TimeCapsule } from "@/contexts/time-capsule-context";
+import {
+  useTimeCapsules,
+  type TimeCapsule,
+} from "@/contexts/time-capsule-context";
 import { useChild } from "@/contexts/child-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
@@ -33,7 +36,10 @@ function formatDate(dateString: string): string {
 }
 
 // Calculate unlock date from age
-function calculateUnlockDateFromAge(birthDate: string, unlockAge: number): Date {
+function calculateUnlockDateFromAge(
+  birthDate: string,
+  unlockAge: number,
+): Date {
   const birth = new Date(birthDate);
   const unlockDate = new Date(birth);
   unlockDate.setFullYear(birth.getFullYear() + unlockAge);
@@ -43,7 +49,7 @@ function calculateUnlockDateFromAge(birthDate: string, unlockAge: number): Date 
 // Get time until unlock string
 function getTimeUntilUnlock(
   capsule: TimeCapsule,
-  childBirthDate?: string
+  childBirthDate?: string,
 ): string {
   let unlockDate: Date;
 
@@ -79,9 +85,15 @@ function getTimeUntilUnlock(
 }
 
 // Get unlock date description
-function getUnlockDescription(capsule: TimeCapsule, childBirthDate?: string): string {
+function getUnlockDescription(
+  capsule: TimeCapsule,
+  childBirthDate?: string,
+): string {
   if (capsule.unlockType === "age" && capsule.unlockAge && childBirthDate) {
-    const unlockDate = calculateUnlockDateFromAge(childBirthDate, capsule.unlockAge);
+    const unlockDate = calculateUnlockDateFromAge(
+      childBirthDate,
+      capsule.unlockAge,
+    );
     return `When child turns ${capsule.unlockAge} (${formatDate(unlockDate.toISOString())})`;
   } else if (capsule.unlockType === "custom_date" && capsule.unlockDate) {
     return formatDate(capsule.unlockDate);
@@ -125,7 +137,10 @@ export default function CapsuleDetailScreen() {
         <Pressable
           testID="back-button"
           onPress={handleBack}
-          style={[styles.notFoundBackButton, { backgroundColor: colors.backgroundSecondary }]}
+          style={[
+            styles.notFoundBackButton,
+            { backgroundColor: colors.backgroundSecondary },
+          ]}
         >
           <ThemedText>Go Back</ThemedText>
         </Pressable>
@@ -140,7 +155,9 @@ export default function CapsuleDetailScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <StatusBar barStyle={colorScheme === "dark" ? "light-content" : "dark-content"} />
+      <StatusBar
+        barStyle={colorScheme === "dark" ? "light-content" : "dark-content"}
+      />
 
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
@@ -153,7 +170,10 @@ export default function CapsuleDetailScreen() {
         <View style={{ width: 50 }} />
       </View>
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+      >
         {/* Status banner */}
         <View
           testID="capsule-status-banner"
@@ -179,7 +199,9 @@ export default function CapsuleDetailScreen() {
                   ? "Opened early"
                   : "Unlocked"}
             </ThemedText>
-            <ThemedText style={[styles.statusSubtitle, { color: colors.textSecondary }]}>
+            <ThemedText
+              style={[styles.statusSubtitle, { color: colors.textSecondary }]}
+            >
               {isSealed
                 ? `Opens ${unlockDescription}`
                 : capsule.unlockedAt
@@ -188,47 +210,79 @@ export default function CapsuleDetailScreen() {
             </ThemedText>
           </View>
           {isSealed && (
-            <View style={[styles.countdownBadge, { backgroundColor: SemanticColors.info }]}>
+            <View
+              style={[
+                styles.countdownBadge,
+                { backgroundColor: SemanticColors.info },
+              ]}
+            >
               <ThemedText style={styles.countdownText}>{timeUntil}</ThemedText>
             </View>
           )}
         </View>
 
         {/* Capsule metadata */}
-        <View style={[styles.metadataCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }, Shadows.small]}>
+        <View
+          style={[
+            styles.metadataCard,
+            { backgroundColor: colors.card, borderColor: colors.cardBorder },
+            Shadows.small,
+          ]}
+        >
           <View style={styles.metadataRow}>
-            <ThemedText style={[styles.metadataLabel, { color: colors.textSecondary }]}>
+            <ThemedText
+              style={[styles.metadataLabel, { color: colors.textSecondary }]}
+            >
               Created
             </ThemedText>
             <ThemedText style={styles.metadataValue}>
               {formatDate(capsule.createdAt)}
             </ThemedText>
           </View>
-          <View style={[styles.metadataDivider, { backgroundColor: colors.border }]} />
+          <View
+            style={[styles.metadataDivider, { backgroundColor: colors.border }]}
+          />
           <View style={styles.metadataRow}>
-            <ThemedText style={[styles.metadataLabel, { color: colors.textSecondary }]}>
+            <ThemedText
+              style={[styles.metadataLabel, { color: colors.textSecondary }]}
+            >
               Unlock Date
             </ThemedText>
-            <ThemedText style={styles.metadataValue}>{unlockDescription}</ThemedText>
+            <ThemedText style={styles.metadataValue}>
+              {unlockDescription}
+            </ThemedText>
           </View>
-          {capsule.attachedPhotoUris && capsule.attachedPhotoUris.length > 0 && (
-            <>
-              <View style={[styles.metadataDivider, { backgroundColor: colors.border }]} />
-              <View style={styles.metadataRow}>
-                <ThemedText style={[styles.metadataLabel, { color: colors.textSecondary }]}>
-                  Photos
-                </ThemedText>
-                <ThemedText style={styles.metadataValue}>
-                  {capsule.attachedPhotoUris.length} attached
-                </ThemedText>
-              </View>
-            </>
-          )}
+          {capsule.attachedPhotoUris &&
+            capsule.attachedPhotoUris.length > 0 && (
+              <>
+                <View
+                  style={[
+                    styles.metadataDivider,
+                    { backgroundColor: colors.border },
+                  ]}
+                />
+                <View style={styles.metadataRow}>
+                  <ThemedText
+                    style={[
+                      styles.metadataLabel,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    Photos
+                  </ThemedText>
+                  <ThemedText style={styles.metadataValue}>
+                    {capsule.attachedPhotoUris.length} attached
+                  </ThemedText>
+                </View>
+              </>
+            )}
         </View>
 
         {/* Letter content - blurred if sealed */}
         <View style={styles.contentSection}>
-          <ThemedText style={[styles.contentLabel, { color: colors.textSecondary }]}>
+          <ThemedText
+            style={[styles.contentLabel, { color: colors.textSecondary }]}
+          >
             Letter Content
           </ThemedText>
           <View
@@ -240,10 +294,15 @@ export default function CapsuleDetailScreen() {
             ]}
           >
             {isSealed ? (
-              <View testID="sealed-content-view" style={styles.sealedContentWrapper}>
+              <View
+                testID="sealed-content-view"
+                style={styles.sealedContentWrapper}
+              >
                 {/* Blurred text content */}
                 <View style={styles.blurredTextContainer}>
-                  <ThemedText style={[styles.blurredText, { color: colors.textMuted }]}>
+                  <ThemedText
+                    style={[styles.blurredText, { color: colors.textMuted }]}
+                  >
                     {capsule.letterContent}
                   </ThemedText>
                   <BlurView
@@ -255,19 +314,32 @@ export default function CapsuleDetailScreen() {
 
                 {/* Overlay with lock icon */}
                 <View style={styles.sealedOverlay}>
-                  <View style={[styles.lockIconContainer, { backgroundColor: SemanticColors.infoLight }]}>
+                  <View
+                    style={[
+                      styles.lockIconContainer,
+                      { backgroundColor: SemanticColors.infoLight },
+                    ]}
+                  >
                     <ThemedText style={styles.lockIcon}>🔒</ThemedText>
                   </View>
                   <ThemedText style={styles.sealedMessage}>
                     Content is sealed
                   </ThemedText>
-                  <ThemedText style={[styles.sealedSubmessage, { color: colors.textSecondary }]}>
+                  <ThemedText
+                    style={[
+                      styles.sealedSubmessage,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
                     This letter will unlock {unlockDescription.toLowerCase()}
                   </ThemedText>
                 </View>
               </View>
             ) : (
-              <ThemedText testID="unlocked-content-view" style={styles.letterContent}>
+              <ThemedText
+                testID="unlocked-content-view"
+                style={styles.letterContent}
+              >
                 {capsule.letterContent}
               </ThemedText>
             )}
@@ -279,10 +351,18 @@ export default function CapsuleDetailScreen() {
         {isSealed && (
           <Pressable
             testID="force-unlock-button"
-            style={[styles.forceUnlockButton, { borderColor: SemanticColors.warning }]}
+            style={[
+              styles.forceUnlockButton,
+              { borderColor: SemanticColors.warning },
+            ]}
             onPress={() => setShowForceUnlockModal(true)}
           >
-            <ThemedText style={[styles.forceUnlockButtonText, { color: SemanticColors.warning }]}>
+            <ThemedText
+              style={[
+                styles.forceUnlockButtonText,
+                { color: SemanticColors.warning },
+              ]}
+            >
               Unlock Early
             </ThemedText>
           </Pressable>
@@ -291,7 +371,9 @@ export default function CapsuleDetailScreen() {
         {/* No edit functionality - capsule is immutable after sealing */}
         <View style={styles.infoBox}>
           <ThemedText style={styles.infoIcon}>ℹ️</ThemedText>
-          <ThemedText style={[styles.infoText, { color: colors.textSecondary }]}>
+          <ThemedText
+            style={[styles.infoText, { color: colors.textSecondary }]}
+          >
             {isSealed
               ? "This letter cannot be edited after sealing. You can unlock it early, but it will be marked as 'Opened Early'."
               : "This letter was opened and its content is now visible."}
@@ -309,31 +391,46 @@ export default function CapsuleDetailScreen() {
         <View style={styles.modalOverlay}>
           <View
             testID="force-unlock-modal"
-            style={[styles.modalContent, { backgroundColor: colors.background }]}
+            style={[
+              styles.modalContent,
+              { backgroundColor: colors.background },
+            ]}
           >
             <ThemedText style={styles.warningIcon}>⚠️</ThemedText>
             <ThemedText type="subtitle" style={styles.modalTitle}>
               Unlock Early?
             </ThemedText>
-            <ThemedText style={[styles.modalDescription, { color: colors.textSecondary }]}>
-              This will permanently unlock the time capsule before its scheduled date.
-              The letter will be marked as &quot;Opened Early&quot;.
+            <ThemedText
+              style={[styles.modalDescription, { color: colors.textSecondary }]}
+            >
+              This will permanently unlock the time capsule before its scheduled
+              date. The letter will be marked as &quot;Opened Early&quot;.
             </ThemedText>
-            <ThemedText style={[styles.modalNote, { color: SemanticColors.warning }]}>
+            <ThemedText
+              style={[styles.modalNote, { color: SemanticColors.warning }]}
+            >
               This action cannot be undone.
             </ThemedText>
 
             <View style={styles.modalButtons}>
               <Pressable
                 testID="cancel-force-unlock"
-                style={[styles.modalButton, styles.cancelButton, { borderColor: colors.border }]}
+                style={[
+                  styles.modalButton,
+                  styles.cancelButton,
+                  { borderColor: colors.border },
+                ]}
                 onPress={() => setShowForceUnlockModal(false)}
               >
                 <ThemedText>Cancel</ThemedText>
               </Pressable>
               <Pressable
                 testID="confirm-force-unlock"
-                style={[styles.modalButton, styles.confirmButton, { backgroundColor: SemanticColors.warning }]}
+                style={[
+                  styles.modalButton,
+                  styles.confirmButton,
+                  { backgroundColor: SemanticColors.warning },
+                ]}
                 onPress={handleForceUnlock}
               >
                 <ThemedText style={{ color: "#fff" }}>Unlock Now</ThemedText>

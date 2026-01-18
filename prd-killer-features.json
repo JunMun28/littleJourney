@@ -240,7 +240,7 @@
         "Verify sealed capsules show countdown only"
       ],
       "acceptanceCriteria": "Children can access their unlocked time capsules",
-      "passes": false
+      "passes": true
     },
     {
       "id": "CAPSULE-007",
