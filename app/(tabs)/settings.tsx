@@ -39,6 +39,7 @@ import { useChildFlat } from "@/hooks/use-children";
 import { useFamilyMembersFlat } from "@/hooks/use-family";
 import { useStripePayment } from "@/hooks/use-stripe-payment";
 import { PRIMARY_COLOR, Colors, SemanticColors } from "@/constants/theme";
+import { useCommunity } from "@/contexts/community-context";
 
 type ModalState =
   | "closed"
@@ -120,6 +121,11 @@ export default function SettingsScreen() {
   const { dailyPromptTime, setDailyPromptTime } = useUserPreferences();
   const { usedBytes, limitBytes, usagePercent, tier, setTier } = useStorage();
   const { exportData, isExporting, lastExportDate } = useExport();
+  const {
+    communityDataSharingEnabled,
+    sharingExplanation,
+    setCommunityDataSharingEnabled,
+  } = useCommunity();
   const { child, updateChild } = useChildFlat();
   const {
     currentPlan,
@@ -1010,6 +1016,43 @@ export default function SettingsScreen() {
 
         <Text style={[styles.exportDescription, { color: colors.textMuted }]}>
           Export all your entries, milestones, and child data as a JSON file.
+        </Text>
+
+        {/* Community Data Sharing Toggle - COMMUNITY-003 */}
+        <View
+          style={[
+            styles.settingRow,
+            { borderBottomColor: colors.border, marginTop: 16 },
+          ]}
+        >
+          <View style={styles.settingInfo}>
+            <Text style={[styles.settingLabel, { color: colors.text }]}>
+              Community Data Sharing
+            </Text>
+            <Text
+              style={[
+                styles.settingDescription,
+                { color: colors.textSecondary },
+              ]}
+            >
+              Share anonymized milestone data
+            </Text>
+          </View>
+          <Switch
+            testID="switch-communityDataSharing"
+            value={communityDataSharingEnabled}
+            onValueChange={setCommunityDataSharingEnabled}
+            trackColor={{ false: colors.border, true: PRIMARY_COLOR }}
+          />
+        </View>
+
+        <Text
+          style={[
+            styles.exportDescription,
+            { color: colors.textMuted, marginTop: 8 },
+          ]}
+        >
+          {sharingExplanation}
         </Text>
       </View>
 

@@ -1328,3 +1328,42 @@ Reasoning: TimeCapsuleContext exists. NotificationContext exists. Need to integr
 
 ---
 
+### Task Selection
+Selected: COMMUNITY-003 (Opt-in to community features) - Full implementation
+Priority: 1 (Architectural decisions and core abstractions)
+Reasoning: Community category completely unimplemented. Requires new CommunityContext for opt-in state. Foundation for COMMUNITY-001 and COMMUNITY-002.
+
+### Implementation Complete
+
+**Task:** COMMUNITY-003 Opt-in to community features
+**PRD Ref:** Community - COMMUNITY-003
+
+**Key Decisions:**
+- Created CommunityContext with communityDataSharingEnabled state (default false per PRD)
+- sharingExplanation provides clear text about what is shared (anonymized milestone timing data)
+- Toggle added to Data & Privacy section in Settings (after export button)
+- Shows description explaining what data is shared and that it can be disabled anytime
+- Uses standard settingRow/Switch pattern matching existing notification toggles
+
+**Files Changed:**
+- NEW: contexts/community-context.tsx (CommunityContext, 55 lines)
+- NEW: __tests__/contexts/community-context.test.tsx (5 tests)
+- MODIFIED: app/_layout.tsx (+CommunityProvider)
+- MODIFIED: app/(tabs)/settings.tsx (+useCommunity, +toggle UI, +styles)
+- MODIFIED: __tests__/app/tabs/settings.test.tsx (+CommunityProvider, +6 tests)
+- MODIFIED: prd-killer-features.json (COMMUNITY-003 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- tsc --noEmit: PASS
+- npm run lint: PASS (pre-existing expo-blur issue)
+- npm test: 986/986 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- COMMUNITY-003 complete: Navigate to Settings > Privacy, find toggle OFF by default, enable sharing, see explanation
+- Community category now 1/3 complete (COMMUNITY-001, COMMUNITY-002 remaining)
+- COMMUNITY-001/002 will use this opt-in state to control data sharing
+
+---
+

@@ -18,6 +18,7 @@ import { UserPreferencesProvider } from "@/contexts/user-preferences-context";
 import { StorageProvider } from "@/contexts/storage-context";
 import { SubscriptionProvider } from "@/contexts/subscription-context";
 import { clearAllMockData, childApi, familyApi } from "@/services/api-client";
+import { CommunityProvider } from "@/contexts/community-context";
 
 // Mock expo-image-picker
 jest.mock("expo-image-picker", () => ({
@@ -98,7 +99,9 @@ const renderWithProviders = (component: React.ReactElement) => {
                   <UserPreferencesProvider>
                     <StorageProvider>
                       <SubscriptionProvider>
-                        <ExportProvider>{component}</ExportProvider>
+                        <CommunityProvider>
+                          <ExportProvider>{component}</ExportProvider>
+                        </CommunityProvider>
                       </SubscriptionProvider>
                     </StorageProvider>
                   </UserPreferencesProvider>
@@ -631,6 +634,93 @@ describe("SettingsScreen - FEEDBACK-001 In-app Feedback", () => {
     // Modal should close - input should no longer be visible
     await waitFor(() => {
       expect(screen.queryByTestId("feedback-input")).toBeNull();
+    });
+  });
+});
+
+describe("SettingsScreen - COMMUNITY-003 Community Data Sharing", () => {
+  beforeEach(() => {
+    clearAllMockData();
+    jest.clearAllMocks();
+  });
+
+  it("renders Community Data Sharing toggle in Data & Privacy section", async () => {
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Community Data Sharing")).toBeTruthy();
+    });
+  });
+
+  it("shows community data sharing toggle switch", async () => {
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("switch-communityDataSharing")).toBeTruthy();
+    });
+  });
+
+  it("toggle is OFF by default", async () => {
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("switch-communityDataSharing")).toBeTruthy();
+    });
+
+    const toggle = screen.getByTestId("switch-communityDataSharing");
+    expect(toggle.props.value).toBe(false);
+  });
+
+  it("shows explanation of what is shared", async () => {
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/anonymized milestone timing data/i),
+      ).toBeTruthy();
+    });
+  });
+
+  it("toggles community sharing on when switch is pressed", async () => {
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("switch-communityDataSharing")).toBeTruthy();
+    });
+
+    const toggle = screen.getByTestId("switch-communityDataSharing");
+    fireEvent(toggle, "valueChange", true);
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId("switch-communityDataSharing").props.value,
+      ).toBe(true);
+    });
+  });
+
+  it("toggles community sharing off after being enabled", async () => {
+    renderWithProviders(<SettingsScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("switch-communityDataSharing")).toBeTruthy();
+    });
+
+    const toggle = screen.getByTestId("switch-communityDataSharing");
+
+    // Enable first
+    fireEvent(toggle, "valueChange", true);
+    await waitFor(() => {
+      expect(
+        screen.getByTestId("switch-communityDataSharing").props.value,
+      ).toBe(true);
+    });
+
+    // Then disable
+    fireEvent(toggle, "valueChange", false);
+    await waitFor(() => {
+      expect(
+        screen.getByTestId("switch-communityDataSharing").props.value,
+      ).toBe(false);
     });
   });
 
