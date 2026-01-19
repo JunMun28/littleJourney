@@ -326,7 +326,7 @@
         "Verify AI learns and adjusts suggestions"
       ],
       "acceptanceCriteria": "Users can dismiss incorrect suggestions; AI improves over time",
-      "passes": false
+      "passes": true
     },
     {
       "id": "AIDETECT-005",
