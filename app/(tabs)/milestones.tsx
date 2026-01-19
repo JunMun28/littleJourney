@@ -400,22 +400,32 @@ export default function MilestonesScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      {/* Badges button */}
-      <Pressable
-        style={[styles.badgesButton, { backgroundColor: colors.card }]}
-        onPress={() => router.push("/badges")}
-        testID="badges-button"
-      >
-        <Text style={styles.badgesButtonIcon}>🏆</Text>
-        <Text style={[styles.badgesButtonText, { color: colors.text }]}>
-          View Badges
-        </Text>
-        <Text
-          style={[styles.badgesButtonArrow, { color: colors.textSecondary }]}
+      {/* Quick Actions Row */}
+      <View style={styles.quickActionsRow}>
+        {/* Development Timeline button (AIDETECT-006) */}
+        <Pressable
+          style={[styles.quickActionButton, { backgroundColor: colors.card }]}
+          onPress={() => router.push("/development-timeline")}
+          testID="development-timeline-button"
         >
-          →
-        </Text>
-      </Pressable>
+          <Text style={styles.quickActionIcon}>📈</Text>
+          <Text style={[styles.quickActionText, { color: colors.text }]}>
+            Timeline
+          </Text>
+        </Pressable>
+
+        {/* Badges button */}
+        <Pressable
+          style={[styles.quickActionButton, { backgroundColor: colors.card }]}
+          onPress={() => router.push("/badges")}
+          testID="badges-button"
+        >
+          <Text style={styles.quickActionIcon}>🏆</Text>
+          <Text style={[styles.quickActionText, { color: colors.text }]}>
+            Badges
+          </Text>
+        </Pressable>
+      </View>
 
       {milestones.length === 0 ? (
         renderEmptyState()
@@ -1000,25 +1010,27 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  badgesButton: {
+  quickActionsRow: {
     flexDirection: "row",
-    alignItems: "center",
+    gap: Spacing.sm,
     margin: Spacing.md,
     marginBottom: 0,
+  },
+  quickActionButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     padding: Spacing.md,
     borderRadius: 12,
+    gap: Spacing.xs,
   },
-  badgesButtonIcon: {
-    fontSize: 24,
-    marginRight: Spacing.sm,
+  quickActionIcon: {
+    fontSize: 20,
   },
-  badgesButtonText: {
-    fontSize: 16,
+  quickActionText: {
+    fontSize: 14,
     fontWeight: "500",
-    flex: 1,
-  },
-  badgesButtonArrow: {
-    fontSize: 18,
   },
   scrollView: {
     flex: 1,

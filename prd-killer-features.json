@@ -354,7 +354,7 @@
         "Tap milestone to view linked entry"
       ],
       "acceptanceCriteria": "Visual timeline shows all milestones with photos",
-      "passes": false
+      "passes": true
     },
     {
       "id": "AIDETECT-007",

@@ -16,6 +16,12 @@ import {
 } from "@/services/api-client";
 import { Text, Pressable } from "react-native";
 
+// Mock expo-router
+const mockPush = jest.fn();
+jest.mock("expo-router", () => ({
+  useRouter: () => ({ push: mockPush, back: jest.fn() }),
+}));
+
 // Mock expo-notifications
 const mockScheduleMilestoneReminder = jest.fn();
 const mockCancelMilestoneReminder = jest.fn();
@@ -972,6 +978,61 @@ describe("MilestonesScreen", () => {
       // Button should be disabled when word is empty
       const addButton = screen.getByTestId("add-first-words-button");
       expect(addButton.props.accessibilityState?.disabled).toBe(true);
+    });
+  });
+
+  // AIDETECT-006: Development timeline visualization navigation
+  describe("AIDETECT-006: Development timeline navigation", () => {
+    beforeEach(() => {
+      mockPush.mockClear();
+    });
+
+    it("shows Development Timeline button", async () => {
+      await createTestChild();
+
+      render(
+        <TestWrapper>
+          <MilestonesScreen />
+        </TestWrapper>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId("development-timeline-button")).toBeTruthy();
+      });
+      expect(screen.getByText("Timeline")).toBeTruthy();
+    });
+
+    it("navigates to development timeline on button press", async () => {
+      await createTestChild();
+
+      render(
+        <TestWrapper>
+          <MilestonesScreen />
+        </TestWrapper>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId("development-timeline-button")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByTestId("development-timeline-button"));
+
+      expect(mockPush).toHaveBeenCalledWith("/development-timeline");
+    });
+
+    it("shows both Timeline and Badges quick action buttons", async () => {
+      await createTestChild();
+
+      render(
+        <TestWrapper>
+          <MilestonesScreen />
+        </TestWrapper>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId("development-timeline-button")).toBeTruthy();
+        expect(screen.getByTestId("badges-button")).toBeTruthy();
+      });
     });
   });
 });
