@@ -7,7 +7,12 @@ import {
   type ReactNode,
 } from "react";
 import { useEntries, type Entry } from "./entry-context";
-import { useMilestones, type Milestone } from "./milestone-context";
+import {
+  useMilestones,
+  type Milestone,
+  type MilestoneTemplate,
+  MILESTONE_TEMPLATES,
+} from "./milestone-context";
 
 // DIGEST-002: Configurable digest frequency
 export type DigestFrequency = "daily" | "weekly" | "monthly";
@@ -34,6 +39,7 @@ export interface DigestContent {
   periodEnd: string; // ISO date
   entries: Entry[];
   milestones: Milestone[]; // DIGEST-003: Highlighted milestones
+  hasMilestones: boolean; // DIGEST-003: Flag for celebratory formatting
   totalPhotos: number;
   totalVideos: number;
   totalVoiceNotes: number;
@@ -66,6 +72,8 @@ interface FamilyDigestContextValue {
   ) => DigestContent | null;
   getEntriesForPeriod: (startDate: string, endDate: string) => Entry[];
   getMilestonesForPeriod: (startDate: string, endDate: string) => Milestone[];
+  // DIGEST-003: Get milestone template info for celebratory formatting
+  getMilestoneTemplateInfo: (templateId: string) => MilestoneTemplate | null;
 
   // Sending (mock - actual sending TBD with backend)
   markDigestSent: (familyMemberId: string) => void;
@@ -233,6 +241,17 @@ export function FamilyDigestProvider({ children }: FamilyDigestProviderProps) {
     [milestones],
   );
 
+  // DIGEST-003: Get milestone template info for celebratory formatting
+  const getMilestoneTemplateInfo = useCallback(
+    (templateId: string): MilestoneTemplate | null => {
+      return (
+        MILESTONE_TEMPLATES.find((template) => template.id === templateId) ??
+        null
+      );
+    },
+    [],
+  );
+
   const generateDigestContent = useCallback(
     (
       familyMemberId: string,
@@ -271,6 +290,7 @@ export function FamilyDigestProvider({ children }: FamilyDigestProviderProps) {
         periodEnd: endDate.toISOString().split("T")[0],
         entries: periodEntries,
         milestones: periodMilestones,
+        hasMilestones: periodMilestones.length > 0, // DIGEST-003
         totalPhotos,
         totalVideos,
         totalVoiceNotes,
@@ -312,6 +332,7 @@ export function FamilyDigestProvider({ children }: FamilyDigestProviderProps) {
       generateDigestContent,
       getEntriesForPeriod,
       getMilestonesForPeriod,
+      getMilestoneTemplateInfo, // DIGEST-003
       markDigestSent,
       getNextScheduledDate,
     }),
@@ -324,6 +345,7 @@ export function FamilyDigestProvider({ children }: FamilyDigestProviderProps) {
       generateDigestContent,
       getEntriesForPeriod,
       getMilestonesForPeriod,
+      getMilestoneTemplateInfo,
       markDigestSent,
       getNextScheduledDate,
     ],

@@ -766,7 +766,7 @@
         "Verify celebratory formatting"
       ],
       "acceptanceCriteria": "Milestones featured prominently in digests",
-      "passes": false
+      "passes": true
     },
     {
       "id": "DIGEST-004",

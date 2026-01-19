@@ -1756,3 +1756,40 @@ Reasoning: Family Digest category completely unimplemented. Requires new FamilyD
 
 ---
 
+### Task Selection
+Selected: DIGEST-003 (Digest includes new milestones) - Full implementation
+Priority: 2 (Integration points between modules)
+Reasoning: Integrates existing MilestoneContext with FamilyDigestContext. No external dependencies. Builds on DIGEST-001/002 context work.
+
+### Implementation Complete
+
+**Task:** DIGEST-003 Digest includes new milestones
+**PRD Ref:** Family Digest - DIGEST-003
+
+**Key Decisions:**
+- Added hasMilestones boolean flag to DigestContent for celebratory formatting indication
+- Added getMilestoneTemplateInfo(templateId) to lookup milestone template details
+- Context already had getMilestonesForPeriod() filtering completed milestones by date
+- generateDigestContent() now sets hasMilestones: periodMilestones.length > 0
+- Template info lookup enables digest to show milestone title/description for highlighting
+
+**Files Changed:**
+- MODIFIED: contexts/family-digest-context.tsx (+hasMilestones field, +getMilestoneTemplateInfo, +MILESTONE_TEMPLATES import)
+- MODIFIED: __tests__/contexts/family-digest-context.test.tsx (+6 DIGEST-003 tests, +MilestoneAdder helper)
+- MODIFIED: prd-killer-features.json (DIGEST-003 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- tsc --noEmit: PASS
+- npm run lint: PASS
+- npm test: 1129/1129 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- DIGEST-003 complete: Completed milestones included in digest, hasMilestones flag for celebratory formatting
+- Email template formatting (visual highlighting) is backend concern, context provides data
+- Family Digest category now 2/4 complete (DIGEST-001, DIGEST-002, DIGEST-003)
+- DIGEST-004 WhatsApp delivery requires backend integration
+
+---
+
