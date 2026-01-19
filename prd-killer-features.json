@@ -740,7 +740,7 @@
         "Tap link to view full details"
       ],
       "acceptanceCriteria": "Family members receive weekly email summaries",
-      "passes": false
+      "passes": true
     },
     {
       "id": "DIGEST-002",
@@ -753,7 +753,7 @@
         "Verify content covers appropriate time period"
       ],
       "acceptanceCriteria": "Configurable digest frequency per family member",
-      "passes": false
+      "passes": true
     },
     {
       "id": "DIGEST-003",

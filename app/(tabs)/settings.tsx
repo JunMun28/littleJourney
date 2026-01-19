@@ -40,6 +40,11 @@ import { useFamilyMembersFlat } from "@/hooks/use-family";
 import { useStripePayment } from "@/hooks/use-stripe-payment";
 import { PRIMARY_COLOR, Colors, SemanticColors } from "@/constants/theme";
 import { useCommunity } from "@/contexts/community-context";
+import {
+  useFamilyDigest,
+  type DigestFrequency,
+  type DeliveryMethod,
+} from "@/contexts/family-digest-context";
 
 type ModalState =
   | "closed"
@@ -126,6 +131,7 @@ export default function SettingsScreen() {
     sharingExplanation,
     setCommunityDataSharingEnabled,
   } = useCommunity();
+  const { enableDigest, disableDigest, getDigestConfig } = useFamilyDigest();
   const { child, updateChild } = useChildFlat();
   const {
     currentPlan,
@@ -809,6 +815,164 @@ export default function SettingsScreen() {
           </View>
         )}
       </View>
+
+      {/* Family Digest Section - DIGEST-001 */}
+      {familyMembers.filter((m) => m.status === "accepted").length > 0 && (
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionHeader, { color: colors.textSecondary }]}>
+            Family Digest
+          </Text>
+          <Text
+            style={[styles.settingDescription, { color: colors.textMuted }]}
+          >
+            Send weekly email updates to family members with recent photos and
+            milestones.
+          </Text>
+
+          {familyMembers
+            .filter((m) => m.status === "accepted")
+            .map((member) => {
+              const digestConfig = getDigestConfig(member.id);
+              const isEnabled = digestConfig?.enabled ?? false;
+              const frequency = digestConfig?.frequency ?? "weekly";
+              const deliveryMethod = digestConfig?.deliveryMethod ?? "email";
+
+              return (
+                <View
+                  key={`digest-${member.id}`}
+                  style={[
+                    styles.digestMemberCard,
+                    { borderBottomColor: colors.border },
+                  ]}
+                >
+                  <View style={styles.digestMemberHeader}>
+                    <View style={styles.familyMemberInfo}>
+                      <Text
+                        style={[
+                          styles.familyMemberEmail,
+                          { color: colors.text },
+                        ]}
+                      >
+                        {member.email}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.familyMemberRelationship,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        {member.relationship}
+                      </Text>
+                    </View>
+                    <Switch
+                      value={isEnabled}
+                      onValueChange={(value) => {
+                        if (value) {
+                          enableDigest(member.id, frequency, deliveryMethod);
+                        } else {
+                          disableDigest(member.id);
+                        }
+                      }}
+                      trackColor={{ false: colors.border, true: PRIMARY_COLOR }}
+                    />
+                  </View>
+
+                  {isEnabled && (
+                    <View style={styles.digestOptions}>
+                      {/* Frequency selector - DIGEST-002 */}
+                      <View style={styles.digestOptionRow}>
+                        <Text
+                          style={[
+                            styles.digestOptionLabel,
+                            { color: colors.text },
+                          ]}
+                        >
+                          Frequency
+                        </Text>
+                        <View style={styles.digestFrequencyButtons}>
+                          {(
+                            ["daily", "weekly", "monthly"] as DigestFrequency[]
+                          ).map((freq) => (
+                            <Pressable
+                              key={freq}
+                              style={[
+                                styles.digestFrequencyButton,
+                                frequency === freq &&
+                                  styles.digestFrequencyButtonActive,
+                                { borderColor: colors.border },
+                              ]}
+                              onPress={() =>
+                                enableDigest(member.id, freq, deliveryMethod)
+                              }
+                            >
+                              <Text
+                                style={[
+                                  styles.digestFrequencyButtonText,
+                                  {
+                                    color:
+                                      frequency === freq ? "#fff" : colors.text,
+                                  },
+                                ]}
+                              >
+                                {freq.charAt(0).toUpperCase() + freq.slice(1)}
+                              </Text>
+                            </Pressable>
+                          ))}
+                        </View>
+                      </View>
+
+                      {/* Delivery method - DIGEST-004 */}
+                      <View style={styles.digestOptionRow}>
+                        <Text
+                          style={[
+                            styles.digestOptionLabel,
+                            { color: colors.text },
+                          ]}
+                        >
+                          Delivery
+                        </Text>
+                        <View style={styles.digestFrequencyButtons}>
+                          {(["email", "whatsapp"] as DeliveryMethod[]).map(
+                            (method) => (
+                              <Pressable
+                                key={method}
+                                style={[
+                                  styles.digestFrequencyButton,
+                                  deliveryMethod === method &&
+                                    styles.digestFrequencyButtonActive,
+                                  { borderColor: colors.border },
+                                ]}
+                                onPress={() =>
+                                  enableDigest(member.id, frequency, method)
+                                }
+                              >
+                                <Text
+                                  style={[
+                                    styles.digestFrequencyButtonText,
+                                    {
+                                      color:
+                                        deliveryMethod === method
+                                          ? "#fff"
+                                          : colors.text,
+                                    },
+                                  ]}
+                                >
+                                  {method === "email"
+                                    ? "📧 Email"
+                                    : "💬 WhatsApp"}
+                                </Text>
+                              </Pressable>
+                            ),
+                          )}
+                        </View>
+                      </View>
+                    </View>
+                  )}
+                </View>
+              );
+            })}
+        </View>
+      )}
 
       {/* Subscription Section */}
       <View style={[styles.section, { backgroundColor: colors.card }]}>
@@ -2231,6 +2395,46 @@ const styles = StyleSheet.create({
   removeButton: {
     fontSize: 14,
     color: "#ff3b30",
+  },
+  // Family Digest styles (DIGEST-001)
+  digestMemberCard: {
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  digestMemberHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  digestOptions: {
+    marginTop: 12,
+    gap: 12,
+  },
+  digestOptionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  digestOptionLabel: {
+    fontSize: 14,
+  },
+  digestFrequencyButtons: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  digestFrequencyButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  digestFrequencyButtonActive: {
+    backgroundColor: PRIMARY_COLOR,
+    borderColor: PRIMARY_COLOR,
+  },
+  digestFrequencyButtonText: {
+    fontSize: 13,
+    fontWeight: "500",
   },
   accountInfo: {
     paddingVertical: 12,

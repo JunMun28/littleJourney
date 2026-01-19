@@ -19,6 +19,7 @@ import { StorageProvider } from "@/contexts/storage-context";
 import { SubscriptionProvider } from "@/contexts/subscription-context";
 import { clearAllMockData, childApi, familyApi } from "@/services/api-client";
 import { CommunityProvider } from "@/contexts/community-context";
+import { FamilyDigestProvider } from "@/contexts/family-digest-context";
 
 // Mock expo-image-picker
 jest.mock("expo-image-picker", () => ({
@@ -100,7 +101,9 @@ const renderWithProviders = (component: React.ReactElement) => {
                     <StorageProvider>
                       <SubscriptionProvider>
                         <CommunityProvider>
-                          <ExportProvider>{component}</ExportProvider>
+                          <FamilyDigestProvider>
+                            <ExportProvider>{component}</ExportProvider>
+                          </FamilyDigestProvider>
                         </CommunityProvider>
                       </SubscriptionProvider>
                     </StorageProvider>

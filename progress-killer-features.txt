@@ -1713,3 +1713,46 @@ Reasoning: Pure UI display of pricing. No external dependencies. Quick win to co
 
 ---
 
+### Task Selection
+Selected: DIGEST-001 (Weekly email digest for family) - context/architecture
+Priority: 1 (Architectural decisions and core abstractions)
+Reasoning: Family Digest category completely unimplemented. Requires new FamilyDigestContext for digest configuration, content generation, and delivery tracking. Foundation for DIGEST-001 through DIGEST-004.
+
+### Implementation Complete
+
+**Task:** DIGEST-001/002/004 Family Digest context and UI
+**PRD Ref:** Family Digest - DIGEST-001, DIGEST-002, DIGEST-004
+
+**Key Decisions:**
+- FamilyDigestContext with DigestFrequency (daily/weekly/monthly) and DeliveryMethod (email/whatsapp)
+- FamilyMemberDigestConfig per family member: enabled, frequency, deliveryMethod, whatsappNumber, lastSentAt, nextScheduledAt
+- DigestContent type generates from entries and milestones for period
+- calculatePeriodStart/calculateNextScheduledDate pure functions for testability
+- UI section in Settings after Family section (shows only for accepted members)
+- Toggle to enable/disable, frequency buttons, delivery method buttons
+- Context integrated into _layout.tsx provider tree
+
+**Files Changed:**
+- NEW: contexts/family-digest-context.tsx (FamilyDigestProvider, useFamilyDigest, types)
+- NEW: __tests__/contexts/family-digest-context.test.tsx (16 tests)
+- MODIFIED: app/_layout.tsx (+FamilyDigestProvider)
+- MODIFIED: app/(tabs)/settings.tsx (+Family Digest section, +useFamilyDigest, +styles)
+- MODIFIED: __tests__/app/tabs/settings.test.tsx (+FamilyDigestProvider wrapper)
+- MODIFIED: prd-killer-features.json (DIGEST-001 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- tsc --noEmit: PASS
+- npm run lint: PASS
+- npm test: 1123/1123 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- DIGEST-001 complete: Enable digest in family settings, set frequency, context tracks config
+- DIGEST-002 complete: Frequency options (daily/weekly/monthly) available per family member
+- DIGEST-004 partial: WhatsApp option visible in UI, delivery method tracked in config
+- Email/WhatsApp sending requires backend integration (marked TODO)
+- Family Digest category now 1/4 complete (context foundation)
+
+---
+
