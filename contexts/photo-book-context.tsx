@@ -6,6 +6,20 @@ import { useMilestones, type Milestone } from "@/contexts/milestone-context";
 import { useChild } from "@/contexts/child-context";
 import { useSubscription } from "@/contexts/subscription-context";
 
+// BOOK-001: Monthly curation constants
+export const MAX_PHOTOS_PER_BOOK = 20;
+export const MAX_PHOTOS_PER_DAY = 3; // For variety - not all same day
+
+// BOOK-001: Scoring weights for photo curation
+const SCORE_MILESTONE = 50; // Has milestone association
+const SCORE_CAPTION = 30; // Has caption
+const SCORE_TAGS = 10; // Has tags/labels
+
+export interface MonthSelection {
+  year: number;
+  month: number; // 1-12
+}
+
 export type PhotoBookPageType = "title" | "photo" | "milestone" | "blank";
 
 export type BookLayoutTemplate = "classic" | "modern" | "playful";
@@ -439,6 +453,120 @@ function formatDate(dateStr: string): string {
   }
 }
 
+/**
+ * BOOK-001: Score an entry for curation algorithm
+ * Higher score = more likely to be selected
+ */
+function scoreEntry(entry: Entry): number {
+  let score = 0;
+
+  // Milestone entries get highest priority
+  if (entry.milestoneId) {
+    score += SCORE_MILESTONE;
+  }
+
+  // Photos with captions ranked higher
+  if (entry.caption && entry.caption.trim().length > 0) {
+    score += SCORE_CAPTION;
+  }
+
+  // Photos with tags/labels get a bonus
+  if (
+    (entry.tags && entry.tags.length > 0) ||
+    (entry.aiLabels && entry.aiLabels.length > 0)
+  ) {
+    score += SCORE_TAGS;
+  }
+
+  return score;
+}
+
+/**
+ * BOOK-001: Curate photos for a monthly photo book
+ * Pure function for testability
+ *
+ * Algorithm:
+ * 1. Filter entries to the specified month (photo entries with media only)
+ * 2. Score each entry based on: milestones (+50), captions (+30), tags (+10)
+ * 3. Sort by score descending, then by date ascending (chronological)
+ * 4. Enforce variety: max 3 photos per day
+ * 5. Select top 20 photos
+ */
+export function curateMonthlyBook(
+  entries: Entry[],
+  month: MonthSelection,
+): PhotoBookPage[] {
+  // Filter to photo entries with media for the specified month
+  const monthStr = `${month.year}-${String(month.month).padStart(2, "0")}`;
+
+  const eligibleEntries = entries.filter((entry) => {
+    // Must be a photo entry with media
+    if (entry.type !== "photo" || !entry.mediaUris || entry.mediaUris.length === 0) {
+      return false;
+    }
+    // Must be in the specified month
+    return entry.date.startsWith(monthStr);
+  });
+
+  if (eligibleEntries.length === 0) {
+    return [];
+  }
+
+  // Score and sort entries
+  const scoredEntries = eligibleEntries.map((entry) => ({
+    entry,
+    score: scoreEntry(entry),
+  }));
+
+  // Sort by score descending, then by date ascending for chronological order
+  scoredEntries.sort((a, b) => {
+    if (b.score !== a.score) {
+      return b.score - a.score; // Higher score first
+    }
+    // Same score: sort chronologically
+    return new Date(a.entry.date).getTime() - new Date(b.entry.date).getTime();
+  });
+
+  // Enforce variety: max photos per day
+  const selectedEntries: Entry[] = [];
+  const photosPerDay = new Map<string, number>();
+
+  for (const { entry } of scoredEntries) {
+    const date = entry.date;
+    const currentCount = photosPerDay.get(date) || 0;
+
+    // Skip if we've hit the per-day limit
+    if (currentCount >= MAX_PHOTOS_PER_DAY) {
+      continue;
+    }
+
+    // Add entry
+    selectedEntries.push(entry);
+    photosPerDay.set(date, currentCount + 1);
+
+    // Stop if we've reached the book limit
+    if (selectedEntries.length >= MAX_PHOTOS_PER_BOOK) {
+      break;
+    }
+  }
+
+  // Re-sort selected entries chronologically for book layout
+  selectedEntries.sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+  );
+
+  // Convert to PhotoBookPage objects
+  return selectedEntries.map((entry) => ({
+    id: `page-curated-${entry.id}`,
+    type: entry.milestoneId ? ("milestone" as const) : ("photo" as const),
+    entryId: entry.id,
+    milestoneId: entry.milestoneId,
+    imageUri: entry.mediaUris![0],
+    caption: entry.caption,
+    date: entry.date,
+  }));
+}
+
 export interface PhotoBookPage {
   id: string;
   type: PhotoBookPageType;
@@ -457,7 +585,14 @@ interface PhotoBookContextType {
   isGenerating: boolean;
   isExporting: boolean;
   canExportPdf: boolean;
+  // BOOK-001: Monthly curation state
+  monthlyBookEnabled: boolean;
+  selectedMonth: MonthSelection;
   generatePhotoBook: () => Promise<void>;
+  // BOOK-001: Monthly curation methods
+  generateMonthlyBook: () => Promise<void>;
+  setMonthlyBookEnabled: (enabled: boolean) => void;
+  setSelectedMonth: (month: MonthSelection) => void;
   reorderPage: (fromIndex: number, toIndex: number) => void;
   removePage: (pageId: string) => void;
   addPage: (page: Omit<PhotoBookPage, "id">) => void;
@@ -488,6 +623,14 @@ export function PhotoBookProvider({ children }: { children: React.ReactNode }) {
   });
   const [isGenerating, setIsGenerating] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+
+  // BOOK-001: Monthly curation state
+  const [monthlyBookEnabled, setMonthlyBookEnabled] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState<MonthSelection>(() => {
+    // Default to current month
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth() + 1 };
+  });
 
   // PDF export only for paid tiers per PRD Section 10.3
   const canExportPdf = currentPlan !== "free";
@@ -584,6 +727,52 @@ export function PhotoBookProvider({ children }: { children: React.ReactNode }) {
     }
   }, [entries, milestones, child]);
 
+  // BOOK-001: Generate monthly photo book using smart curation algorithm
+  const generateMonthlyBook = useCallback(async () => {
+    setIsGenerating(true);
+
+    try {
+      const generatedPages: PhotoBookPage[] = [];
+
+      // Get month name for title
+      const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December",
+      ];
+      const monthName = monthNames[selectedMonth.month - 1];
+      const yearStr = selectedMonth.year.toString();
+
+      // Title page
+      generatedPages.push({
+        id: `page-title-${Date.now()}`,
+        type: "title",
+        title: child?.name
+          ? `${child.name}'s ${monthName} ${yearStr}`
+          : `${monthName} ${yearStr} Memories`,
+        caption: `A curated collection of ${MAX_PHOTOS_PER_BOOK} special moments`,
+      });
+
+      // Curate photos using the algorithm
+      const curatedPages = curateMonthlyBook(entries, selectedMonth);
+
+      // Add curated pages
+      generatedPages.push(...curatedPages);
+
+      setPages(generatedPages);
+
+      // Update cover with month info
+      setCover((current) => ({
+        ...current,
+        title: child?.name
+          ? `${child.name}'s ${monthName} ${yearStr}`
+          : `${monthName} ${yearStr} Memories`,
+        dateRange: `${monthName} ${yearStr}`,
+      }));
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [entries, selectedMonth, child]);
+
   const reorderPage = useCallback((fromIndex: number, toIndex: number) => {
     setPages((current) => {
       const newPages = [...current];
@@ -659,7 +848,14 @@ export function PhotoBookProvider({ children }: { children: React.ReactNode }) {
         isGenerating,
         isExporting,
         canExportPdf,
+        // BOOK-001: Monthly curation state
+        monthlyBookEnabled,
+        selectedMonth,
         generatePhotoBook,
+        // BOOK-001: Monthly curation methods
+        generateMonthlyBook,
+        setMonthlyBookEnabled,
+        setSelectedMonth,
         reorderPage,
         removePage,
         addPage,

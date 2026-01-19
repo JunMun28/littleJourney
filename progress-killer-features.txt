@@ -1629,3 +1629,45 @@ Reasoning: CommunityContext exists (COMMUNITY-002, 003 complete). Completes Comm
 
 ---
 
+### Task Selection
+Selected: BOOK-001 (Monthly photo book auto-curation by AI)
+Priority: 4 (Standard features and implementation)
+Reasoning: Photo book context exists (BOOK-002, 003, 004 complete). BOOK-001 is smart selection algorithm - no external AI API required. Can implement locally using entry metadata (dates, captions, milestones). Foundation for subscription features.
+
+### Implementation Complete
+
+**Task:** BOOK-001 Monthly photo book auto-curation
+**PRD Ref:** Photo Book Export - BOOK-001
+
+**Key Decisions:**
+- Created curateMonthlyBook() pure function for testability
+- Scoring algorithm: milestones (+50), captions (+30), tags (+10)
+- MAX_PHOTOS_PER_BOOK = 20 (per PRD spec)
+- MAX_PHOTOS_PER_DAY = 3 (ensures variety, not all same day)
+- Algorithm: filter to month → score entries → sort by score desc → enforce per-day limit → select top 20 → re-sort chronologically
+- Added MonthSelection type with year/month properties
+- Added monthlyBookEnabled state and setMonthlyBookEnabled method
+- Added selectedMonth state and setSelectedMonth method
+- Added generateMonthlyBook() that creates title page + curated pages
+- Cover auto-updates with month name and year
+
+**Files Changed:**
+- MODIFIED: contexts/photo-book-context.tsx (+curateMonthlyBook function, +scoring, +state, +methods)
+- MODIFIED: __tests__/contexts/photo-book-context.test.tsx (+13 BOOK-001 tests)
+- MODIFIED: prd-killer-features.json (BOOK-001 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- npx expo lint: PASS
+- npm test (photo-book): 25/25 PASS
+- npm test (all): 1092/1092 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- BOOK-001 complete: Enable monthly book in Settings, select month, AI selects top 20 photos considering variety, milestones prioritized, captioned photos ranked higher
+- Smart selection algorithm implemented without external AI service
+- Photo Book Export category now 4/9 complete (BOOK-002, 003, 004, 001)
+- Foundation for BOOK-005 (print integration), BOOK-006 (subscription)
+
+---
+
