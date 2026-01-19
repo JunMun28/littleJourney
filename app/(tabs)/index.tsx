@@ -23,12 +23,17 @@ import { extractDateFromExif, type ExifData } from "@/utils/exif-date";
 import { useRateLimit } from "@/hooks/use-rate-limit";
 import { useVideoUpload } from "@/hooks/use-video-upload";
 import { useImageAnalysis } from "@/hooks/use-image-analysis";
+import { useMilestoneDetection } from "@/hooks/use-milestone-detection";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { PhotoCarousel } from "@/components/photo-carousel";
 import { VideoPlayer } from "@/components/video-player";
-import { type Entry, type EntryType } from "@/contexts/entry-context";
+import {
+  type Entry,
+  type EntryType,
+  type AiMilestoneSuggestion,
+} from "@/contexts/entry-context";
 import { useAuth } from "@/contexts/auth-context";
 import { useInfiniteEntries, useCreateEntry } from "@/hooks/use-entries";
 import { useChildFlat } from "@/hooks/use-children";
@@ -448,6 +453,14 @@ export default function FeedScreen() {
     analyzeImages,
     reset: resetImageAnalysis,
   } = useImageAnalysis();
+  // AI Milestone Detection (AIDETECT-001)
+  const {
+    isDetecting: isDetectingMilestones,
+    suggestions: milestoneSuggestions,
+    detectMilestones,
+    dismissSuggestion: dismissMilestoneSuggestion,
+    reset: resetMilestoneDetection,
+  } = useMilestoneDetection();
   // Voice recording (VOICE-001)
   const {
     isRecording,
@@ -614,6 +627,7 @@ export default function FeedScreen() {
     discardRecording();
     resetVideoUploadState();
     resetImageAnalysis();
+    resetMilestoneDetection();
   };
 
   const onRefresh = useCallback(() => {
@@ -820,6 +834,10 @@ export default function FeedScreen() {
     // This runs async in the background while user writes caption
     analyzeImages(imageUris);
 
+    // Detect potential milestones from images (AIDETECT-001)
+    // Runs in parallel with image analysis
+    detectMilestones(imageUris);
+
     setCreateStep("caption");
   };
 
@@ -924,6 +942,18 @@ export default function FeedScreen() {
       mediaUrisToSave = voicePhotoUris;
     }
 
+    // Convert milestone suggestions to entry format (AIDETECT-001)
+    const aiMilestoneSuggestions: AiMilestoneSuggestion[] | undefined =
+      milestoneSuggestions.length > 0
+        ? milestoneSuggestions.map((s) => ({
+            templateId: s.templateId,
+            title: s.template.title,
+            confidence: s.confidence,
+            status: "pending" as const,
+            matchedLabels: s.matchedLabels,
+          }))
+        : undefined;
+
     createEntry.mutate(
       {
         type: selectedType,
@@ -933,6 +963,7 @@ export default function FeedScreen() {
         date: dateString,
         tags: tags.length > 0 ? tags : undefined,
         aiLabels: aiLabels.length > 0 ? aiLabels : undefined, // AI labels for semantic search (SEARCH-002)
+        aiMilestoneSuggestions, // AI-detected milestone suggestions (AIDETECT-001)
         // Voice entry fields (VOICE-001)
         audioUri: voiceUri || undefined,
         audioDuration: voiceDuration > 0 ? voiceDuration : undefined,
@@ -1555,6 +1586,108 @@ export default function FeedScreen() {
                   </ThemedText>
                 </View>
               )}
+
+              {/* AI Milestone Detection indicator and suggestions (AIDETECT-001) */}
+              {isDetectingMilestones && selectedType === "photo" && (
+                <View
+                  style={styles.aiAnalysisIndicator}
+                  testID="milestone-detection-loading"
+                >
+                  <ActivityIndicator size="small" color={PRIMARY_COLOR} />
+                  <ThemedText
+                    style={[
+                      styles.aiAnalysisText,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    Detecting milestones...
+                  </ThemedText>
+                </View>
+              )}
+
+              {/* Show milestone suggestions (AIDETECT-001) */}
+              {!isDetectingMilestones &&
+                milestoneSuggestions.length > 0 &&
+                selectedType === "photo" && (
+                  <View
+                    style={styles.milestoneSuggestionsContainer}
+                    testID="milestone-suggestions"
+                  >
+                    <View style={styles.milestoneSuggestionsHeader}>
+                      <ThemedText style={styles.milestoneSuggestionsIcon}>
+                        🎯
+                      </ThemedText>
+                      <ThemedText
+                        type="defaultSemiBold"
+                        style={styles.milestoneSuggestionsTitle}
+                      >
+                        Milestone Detected
+                      </ThemedText>
+                    </View>
+                    <ThemedText
+                      style={[
+                        styles.milestoneSuggestionsHint,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      We detected a possible milestone in your photo
+                    </ThemedText>
+                    <View style={styles.milestoneSuggestionsList}>
+                      {milestoneSuggestions.map((suggestion) => (
+                        <View
+                          key={suggestion.templateId}
+                          style={[
+                            styles.milestoneSuggestionCard,
+                            { backgroundColor: colors.backgroundSecondary },
+                          ]}
+                          testID={`milestone-suggestion-${suggestion.templateId}`}
+                        >
+                          <View style={styles.milestoneSuggestionInfo}>
+                            <ThemedText
+                              type="defaultSemiBold"
+                              style={styles.milestoneSuggestionTitle}
+                            >
+                              {suggestion.template.title}
+                            </ThemedText>
+                            <ThemedText
+                              style={[
+                                styles.milestoneSuggestionConfidence,
+                                { color: colors.textSecondary },
+                              ]}
+                            >
+                              {Math.round(suggestion.confidence * 100)}% match
+                            </ThemedText>
+                          </View>
+                          <Pressable
+                            style={styles.milestoneSuggestionDismiss}
+                            onPress={() =>
+                              dismissMilestoneSuggestion(suggestion.templateId)
+                            }
+                            hitSlop={8}
+                            testID={`dismiss-milestone-${suggestion.templateId}`}
+                          >
+                            <ThemedText
+                              style={[
+                                styles.milestoneSuggestionDismissText,
+                                { color: colors.textMuted },
+                              ]}
+                            >
+                              ✕
+                            </ThemedText>
+                          </Pressable>
+                        </View>
+                      ))}
+                    </View>
+                    <ThemedText
+                      style={[
+                        styles.milestoneSuggestionsFooter,
+                        { color: colors.textMuted },
+                      ]}
+                    >
+                      You can link this entry to a milestone after posting
+                    </ThemedText>
+                  </View>
+                )}
 
               {/* Video upload progress indicator (VIDEO-001) */}
               {videoUploadState.isUploading && (
@@ -2179,5 +2312,60 @@ const styles = StyleSheet.create({
   streakEncourage: {
     fontSize: 13,
     marginTop: 8,
+  },
+  // AI Milestone Detection styles (AIDETECT-001)
+  milestoneSuggestionsContainer: {
+    marginBottom: 16,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: SemanticColors.goldLight,
+    borderWidth: 1,
+    borderColor: "rgba(255, 215, 0, 0.3)",
+  },
+  milestoneSuggestionsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  milestoneSuggestionsIcon: {
+    fontSize: 18,
+    marginRight: 8,
+  },
+  milestoneSuggestionsTitle: {
+    fontSize: 15,
+  },
+  milestoneSuggestionsHint: {
+    fontSize: 13,
+    marginBottom: 12,
+  },
+  milestoneSuggestionsList: {
+    gap: 8,
+  },
+  milestoneSuggestionCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderRadius: 8,
+  },
+  milestoneSuggestionInfo: {
+    flex: 1,
+  },
+  milestoneSuggestionTitle: {
+    fontSize: 15,
+  },
+  milestoneSuggestionConfidence: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  milestoneSuggestionDismiss: {
+    padding: 4,
+  },
+  milestoneSuggestionDismissText: {
+    fontSize: 16,
+  },
+  milestoneSuggestionsFooter: {
+    fontSize: 12,
+    marginTop: 12,
+    fontStyle: "italic",
   },
 });

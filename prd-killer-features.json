@@ -282,7 +282,7 @@
         "Accept or dismiss suggestion"
       ],
       "acceptanceCriteria": "AI automatically suggests milestones based on photo content",
-      "passes": false
+      "passes": true
     },
     {
       "id": "AIDETECT-002",

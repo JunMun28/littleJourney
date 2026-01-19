@@ -1963,3 +1963,48 @@ All features implementable without external services are complete.
 
 ---
 
+## Current Session: 2026-01-19
+
+### Task Selection
+Selected: AIDETECT-001 (Auto-detect milestones from photos)
+Priority: 1 (Architectural decisions and core abstractions)
+Reasoning: AI Milestone Detection has no infrastructure. Need service layer, types, hook, and UI for milestone suggestions. Foundation for AIDETECT-002 through AIDETECT-005.
+
+### Implementation Complete
+
+**Task:** AIDETECT-001 Auto-detect milestones from photos
+**PRD Ref:** AI Milestone Detection - AIDETECT-001
+
+**Key Decisions:**
+- Created milestone-detection service that uses existing image-analysis service
+- Label-to-milestone mapping for common baby milestones (walking, smile, birthday, etc.)
+- Suggestions include confidence score and matched labels
+- Top 3 suggestions returned (sorted by confidence)
+- AiMilestoneSuggestion type added to Entry interface (status: pending|accepted|dismissed)
+- Hook follows same pattern as use-image-analysis
+- Detection runs in parallel with image analysis during photo upload
+- UI shows suggestions card in caption step with dismiss option
+
+**Files Changed:**
+- NEW: services/milestone-detection.ts (service with label mapping, confidence calc)
+- NEW: hooks/use-milestone-detection.ts (hook for state management)
+- NEW: __tests__/services/milestone-detection.test.ts (12 tests)
+- NEW: __tests__/hooks/use-milestone-detection.test.ts (8 tests)
+- MODIFIED: contexts/entry-context.tsx (+AiMilestoneSuggestion type)
+- MODIFIED: app/(tabs)/index.tsx (+milestone detection integration, +UI)
+
+**Verification:**
+- tsc --noEmit: PASS
+- npm run lint: PASS
+- npm test: 1186/1186 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- AIDETECT-001 complete: Photo upload triggers milestone detection, suggestions shown in caption step
+- Mock implementation uses label-to-milestone mapping
+- Production would use OpenAI Vision, Google Cloud Vision, or Cloudflare Workers AI
+- Suggestions stored with entry for later accept/dismiss (AIDETECT-003/004)
+- Background processing (AIDETECT-008) partially addressed - runs async during caption entry
+
+---
+

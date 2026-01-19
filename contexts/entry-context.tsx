@@ -8,6 +8,17 @@ import {
 
 export type EntryType = "photo" | "video" | "text" | "voice";
 
+// AI Milestone Suggestion status (AIDETECT-001, AIDETECT-003, AIDETECT-004)
+export type AiSuggestionStatus = "pending" | "accepted" | "dismissed";
+
+export interface AiMilestoneSuggestion {
+  templateId: string;
+  title: string;
+  confidence: number;
+  status: AiSuggestionStatus;
+  matchedLabels: string[];
+}
+
 export interface Entry {
   id: string;
   type: EntryType;
@@ -18,6 +29,8 @@ export interface Entry {
   tags?: string[];
   aiLabels?: string[]; // AI-generated labels from image analysis (SEARCH-002)
   milestoneId?: string; // Reference to linked milestone (PRD SEARCH-005)
+  // AI Milestone Detection fields (AIDETECT-001)
+  aiMilestoneSuggestions?: AiMilestoneSuggestion[]; // AI-suggested milestones
   // Voice entry fields (VOICE-001)
   audioUri?: string; // Voice recording URI
   audioDuration?: number; // Duration in milliseconds
