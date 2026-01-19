@@ -2239,3 +2239,37 @@ Reasoning: Year in Review has no context. Foundation needed for YIR-001 through 
 - Tests cover all YIR features: curation, customization, reset, music selection, export, monthly recaps
 
 ---
+
+### Task Selection
+Selected: YIR-002, YIR-003, YIR-005 - PRD status update
+Priority: 5 (Quick wins)
+Reasoning: Features already implemented in prior session but PRD marked as passes: false. Tests exist, code complete.
+
+### Implementation Complete
+
+**Task:** Update PRD status for YIR-002, YIR-003, YIR-005
+**PRD Ref:** Year in Review - YIR-002, YIR-003, YIR-005
+
+**Key Decisions:**
+- YIR-002 fully implemented: add/remove clips, change music, adjust transitions, reset
+- YIR-003 fully implemented: 8-track music library, preview, selection
+- YIR-005 fully implemented: generateMonthlyRecap in context, shorter duration
+- Fixed TypeScript errors in tests: removed erroneous childId field from Entry objects
+
+**Files Changed:**
+- MODIFIED: prd-killer-features.json (YIR-002, YIR-003, YIR-005 passes: true)
+- MODIFIED: __tests__/contexts/year-in-review-context.test.tsx (fixed Entry type - removed childId)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- tsc --noEmit: PASS
+- npm run lint: PASS
+- npm test: 1239/1239 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- Year in Review category now 4/5 complete (YIR-001, 002, 003, 005)
+- YIR-004 (export) stays false - video export requires ffmpeg native module
+- Remaining passes: false tasks mostly require external APIs (print partner, HealthHub, WhatsApp) or native modules (widget)
+
+---

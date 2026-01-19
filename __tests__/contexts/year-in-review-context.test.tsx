@@ -21,20 +21,20 @@ jest.mock("expo-notifications", () => ({
 // Create test entries for a year
 function createTestEntries(year: number, count: number): Entry[] {
   const entries: Entry[] = [];
+  const now = new Date().toISOString();
   for (let i = 0; i < count; i++) {
     const month = (i % 12) + 1;
     const day = (i % 28) + 1;
     entries.push({
       id: `entry-${i}`,
-      childId: "child-1",
       type: "photo",
       date: `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
       mediaUris: [`https://example.com/photo-${i}.jpg`],
       caption: i % 3 === 0 ? `Entry caption ${i}` : undefined,
       aiLabels: i % 5 === 0 ? ["outdoors", "smiling"] : undefined,
       milestoneId: i % 10 === 0 ? `milestone-${i}` : undefined,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
     });
   }
   return entries;
@@ -144,35 +144,33 @@ describe("YearInReviewContext", () => {
 
     it("prioritizes entries with captions and tags", async () => {
       // Create entries: some with captions/tags, some without
+      const now = new Date().toISOString();
       const entries: Entry[] = [
         {
           id: "entry-with-caption",
-          childId: "child-1",
           type: "photo",
           date: "2024-01-01",
           mediaUris: ["https://example.com/1.jpg"],
           caption: "A great day!",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          createdAt: now,
+          updatedAt: now,
         },
         {
           id: "entry-with-tags",
-          childId: "child-1",
           type: "photo",
           date: "2024-02-01",
           mediaUris: ["https://example.com/2.jpg"],
           aiLabels: ["outdoor", "sunny"],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          createdAt: now,
+          updatedAt: now,
         },
         {
           id: "entry-plain",
-          childId: "child-1",
           type: "photo",
           date: "2024-03-01",
           mediaUris: ["https://example.com/3.jpg"],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          createdAt: now,
+          updatedAt: now,
         },
       ];
       mockEntries = entries;
@@ -656,16 +654,16 @@ describe("YearInReviewContext", () => {
     it("generates monthly recap", async () => {
       // Create entries specifically for January 2024
       const entries: Entry[] = [];
+      const now = new Date().toISOString();
       for (let i = 0; i < 10; i++) {
         entries.push({
           id: `entry-jan-${i}`,
-          childId: "child-1",
           type: "photo",
           date: `2024-01-${String((i % 28) + 1).padStart(2, "0")}`,
           mediaUris: [`https://example.com/photo-${i}.jpg`],
           caption: i % 2 === 0 ? `January entry ${i}` : undefined,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          createdAt: now,
+          updatedAt: now,
         });
       }
       mockEntries = entries;

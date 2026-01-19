@@ -683,7 +683,7 @@
         "Save final version"
       ],
       "acceptanceCriteria": "Parents can customize auto-generated video",
-      "passes": false
+      "passes": true
     },
     {
       "id": "YIR-003",
@@ -697,7 +697,7 @@
         "Verify video regenerates with new music"
       ],
       "acceptanceCriteria": "Licensed music library for video soundtracks",
-      "passes": false
+      "passes": true
     },
     {
       "id": "YIR-004",
@@ -725,7 +725,7 @@
         "Verify includes that month's highlights only"
       ],
       "acceptanceCriteria": "Shorter monthly video recaps available",
-      "passes": false
+      "passes": true
     },
     {
       "id": "DIGEST-001",
