@@ -42,3 +42,7 @@ app-example
 /ios
 /android
 .env
+
+# Hook logs
+pre-log.json
+post-log.json

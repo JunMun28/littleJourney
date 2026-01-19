@@ -1,4 +1,3 @@
-## Plan Mode
+# Claude Settings
 
-- Make the plan extremely concise. Sacrifice grammar for the sake of concision.
-- At the end of each plan, give me a list of unresolved questions to answer, if any.
+See [docs/claude/](../docs/claude/) for project-specific instructions.

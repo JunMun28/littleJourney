@@ -25,10 +25,10 @@ for ((i=1; i<=$1; i++)); do
   echo ""
 
   result=$(claude --dangerously-skip-permissions --chrome --permission-mode acceptEdits -p \
-"@PRD.md @progress.txt \
+"@prd-killer-features.json @progress-killer-features.txt \
 \
 # OBJECTIVE \
-Identify the highest priority task from progress.txt and PRD.md. Work on ONLY ONE task. \
+Identify the highest priority task from progress-killer-features.txt and prd-killer-features.json. Work on ONLY ONE task. \
 \
 # WORKFLOW \
 1. **Select Task**: Prioritize in this order: \
@@ -53,7 +53,7 @@ Identify the highest priority task from progress.txt and PRD.md. Work on ONLY ON
    - UI (if UI changes): use Chrome MCP to verify UI on web via \`npm run web\` \
    *Do NOT commit if any feedback loop fails. Fix issues first.* \
 \
-4. **Document**: Append to \`progress.txt\`: \
+4. **Document**: Append to \`progress-killer-features.txt\`: \
    - Task completed and PRD item reference \
    - Key decisions made and reasoning \
    - Files changed \
@@ -63,7 +63,7 @@ Identify the highest priority task from progress.txt and PRD.md. Work on ONLY ON
 5. **Commit**: Make a git commit of that feature. \
 \
 # TERMINATION\
-If, while implementing the feature, you notice that all work is complete (no more passes: false in PRD.md), output <promise>COMPLETE</promise>.")
+If, while implementing the feature, you notice that all work is complete (no more passes: false in prd-killer-features.json), output <promise>COMPLETE</promise>.")
 
   echo ""
   echo "Claude Code execution completed for iteration $i"
