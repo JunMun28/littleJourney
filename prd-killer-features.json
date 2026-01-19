@@ -33,7 +33,7 @@
         "Review AI selection in preview screen"
       ],
       "acceptanceCriteria": "AI automatically curates best 20 photos each month with smart selection algorithm",
-      "passes": false
+      "passes": true
     },
     {
       "id": "BOOK-002",
