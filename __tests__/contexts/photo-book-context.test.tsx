@@ -8,6 +8,9 @@ import {
   type MonthSelection,
   MAX_PHOTOS_PER_BOOK,
   MAX_PHOTOS_PER_DAY,
+  BOOK_PRICING_TIERS,
+  SUBSCRIPTION_DISCOUNT_PERCENT,
+  calculateDiscountedPrice,
 } from "@/contexts/photo-book-context";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
@@ -381,7 +384,9 @@ describe("PhotoBookContext", () => {
 
         // Should only include January photo entries (excluding text entry)
         expect(result.every((p) => p.date?.startsWith("2024-01"))).toBe(true);
-        expect(result.find((p) => p.date?.startsWith("2024-02"))).toBeUndefined();
+        expect(
+          result.find((p) => p.date?.startsWith("2024-02")),
+        ).toBeUndefined();
       });
 
       it("should only include photo entries with media", () => {
@@ -408,16 +413,19 @@ describe("PhotoBookContext", () => {
       it("should prioritize photos with captions for selection when at limit", () => {
         // Create more entries than MAX_PHOTOS_PER_BOOK to test prioritization
         // All on different days to avoid per-day limit interference
-        const entriesWithAndWithoutCaptions = Array.from({ length: 25 }, (_, i) => ({
-          id: `entry-${i}`,
-          type: "photo" as const,
-          mediaUris: [`photo${i}.jpg`],
-          // First 15 have captions, last 10 don't
-          caption: i < 15 ? `Caption ${i}` : undefined,
-          date: `2024-01-${String(i + 1).padStart(2, "0")}`,
-          createdAt: `2024-01-${String(i + 1).padStart(2, "0")}T10:00:00Z`,
-          updatedAt: `2024-01-${String(i + 1).padStart(2, "0")}T10:00:00Z`,
-        }));
+        const entriesWithAndWithoutCaptions = Array.from(
+          { length: 25 },
+          (_, i) => ({
+            id: `entry-${i}`,
+            type: "photo" as const,
+            mediaUris: [`photo${i}.jpg`],
+            // First 15 have captions, last 10 don't
+            caption: i < 15 ? `Caption ${i}` : undefined,
+            date: `2024-01-${String(i + 1).padStart(2, "0")}`,
+            createdAt: `2024-01-${String(i + 1).padStart(2, "0")}T10:00:00Z`,
+            updatedAt: `2024-01-${String(i + 1).padStart(2, "0")}T10:00:00Z`,
+          }),
+        );
 
         const month: MonthSelection = { year: 2024, month: 1 };
         const result = curateMonthlyBook(entriesWithAndWithoutCaptions, month);
@@ -556,6 +564,76 @@ describe("PhotoBookContext", () => {
         expect(result.current.pages.length).toBeGreaterThan(0);
         // First page should be title
         expect(result.current.pages[0].type).toBe("title");
+      });
+    });
+  });
+
+  // BOOK-007: Book pricing tiers tests
+  describe("BOOK-007: Book pricing tiers", () => {
+    describe("BOOK_PRICING_TIERS constant", () => {
+      it("should have 3 pricing tiers (mini, standard, premium)", () => {
+        expect(BOOK_PRICING_TIERS.length).toBe(3);
+        expect(BOOK_PRICING_TIERS.map((t) => t.id)).toEqual([
+          "mini",
+          "standard",
+          "premium",
+        ]);
+      });
+
+      it("should have mini book with 20 pages priced at SGD 15-20", () => {
+        const mini = BOOK_PRICING_TIERS.find((t) => t.id === "mini");
+        expect(mini).toBeDefined();
+        expect(mini?.pages).toBe(20);
+        expect(mini?.priceMin).toBe(15);
+        expect(mini?.priceMax).toBe(20);
+      });
+
+      it("should have standard book with 40 pages priced at SGD 25-35", () => {
+        const standard = BOOK_PRICING_TIERS.find((t) => t.id === "standard");
+        expect(standard).toBeDefined();
+        expect(standard?.pages).toBe(40);
+        expect(standard?.priceMin).toBe(25);
+        expect(standard?.priceMax).toBe(35);
+      });
+
+      it("should have premium book with 80 pages priced at SGD 45-60", () => {
+        const premium = BOOK_PRICING_TIERS.find((t) => t.id === "premium");
+        expect(premium).toBeDefined();
+        expect(premium?.pages).toBe(80);
+        expect(premium?.priceMin).toBe(45);
+        expect(premium?.priceMax).toBe(60);
+      });
+
+      it("should include name, description, and icon for each tier", () => {
+        for (const tier of BOOK_PRICING_TIERS) {
+          expect(tier.name).toBeTruthy();
+          expect(tier.description).toBeTruthy();
+          expect(tier.icon).toBeTruthy();
+        }
+      });
+    });
+
+    describe("Subscription discount", () => {
+      it("should have 20% subscription discount", () => {
+        expect(SUBSCRIPTION_DISCOUNT_PERCENT).toBe(20);
+      });
+
+      it("should calculate discounted price correctly", () => {
+        // 20% off $20 = $16
+        expect(calculateDiscountedPrice(20)).toBe(16);
+        // 20% off $35 = $28
+        expect(calculateDiscountedPrice(35)).toBe(28);
+        // 20% off $60 = $48
+        expect(calculateDiscountedPrice(60)).toBe(48);
+      });
+
+      it("should round discounted prices to whole numbers", () => {
+        // 20% off $15 = $12
+        expect(calculateDiscountedPrice(15)).toBe(12);
+        // 20% off $25 = $20
+        expect(calculateDiscountedPrice(25)).toBe(20);
+        // 20% off $45 = $36
+        expect(calculateDiscountedPrice(45)).toBe(36);
       });
     });
   });

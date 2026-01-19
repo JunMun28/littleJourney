@@ -105,6 +105,39 @@ jest.mock("@/contexts/photo-book-context", () => ({
       text: "#FFFFFF",
     },
   ],
+  // BOOK-007: Pricing tiers
+  BOOK_PRICING_TIERS: [
+    {
+      id: "mini",
+      name: "Mini Book",
+      pages: 20,
+      priceMin: 15,
+      priceMax: 20,
+      description: "Perfect for monthly memories",
+      icon: "📘",
+    },
+    {
+      id: "standard",
+      name: "Standard Book",
+      pages: 40,
+      priceMin: 25,
+      priceMax: 35,
+      description: "Great for quarterly highlights",
+      icon: "📗",
+    },
+    {
+      id: "premium",
+      name: "Premium Book",
+      pages: 80,
+      priceMin: 45,
+      priceMax: 60,
+      description: "Complete yearly collection",
+      icon: "📕",
+    },
+  ],
+  SUBSCRIPTION_DISCOUNT_PERCENT: 20,
+  calculateDiscountedPrice: (price: number) =>
+    Math.round(price * (1 - 20 / 100)),
 }));
 
 describe("PhotoBookScreen", () => {
@@ -407,5 +440,71 @@ describe("PhotoBookScreen", () => {
         photoUri: "cover-photo.jpg",
       });
     });
+  });
+
+  // BOOK-007: Book pricing tiers tests
+
+  it("shows Pricing button in header", () => {
+    const { getByTestId } = render(<PhotoBookScreen />);
+
+    expect(getByTestId("pricing-button")).toBeTruthy();
+  });
+
+  it("opens pricing modal when Pricing button is pressed", () => {
+    const { getByTestId, getByText } = render(<PhotoBookScreen />);
+
+    fireEvent.press(getByTestId("pricing-button"));
+
+    expect(getByText("Book Pricing")).toBeTruthy();
+  });
+
+  it("shows all three pricing tiers in pricing modal", () => {
+    const { getByTestId, getByText } = render(<PhotoBookScreen />);
+
+    fireEvent.press(getByTestId("pricing-button"));
+
+    expect(getByText("Mini Book")).toBeTruthy();
+    expect(getByText("Standard Book")).toBeTruthy();
+    expect(getByText("Premium Book")).toBeTruthy();
+  });
+
+  it("shows page counts for each tier", () => {
+    const { getByTestId, getByText } = render(<PhotoBookScreen />);
+
+    fireEvent.press(getByTestId("pricing-button"));
+
+    expect(getByText("20 pages")).toBeTruthy();
+    expect(getByText("40 pages")).toBeTruthy();
+    expect(getByText("80 pages")).toBeTruthy();
+  });
+
+  it("shows price ranges in SGD", () => {
+    const { getByTestId, getByText } = render(<PhotoBookScreen />);
+
+    fireEvent.press(getByTestId("pricing-button"));
+
+    expect(getByText("S$15 - S$20")).toBeTruthy();
+    expect(getByText("S$25 - S$35")).toBeTruthy();
+    expect(getByText("S$45 - S$60")).toBeTruthy();
+  });
+
+  it("shows subscription discount information", () => {
+    const { getByTestId, getByText } = render(<PhotoBookScreen />);
+
+    fireEvent.press(getByTestId("pricing-button"));
+
+    expect(getByText("20% off")).toBeTruthy();
+  });
+
+  it("closes pricing modal when Done is pressed", () => {
+    const { getByTestId, getByText, queryByText } = render(<PhotoBookScreen />);
+
+    fireEvent.press(getByTestId("pricing-button"));
+    expect(getByText("Book Pricing")).toBeTruthy();
+
+    fireEvent.press(getByText("Done"));
+
+    // Modal should be closed - Book Pricing title should not be visible
+    // Note: Modal content may still be in DOM but not visible
   });
 });

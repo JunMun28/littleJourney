@@ -123,7 +123,7 @@
         "Verify subscription discount shown (20% off)"
       ],
       "acceptanceCriteria": "Clear pricing tiers with subscription discount",
-      "passes": false
+      "passes": true
     },
     {
       "id": "BOOK-008",

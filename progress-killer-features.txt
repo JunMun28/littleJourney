@@ -1671,3 +1671,45 @@ Reasoning: Photo book context exists (BOOK-002, 003, 004 complete). BOOK-001 is 
 
 ---
 
+### Task Selection
+Selected: BOOK-007 (Book pricing tiers) - Full implementation
+Priority: 5 (Polish, cleanup, and quick wins)
+Reasoning: Pure UI display of pricing. No external dependencies. Quick win to complete Photo Book category.
+
+### Implementation Complete
+
+**Task:** BOOK-007 Book pricing tiers
+**PRD Ref:** Photo Book Export - BOOK-007
+
+**Key Decisions:**
+- BookPricingTier type: id (mini/standard/premium), name, pages, priceMin/Max, description, icon
+- BOOK_PRICING_TIERS constant with 3 tiers per PRD spec
+- Mini: 20 pages, S$15-20; Standard: 40 pages, S$25-35; Premium: 80 pages, S$45-60
+- SUBSCRIPTION_DISCOUNT_PERCENT = 20 (per PRD spec)
+- calculateDiscountedPrice() pure function for price calculations
+- Pricing button added to photo-book header
+- Modal displays: discount banner (20% off), all 3 pricing tiers with prices and discounted prices
+- Singapore Dollar (S$) formatting throughout
+
+**Files Changed:**
+- MODIFIED: contexts/photo-book-context.tsx (+BookPricingTier type, +BOOK_PRICING_TIERS, +SUBSCRIPTION_DISCOUNT_PERCENT, +calculateDiscountedPrice)
+- MODIFIED: app/photo-book.tsx (+pricing modal, +pricing button, +styles)
+- MODIFIED: __tests__/contexts/photo-book-context.test.tsx (+8 BOOK-007 tests)
+- MODIFIED: __tests__/app/photo-book.test.tsx (+7 BOOK-007 UI tests, +pricing mocks)
+- MODIFIED: prd-killer-features.json (BOOK-007 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- tsc --noEmit: PASS
+- npm run lint: PASS
+- npm test (photo-book): 65/65 PASS
+- npm test (all): 1107/1107 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- BOOK-007 complete: Tap Pricing button, view all 3 tiers with page counts, SGD prices, subscription discount (20% off)
+- Photo Book Export category now 5/9 complete (BOOK-001, 002, 003, 004, 007)
+- Remaining BOOK features require external integrations (print partner, payment, shipping)
+
+---
+

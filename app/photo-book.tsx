@@ -23,6 +23,9 @@ import {
   BOOK_LAYOUTS,
   COVER_COLOR_THEMES,
   type CoverColorTheme,
+  BOOK_PRICING_TIERS,
+  SUBSCRIPTION_DISCOUNT_PERCENT,
+  calculateDiscountedPrice,
 } from "@/contexts/photo-book-context";
 import {
   Colors,
@@ -32,7 +35,7 @@ import {
   Spacing,
 } from "@/constants/theme";
 
-type ModalState = "closed" | "editCaption" | "editCover";
+type ModalState = "closed" | "editCaption" | "editCover" | "pricing";
 
 type ColorScheme = (typeof Colors)["light"];
 
@@ -401,6 +404,13 @@ export default function PhotoBookScreen() {
           Photo Book
         </Text>
         <View style={styles.headerActions}>
+          <Pressable
+            testID="pricing-button"
+            style={styles.headerActionButton}
+            onPress={() => setModalState("pricing")}
+          >
+            <Text style={styles.headerActionText}>Pricing</Text>
+          </Pressable>
           <Pressable
             testID="cover-editor-button"
             style={styles.headerActionButton}
@@ -848,6 +858,128 @@ export default function PhotoBookScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* BOOK-007: Pricing Modal */}
+      <Modal
+        visible={modalState === "pricing"}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setModalState("closed")}
+      >
+        <View
+          style={[
+            styles.modalContainer,
+            { backgroundColor: colors.backgroundSecondary },
+          ]}
+        >
+          <View
+            style={[
+              styles.modalHeader,
+              {
+                backgroundColor: colors.background,
+                borderBottomColor: colors.border,
+              },
+            ]}
+          >
+            <View style={styles.modalHeaderSpacer} />
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              Book Pricing
+            </Text>
+            <Pressable onPress={() => setModalState("closed")}>
+              <Text style={styles.modalSave}>Done</Text>
+            </Pressable>
+          </View>
+
+          <ScrollView style={styles.pricingContent}>
+            {/* Subscription Discount Banner */}
+            <View
+              style={[
+                styles.discountBanner,
+                { backgroundColor: SemanticColors.gold },
+              ]}
+            >
+              <Text style={styles.discountBannerIcon}>🎁</Text>
+              <View style={styles.discountBannerText}>
+                <Text style={styles.discountBannerTitle}>
+                  Subscriber Discount
+                </Text>
+                <Text style={styles.discountBannerSubtitle}>
+                  {SUBSCRIPTION_DISCOUNT_PERCENT}% off all books with an active
+                  subscription
+                </Text>
+              </View>
+              <Text style={styles.discountBadge}>
+                {SUBSCRIPTION_DISCOUNT_PERCENT}% off
+              </Text>
+            </View>
+
+            {/* Pricing Tiers */}
+            {BOOK_PRICING_TIERS.map((tier) => (
+              <View
+                key={tier.id}
+                style={[
+                  styles.pricingCard,
+                  {
+                    backgroundColor: colors.card,
+                    borderColor: colors.cardBorder,
+                  },
+                  Shadows.medium,
+                ]}
+              >
+                <View style={styles.pricingCardHeader}>
+                  <Text style={styles.pricingIcon}>{tier.icon}</Text>
+                  <View style={styles.pricingCardTitleSection}>
+                    <Text
+                      style={[styles.pricingCardTitle, { color: colors.text }]}
+                    >
+                      {tier.name}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.pricingCardPages,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      {tier.pages} pages
+                    </Text>
+                  </View>
+                </View>
+
+                <Text
+                  style={[
+                    styles.pricingDescription,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  {tier.description}
+                </Text>
+
+                <View style={styles.pricingPriceSection}>
+                  <Text style={[styles.pricingPrice, { color: colors.text }]}>
+                    S${tier.priceMin} - S${tier.priceMax}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.pricingDiscountedPrice,
+                      { color: SemanticColors.success },
+                    ]}
+                  >
+                    With subscription: S$
+                    {calculateDiscountedPrice(tier.priceMin)} - S$
+                    {calculateDiscountedPrice(tier.priceMax)}
+                  </Text>
+                </View>
+              </View>
+            ))}
+
+            {/* Note */}
+            <Text style={[styles.pricingNote, { color: colors.textMuted }]}>
+              Prices are in Singapore Dollars (SGD). Shipping costs may apply
+              based on delivery location.
+            </Text>
+          </ScrollView>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -1263,5 +1395,97 @@ const styles = StyleSheet.create({
     textAlign: "center",
     opacity: 0.8,
     marginTop: Spacing.xs,
+  },
+  // BOOK-007: Pricing modal styles
+  modalHeaderSpacer: {
+    width: 50,
+  },
+  pricingContent: {
+    flex: 1,
+    padding: Spacing.lg,
+  },
+  discountBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: Spacing.md,
+    borderRadius: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  discountBannerIcon: {
+    fontSize: 24,
+    marginRight: Spacing.md,
+  },
+  discountBannerText: {
+    flex: 1,
+  },
+  discountBannerTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#4A3728",
+    marginBottom: 2,
+  },
+  discountBannerSubtitle: {
+    fontSize: 12,
+    color: "#4A3728",
+    opacity: 0.8,
+  },
+  discountBadge: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#4A3728",
+    backgroundColor: "rgba(255,255,255,0.5)",
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: Spacing.sm,
+  },
+  pricingCard: {
+    borderRadius: Spacing.md,
+    padding: Spacing.lg,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+  },
+  pricingCardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: Spacing.sm,
+  },
+  pricingIcon: {
+    fontSize: 32,
+    marginRight: Spacing.md,
+  },
+  pricingCardTitleSection: {
+    flex: 1,
+  },
+  pricingCardTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: 2,
+  },
+  pricingCardPages: {
+    fontSize: 14,
+  },
+  pricingDescription: {
+    fontSize: 14,
+    marginBottom: Spacing.md,
+  },
+  pricingPriceSection: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "rgba(0,0,0,0.1)",
+    paddingTop: Spacing.md,
+  },
+  pricingPrice: {
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: Spacing.xs,
+  },
+  pricingDiscountedPrice: {
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  pricingNote: {
+    fontSize: 12,
+    textAlign: "center",
+    marginTop: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
   },
 });

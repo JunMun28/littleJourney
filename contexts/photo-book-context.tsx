@@ -15,6 +15,59 @@ const SCORE_MILESTONE = 50; // Has milestone association
 const SCORE_CAPTION = 30; // Has caption
 const SCORE_TAGS = 10; // Has tags/labels
 
+// BOOK-007: Book pricing tiers
+export type BookSize = "mini" | "standard" | "premium";
+
+export interface BookPricingTier {
+  id: BookSize;
+  name: string;
+  pages: number;
+  priceMin: number; // SGD
+  priceMax: number; // SGD
+  description: string;
+  icon: string;
+}
+
+export const BOOK_PRICING_TIERS: BookPricingTier[] = [
+  {
+    id: "mini",
+    name: "Mini Book",
+    pages: 20,
+    priceMin: 15,
+    priceMax: 20,
+    description: "Perfect for monthly memories",
+    icon: "📘",
+  },
+  {
+    id: "standard",
+    name: "Standard Book",
+    pages: 40,
+    priceMin: 25,
+    priceMax: 35,
+    description: "Great for quarterly highlights",
+    icon: "📗",
+  },
+  {
+    id: "premium",
+    name: "Premium Book",
+    pages: 80,
+    priceMin: 45,
+    priceMax: 60,
+    description: "Complete yearly collection",
+    icon: "📕",
+  },
+];
+
+// BOOK-007: Subscription discount
+export const SUBSCRIPTION_DISCOUNT_PERCENT = 20;
+
+/**
+ * Calculate discounted price for subscribers
+ */
+export function calculateDiscountedPrice(price: number): number {
+  return Math.round(price * (1 - SUBSCRIPTION_DISCOUNT_PERCENT / 100));
+}
+
 export interface MonthSelection {
   year: number;
   month: number; // 1-12
@@ -501,7 +554,11 @@ export function curateMonthlyBook(
 
   const eligibleEntries = entries.filter((entry) => {
     // Must be a photo entry with media
-    if (entry.type !== "photo" || !entry.mediaUris || entry.mediaUris.length === 0) {
+    if (
+      entry.type !== "photo" ||
+      !entry.mediaUris ||
+      entry.mediaUris.length === 0
+    ) {
       return false;
     }
     // Must be in the specified month
@@ -736,8 +793,18 @@ export function PhotoBookProvider({ children }: { children: React.ReactNode }) {
 
       // Get month name for title
       const monthNames = [
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December",
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
       ];
       const monthName = monthNames[selectedMonth.month - 1];
       const yearStr = selectedMonth.year.toString();
