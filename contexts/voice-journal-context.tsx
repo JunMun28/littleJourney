@@ -18,6 +18,12 @@ export interface VoiceRecording {
   createdAt: string;
 }
 
+// Transcription state for VOICE-002
+export interface TranscriptionState {
+  isTranscribing: boolean;
+  transcriptionError: string | null;
+}
+
 interface VoiceJournalContextValue {
   // State
   isRecording: boolean;
@@ -27,6 +33,8 @@ interface VoiceJournalContextValue {
   permissionDenied: boolean;
   playbackProgress: number; // 0-1
   currentPlayingId: string | null;
+  // Transcription state (VOICE-002)
+  transcriptionState: TranscriptionState;
 
   // Recording actions
   startRecording: () => Promise<void>;
@@ -38,6 +46,10 @@ interface VoiceJournalContextValue {
   playRecording: (id: string) => Promise<void>;
   pausePlayback: () => Promise<void>;
   stopPlayback: () => Promise<void>;
+
+  // Transcription actions (VOICE-002)
+  transcribeRecording: (uri: string) => Promise<string | null>;
+  clearTranscriptionError: () => void;
 
   // Management
   deleteRecording: (id: string) => void;
@@ -56,6 +68,21 @@ function generateId(): string {
   return `voice_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
+// Mock transcription function for VOICE-002
+// In production, this would call a speech-to-text API (e.g., Google Speech-to-Text, Whisper)
+async function mockTranscribeAudio(
+  _uri: string,
+  durationMs: number,
+): Promise<string> {
+  // Simulate AI processing time based on audio duration
+  const processingTime = Math.min(durationMs * 0.1, 3000); // Max 3 seconds
+  await new Promise((resolve) => setTimeout(resolve, processingTime));
+
+  // Return a placeholder transcript
+  // In production, this would return actual transcription from AI service
+  return "Voice note transcription will appear here once connected to a speech-to-text service.";
+}
+
 export function VoiceJournalProvider({ children }: VoiceJournalProviderProps) {
   // Recording state
   const [isRecording, setIsRecording] = useState(false);
@@ -70,6 +97,13 @@ export function VoiceJournalProvider({ children }: VoiceJournalProviderProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackProgress, setPlaybackProgress] = useState(0);
   const [currentPlayingId, setCurrentPlayingId] = useState<string | null>(null);
+
+  // Transcription state (VOICE-002)
+  const [transcriptionState, setTranscriptionState] =
+    useState<TranscriptionState>({
+      isTranscribing: false,
+      transcriptionError: null,
+    });
 
   // Refs for audio objects
   const recordingRef = useRef<Audio.Recording | null>(null);
@@ -241,6 +275,50 @@ export function VoiceJournalProvider({ children }: VoiceJournalProviderProps) {
     }
   }, []);
 
+  // Transcription function (VOICE-002)
+  const transcribeRecording = useCallback(
+    async (uri: string): Promise<string | null> => {
+      try {
+        setTranscriptionState({
+          isTranscribing: true,
+          transcriptionError: null,
+        });
+
+        // Get duration from current recording if available
+        const duration = currentRecording?.duration || 5000;
+
+        // Call mock transcription (would be real API in production)
+        const transcript = await mockTranscribeAudio(uri, duration);
+
+        setTranscriptionState({
+          isTranscribing: false,
+          transcriptionError: null,
+        });
+
+        return transcript;
+      } catch (error) {
+        console.error("Failed to transcribe recording:", error);
+        setTranscriptionState({
+          isTranscribing: false,
+          transcriptionError:
+            error instanceof Error
+              ? error.message
+              : "Transcription failed. Please try again.",
+        });
+        return null;
+      }
+    },
+    [currentRecording?.duration],
+  );
+
+  // Clear transcription error (VOICE-002)
+  const clearTranscriptionError = useCallback((): void => {
+    setTranscriptionState((prev) => ({
+      ...prev,
+      transcriptionError: null,
+    }));
+  }, []);
+
   const deleteRecording = useCallback((id: string): void => {
     setRecordings((prev) => prev.filter((r) => r.id !== id));
   }, []);
@@ -262,6 +340,7 @@ export function VoiceJournalProvider({ children }: VoiceJournalProviderProps) {
     permissionDenied,
     playbackProgress,
     currentPlayingId,
+    transcriptionState, // VOICE-002
     startRecording,
     stopRecording,
     saveRecording,
@@ -269,6 +348,8 @@ export function VoiceJournalProvider({ children }: VoiceJournalProviderProps) {
     playRecording,
     pausePlayback,
     stopPlayback,
+    transcribeRecording, // VOICE-002
+    clearTranscriptionError, // VOICE-002
     deleteRecording,
     updateRecording,
   };

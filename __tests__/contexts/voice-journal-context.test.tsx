@@ -237,4 +237,96 @@ describe("VoiceJournalContext", () => {
       expect(result.current.recordings.length).toBe(0);
     });
   });
+
+  // VOICE-002: Transcription tests
+  describe("transcription functionality", () => {
+    it("provides initial transcription state", () => {
+      const { result } = renderHook(() => useVoiceJournal(), { wrapper });
+
+      expect(result.current.transcriptionState).toEqual({
+        isTranscribing: false,
+        transcriptionError: null,
+      });
+    });
+
+    it("transcribes recording and returns transcript", async () => {
+      const { result } = renderHook(() => useVoiceJournal(), { wrapper });
+
+      // Start recording first to get currentRecording duration
+      await act(async () => {
+        await result.current.startRecording();
+      });
+      await act(async () => {
+        await result.current.stopRecording();
+      });
+
+      let transcript: string | null = null;
+      await act(async () => {
+        transcript = await result.current.transcribeRecording(
+          "file:///test-recording.m4a",
+        );
+      });
+
+      expect(transcript).not.toBeNull();
+      expect(typeof transcript).toBe("string");
+      expect(result.current.transcriptionState.isTranscribing).toBe(false);
+      expect(result.current.transcriptionState.transcriptionError).toBeNull();
+    });
+
+    it("sets isTranscribing to true during transcription", async () => {
+      const { result } = renderHook(() => useVoiceJournal(), { wrapper });
+
+      // Create recording
+      await act(async () => {
+        await result.current.startRecording();
+      });
+      await act(async () => {
+        await result.current.stopRecording();
+      });
+
+      // Check that isTranscribing is set during transcription
+      // Note: Due to mock fast execution, we may not catch the intermediate state
+      // but we verify the function completes without error
+      let transcript: string | null = null;
+      await act(async () => {
+        transcript = await result.current.transcribeRecording(
+          "file:///test-recording.m4a",
+        );
+      });
+
+      expect(transcript).not.toBeNull();
+    });
+
+    it("clears transcription error", async () => {
+      const { result } = renderHook(() => useVoiceJournal(), { wrapper });
+
+      // Clear any existing error
+      await act(async () => {
+        result.current.clearTranscriptionError();
+      });
+
+      expect(result.current.transcriptionState.transcriptionError).toBeNull();
+    });
+
+    it("provides transcript placeholder text for mock implementation", async () => {
+      const { result } = renderHook(() => useVoiceJournal(), { wrapper });
+
+      await act(async () => {
+        await result.current.startRecording();
+      });
+      await act(async () => {
+        await result.current.stopRecording();
+      });
+
+      let transcript: string | null = null;
+      await act(async () => {
+        transcript = await result.current.transcribeRecording(
+          "file:///test-recording.m4a",
+        );
+      });
+
+      // Mock returns placeholder text
+      expect(transcript).toContain("speech-to-text service");
+    });
+  });
 });

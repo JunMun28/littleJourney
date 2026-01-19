@@ -456,6 +456,10 @@ export default function FeedScreen() {
     startRecording,
     stopRecording,
     discardRecording,
+    // Transcription (VOICE-002)
+    transcriptionState,
+    transcribeRecording,
+    clearTranscriptionError,
   } = useVoiceJournal();
   // Gamification: streak and monthly goal (GAME-002, GAME-003)
   const { streakData, monthlyGoalData } = useGamification();
@@ -476,6 +480,9 @@ export default function FeedScreen() {
   // Voice recording state (VOICE-001)
   const [voiceUri, setVoiceUri] = useState<string | null>(null);
   const [voiceDuration, setVoiceDuration] = useState<number>(0);
+  // Voice transcription state (VOICE-002)
+  const [voiceTranscript, setVoiceTranscript] = useState<string>("");
+  const [hasTranscribed, setHasTranscribed] = useState(false);
   // Voice photo attachment state (VOICE-003)
   const [voicePhotoUris, setVoicePhotoUris] = useState<string[]>([]);
   const [voicePhotoSizes, setVoicePhotoSizes] = useState<number[]>([]);
@@ -597,6 +604,10 @@ export default function FeedScreen() {
     // Reset voice state (VOICE-001)
     setVoiceUri(null);
     setVoiceDuration(0);
+    // Reset voice transcription state (VOICE-002)
+    setVoiceTranscript("");
+    setHasTranscribed(false);
+    clearTranscriptionError();
     // Reset voice photo state (VOICE-003)
     setVoicePhotoUris([]);
     setVoicePhotoSizes([]);
@@ -823,6 +834,15 @@ export default function FeedScreen() {
       setVoiceUri(recording.uri);
       setVoiceDuration(recording.duration);
       setCreateStep("caption");
+
+      // Auto-transcribe voice recording (VOICE-002)
+      // Transcription happens in background while user adds caption
+      transcribeRecording(recording.uri).then((transcript) => {
+        if (transcript) {
+          setVoiceTranscript(transcript);
+          setHasTranscribed(true);
+        }
+      });
     }
   };
 
@@ -916,6 +936,8 @@ export default function FeedScreen() {
         // Voice entry fields (VOICE-001)
         audioUri: voiceUri || undefined,
         audioDuration: voiceDuration > 0 ? voiceDuration : undefined,
+        // Voice transcription (VOICE-002)
+        transcript: voiceTranscript.trim() || undefined,
         createdBy: user?.id,
         createdByName: user?.name || user?.email?.split("@")[0], // Fallback to email prefix
       },
@@ -1307,6 +1329,88 @@ export default function FeedScreen() {
                   </ThemedText>
                 </View>
               )}
+
+              {/* Voice transcription section (VOICE-002) */}
+              {selectedType === "voice" && voiceUri && (
+                <View
+                  style={styles.transcriptionSection}
+                  testID="transcription-section"
+                >
+                  <View style={styles.transcriptionHeader}>
+                    <ThemedText
+                      style={[
+                        styles.transcriptionLabel,
+                        { color: colors.textMuted },
+                      ]}
+                    >
+                      Transcript
+                    </ThemedText>
+                    {transcriptionState.isTranscribing && (
+                      <ThemedText
+                        style={[
+                          styles.transcriptionStatus,
+                          { color: PRIMARY_COLOR },
+                        ]}
+                        testID="transcription-loading"
+                      >
+                        Transcribing...
+                      </ThemedText>
+                    )}
+                    {hasTranscribed && !transcriptionState.isTranscribing && (
+                      <ThemedText
+                        style={[
+                          styles.transcriptionStatus,
+                          { color: SemanticColors.success },
+                        ]}
+                        testID="transcription-complete"
+                      >
+                        ✓ Complete
+                      </ThemedText>
+                    )}
+                  </View>
+                  {transcriptionState.transcriptionError && (
+                    <ThemedText
+                      style={[
+                        styles.transcriptionError,
+                        { color: SemanticColors.error },
+                      ]}
+                      testID="transcription-error"
+                    >
+                      {transcriptionState.transcriptionError}
+                    </ThemedText>
+                  )}
+                  <TextInput
+                    style={[
+                      styles.transcriptInput,
+                      {
+                        borderColor: colors.inputBorder,
+                        color: colors.text,
+                        backgroundColor: colors.backgroundSecondary,
+                      },
+                    ]}
+                    placeholder={
+                      transcriptionState.isTranscribing
+                        ? "Transcribing audio..."
+                        : "Edit transcript here..."
+                    }
+                    placeholderTextColor={colors.placeholder}
+                    value={voiceTranscript}
+                    onChangeText={setVoiceTranscript}
+                    multiline
+                    editable={!transcriptionState.isTranscribing}
+                    testID="transcript-input"
+                  />
+                  <ThemedText
+                    style={[
+                      styles.transcriptionHint,
+                      { color: colors.textMuted },
+                    ]}
+                  >
+                    Transcript is searchable and will be saved with your entry
+                  </ThemedText>
+                </View>
+              )}
+
               {/* Voice photo preview (VOICE-003) */}
               {selectedType === "voice" && voicePhotoUris.length > 0 && (
                 <ScrollView
@@ -1876,6 +1980,42 @@ const styles = StyleSheet.create({
   },
   voicePreviewText: {
     fontSize: 16,
+  },
+  // Voice transcription styles (VOICE-002)
+  transcriptionSection: {
+    width: "100%",
+    marginTop: 16,
+    paddingHorizontal: 16,
+  },
+  transcriptionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  transcriptionLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  transcriptionStatus: {
+    fontSize: 12,
+  },
+  transcriptionError: {
+    fontSize: 12,
+    marginBottom: 8,
+  },
+  transcriptInput: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    minHeight: 80,
+    textAlignVertical: "top",
+  },
+  transcriptionHint: {
+    fontSize: 12,
+    marginTop: 8,
+    fontStyle: "italic",
   },
   // Voice photo attachment styles (VOICE-003)
   voicePhotoSection: {

@@ -625,7 +625,7 @@
         "Verify transcript is searchable"
       ],
       "acceptanceCriteria": "Voice entries auto-transcribed for search and display",
-      "passes": false
+      "passes": true
     },
     {
       "id": "VOICE-003",

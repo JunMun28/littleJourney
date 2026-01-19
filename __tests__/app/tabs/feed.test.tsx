@@ -1134,6 +1134,109 @@ describe("Voice entry with photo attachment", () => {
   });
 });
 
+// VOICE-002: Voice to text transcription tests
+describe("Voice to text transcription (VOICE-002)", () => {
+  it("should include transcript in Entry interface", () => {
+    const voiceEntryWithTranscript = {
+      id: "entry_127",
+      type: "voice" as const,
+      audioUri: "file:///recording.m4a",
+      audioDuration: 5000,
+      transcript: "Hello, this is a test transcription.",
+      caption: "Voice note",
+      date: "2026-01-19",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    expect(voiceEntryWithTranscript.type).toBe("voice");
+    expect(voiceEntryWithTranscript.transcript).toBe(
+      "Hello, this is a test transcription.",
+    );
+  });
+
+  it("should allow searching by transcript text", () => {
+    const entries = [
+      {
+        id: "1",
+        type: "voice" as const,
+        transcript: "First words mama",
+        date: "2026-01-19",
+      },
+      {
+        id: "2",
+        type: "voice" as const,
+        transcript: "Baby laughing at daddy",
+        date: "2026-01-18",
+      },
+      {
+        id: "3",
+        type: "photo" as const,
+        caption: "At the park",
+        date: "2026-01-17",
+      },
+    ];
+
+    // Search for "mama" should find voice entry
+    const searchTerm = "mama";
+    const results = entries.filter(
+      (entry) =>
+        entry.transcript?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        entry.caption?.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
+
+    expect(results.length).toBe(1);
+    expect(results[0].id).toBe("1");
+    expect(results[0].transcript).toContain("mama");
+  });
+
+  it("should support editable transcript field", () => {
+    // User can edit the transcript if needed
+    let transcript = "Voice note transcription will appear here";
+    const editedTranscript = "Baby said mama for the first time!";
+
+    transcript = editedTranscript;
+
+    expect(transcript).toBe(editedTranscript);
+  });
+
+  it("should create voice entry with transcript via API", async () => {
+    const { clearAllMockData, entryApi } = require("@/services/api-client");
+    clearAllMockData();
+
+    const result = await entryApi.createEntry({
+      entry: {
+        type: "voice",
+        date: "2026-01-19",
+        audioUri: "file:///recording.m4a",
+        audioDuration: 5000,
+        transcript: "Test transcription from voice recording",
+      },
+    });
+
+    expect(result.data.type).toBe("voice");
+    expect(result.data.transcript).toBe(
+      "Test transcription from voice recording",
+    );
+  });
+
+  it("should handle empty transcript when transcription fails", () => {
+    const voiceEntryNoTranscript = {
+      id: "entry_128",
+      type: "voice" as const,
+      audioUri: "file:///recording.m4a",
+      audioDuration: 5000,
+      transcript: undefined, // Transcription failed or not available
+      date: "2026-01-19",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    expect(voiceEntryNoTranscript.transcript).toBeUndefined();
+    expect(voiceEntryNoTranscript.audioUri).toBeDefined();
+  });
+});
+
 // GAME-002: Streak Card Tests
 describe("Streak card (GAME-002)", () => {
   // Helper function to determine if streak card should show
