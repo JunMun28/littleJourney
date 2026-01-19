@@ -30,27 +30,39 @@ const LABEL_TO_MILESTONE_MAP: Record<string, string[]> = {
   standing: ["first_steps"],
   toddler: ["first_steps"],
 
-  // First Solid Food
-  eating: ["annaprashan", "first_hawker_food"],
-  food: ["annaprashan", "first_hawker_food"],
-  feeding: ["annaprashan"],
-  "solid food": ["annaprashan"],
-  "high chair": ["annaprashan"],
-  spoon: ["annaprashan"],
+  // First Solid Food (AIDETECT-002)
+  eating: ["first_solid_food", "annaprashan", "first_hawker_food"],
+  food: ["first_solid_food", "annaprashan", "first_hawker_food"],
+  feeding: ["first_solid_food", "annaprashan"],
+  "solid food": ["first_solid_food", "annaprashan"],
+  "high chair": ["first_solid_food", "annaprashan"],
+  spoon: ["first_solid_food", "annaprashan"],
+  puree: ["first_solid_food"],
+  mashed: ["first_solid_food"],
+  cereal: ["first_solid_food"],
+  "baby food": ["first_solid_food"],
   hawker: ["first_hawker_food"],
 
-  // First Birthday
-  birthday: ["zhua_zhou"],
-  cake: ["zhua_zhou"],
-  candles: ["zhua_zhou"],
-  party: ["zhua_zhou"],
-  celebration: ["full_month", "hundred_days", "zhua_zhou"],
+  // First Birthday (AIDETECT-002)
+  birthday: ["first_birthday", "zhua_zhou"],
+  cake: ["first_birthday", "zhua_zhou"],
+  candles: ["first_birthday", "zhua_zhou"],
+  party: ["first_birthday", "zhua_zhou"],
+  celebration: ["full_month", "hundred_days", "first_birthday", "zhua_zhou"],
+  "one year": ["first_birthday"],
+  "1 year": ["first_birthday"],
+  "first birthday": ["first_birthday"],
 
-  // First Swim
-  swimming: [],
-  pool: [],
+  // First Swim (AIDETECT-002)
+  swimming: ["first_swim"],
+  pool: ["first_swim"],
+  swim: ["first_swim"],
+  "first swim": ["first_swim"],
+  swimsuit: ["first_swim"],
+  floatie: ["first_swim"],
+  "swimming pool": ["first_swim"],
+  splash: ["first_swim"],
   water: [],
-  splash: [],
 
   // First Smile/Laugh
   smile: ["first_smile"],

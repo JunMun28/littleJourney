@@ -207,6 +207,103 @@ describe("milestone-detection service", () => {
     });
   });
 
+  // AIDETECT-002: Milestone detection accuracy tests
+  describe("AIDETECT-002 accuracy", () => {
+    it("suggests first_solid_food milestone when eating solid food detected", async () => {
+      mockAnalyzeImage.mockResolvedValue({
+        labels: ["eating", "baby", "food", "high chair"],
+        labelsWithConfidence: [
+          { label: "eating", confidence: 0.9 },
+          { label: "baby", confidence: 0.88 },
+          { label: "food", confidence: 0.85 },
+          { label: "high chair", confidence: 0.8 },
+        ],
+      });
+
+      const result = await detectMilestonesFromImage(
+        "file:///test/solid-food.jpg",
+      );
+
+      expect(result.suggestions.length).toBeGreaterThan(0);
+      const templateIds = result.suggestions.map((s) => s.templateId);
+      expect(templateIds).toContain("first_solid_food");
+    });
+
+    it("suggests first_birthday milestone when cake and birthday detected", async () => {
+      mockAnalyzeImage.mockResolvedValue({
+        labels: ["birthday", "cake", "baby", "celebration"],
+        labelsWithConfidence: [
+          { label: "birthday", confidence: 0.95 },
+          { label: "cake", confidence: 0.92 },
+          { label: "baby", confidence: 0.88 },
+          { label: "celebration", confidence: 0.85 },
+        ],
+      });
+
+      const result = await detectMilestonesFromImage(
+        "file:///test/first-birthday.jpg",
+      );
+
+      expect(result.suggestions.length).toBeGreaterThan(0);
+      const templateIds = result.suggestions.map((s) => s.templateId);
+      expect(templateIds).toContain("first_birthday");
+    });
+
+    it("suggests first_swim milestone when swimming pool detected", async () => {
+      mockAnalyzeImage.mockResolvedValue({
+        labels: ["swimming", "pool", "baby", "water"],
+        labelsWithConfidence: [
+          { label: "swimming", confidence: 0.9 },
+          { label: "pool", confidence: 0.88 },
+          { label: "baby", confidence: 0.85 },
+          { label: "water", confidence: 0.8 },
+        ],
+      });
+
+      const result = await detectMilestonesFromImage(
+        "file:///test/first-swim.jpg",
+      );
+
+      expect(result.suggestions.length).toBeGreaterThan(0);
+      const templateIds = result.suggestions.map((s) => s.templateId);
+      expect(templateIds).toContain("first_swim");
+    });
+
+    it("suggests first_swim for splash label", async () => {
+      mockAnalyzeImage.mockResolvedValue({
+        labels: ["splash", "baby", "fun"],
+        labelsWithConfidence: [
+          { label: "splash", confidence: 0.85 },
+          { label: "baby", confidence: 0.9 },
+          { label: "fun", confidence: 0.7 },
+        ],
+      });
+
+      const result = await detectMilestonesFromImage("file:///test/splash.jpg");
+
+      expect(result.suggestions.length).toBeGreaterThan(0);
+      const templateIds = result.suggestions.map((s) => s.templateId);
+      expect(templateIds).toContain("first_swim");
+    });
+
+    it("suggests first_solid_food for puree/cereal labels", async () => {
+      mockAnalyzeImage.mockResolvedValue({
+        labels: ["puree", "baby", "feeding"],
+        labelsWithConfidence: [
+          { label: "puree", confidence: 0.88 },
+          { label: "baby", confidence: 0.92 },
+          { label: "feeding", confidence: 0.85 },
+        ],
+      });
+
+      const result = await detectMilestonesFromImage("file:///test/puree.jpg");
+
+      expect(result.suggestions.length).toBeGreaterThan(0);
+      const templateIds = result.suggestions.map((s) => s.templateId);
+      expect(templateIds).toContain("first_solid_food");
+    });
+  });
+
   describe("isHighConfidence", () => {
     it("returns true for confidence >= 0.75", () => {
       const suggestion: MilestoneSuggestion = {

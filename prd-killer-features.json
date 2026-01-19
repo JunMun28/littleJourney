@@ -297,7 +297,7 @@
         "Verify suggests 'First Swim'"
       ],
       "acceptanceCriteria": "AI correctly identifies common milestone events",
-      "passes": false
+      "passes": true
     },
     {
       "id": "AIDETECT-003",

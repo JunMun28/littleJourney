@@ -2081,3 +2081,42 @@ Reasoning: dismissSuggestion already implemented in AIDETECT-003. Need tests and
 
 ---
 
+
+### Task Selection
+Selected: AIDETECT-002 (Milestone detection accuracy)
+Priority: 2 (Integration points between modules)
+Reasoning: Extends existing AI milestone detection. AIDETECT-001 passes but detection accuracy for specific milestones (solid food, birthday, swim) was limited. Need new milestone templates and label mappings.
+
+### Implementation Complete
+
+**Task:** AIDETECT-002 Milestone detection accuracy
+**PRD Ref:** AI Milestone Detection - AIDETECT-002
+
+**Key Decisions:**
+- Added 3 new milestone templates: first_swim, first_solid_food, first_birthday
+- first_swim was missing entirely (labels mapped to empty arrays)
+- first_solid_food provides non-cultural alternative to annaprashan
+- first_birthday is universal version (vs cultural zhua_zhou)
+- Extended LABEL_TO_MILESTONE_MAP with more labels: puree, mashed, cereal, baby food, swimsuit, floatie
+- Swimming labels now properly map to first_swim
+- Birthday/cake/celebration now map to both first_birthday and zhua_zhou
+
+**Files Changed:**
+- MODIFIED: contexts/milestone-context.tsx (+3 milestone templates: first_swim, first_solid_food, first_birthday)
+- MODIFIED: services/milestone-detection.ts (+label mappings for solid food, birthday, swimming)
+- MODIFIED: __tests__/services/milestone-detection.test.ts (+5 AIDETECT-002 accuracy tests)
+- MODIFIED: prd-killer-features.json (AIDETECT-002 passes: true)
+- MODIFIED: progress-killer-features.txt
+
+**Verification:**
+- tsc --noEmit: PASS
+- npm run lint: PASS
+- npm test: 1206/1206 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- AIDETECT-002 complete: Solid food → first_solid_food, Birthday → first_birthday, Pool → first_swim
+- Tests verify each scenario with appropriate labels and confidence scores
+- AI Milestone Detection category now 5/8 complete
+
+---

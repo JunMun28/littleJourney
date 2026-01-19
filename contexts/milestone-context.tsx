@@ -219,6 +219,28 @@ export const MILESTONE_TEMPLATES: MilestoneTemplate[] = [
     description: "Baby's first visit to Singapore Zoo",
     culturalTradition: "universal",
   },
+
+  // Additional Universal Milestones (AIDETECT-002)
+  {
+    id: "first_swim",
+    title: "First Swim",
+    description: "Baby's first swimming experience",
+    culturalTradition: "universal",
+  },
+  {
+    id: "first_solid_food",
+    title: "First Solid Food",
+    description: "Baby's first solid food experience",
+    culturalTradition: "universal",
+    typicalAgeMonths: { min: 4, max: 8 }, // Typically around 6 months
+  },
+  {
+    id: "first_birthday",
+    title: "First Birthday",
+    description: "Baby's first birthday celebration",
+    culturalTradition: "universal",
+    daysFromBirth: 365,
+  },
 ];
 
 interface MilestoneContextValue {
