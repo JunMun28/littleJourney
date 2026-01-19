@@ -371,6 +371,20 @@ export default function EntryDetailScreen() {
             </View>
           </Pressable>
 
+          {/* AI-Generated Tags (AIDETECT-005) */}
+          {entry.aiLabels && entry.aiLabels.length > 0 && (
+            <View style={styles.aiTagsContainer} testID="ai-tags-section">
+              <ThemedText style={styles.aiTagsLabel}>🏷️ AI Tags</ThemedText>
+              <View style={styles.aiTagsRow}>
+                {entry.aiLabels.map((label, index) => (
+                  <View key={`${label}-${index}`} style={styles.aiTag}>
+                    <ThemedText style={styles.aiTagText}>{label}</ThemedText>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
           {/* AI Milestone Suggestions (AIDETECT-003, AIDETECT-004) */}
           {pendingSuggestions.length > 0 && isParent && (
             <View
@@ -1144,5 +1158,32 @@ const styles = StyleSheet.create({
   suggestionDismissText: {
     color: ViewerColors.textMuted,
     fontSize: 16,
+  },
+  // AI Tags styles (AIDETECT-005)
+  aiTagsContainer: {
+    marginTop: Spacing.md,
+    paddingTop: Spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: ViewerColors.modalBorder,
+  },
+  aiTagsLabel: {
+    color: ViewerColors.textMuted,
+    fontSize: 12,
+    marginBottom: Spacing.sm,
+  },
+  aiTagsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.xs,
+  },
+  aiTag: {
+    backgroundColor: ViewerColors.buttonBackground,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  aiTagText: {
+    color: ViewerColors.text,
+    fontSize: 12,
   },
 });

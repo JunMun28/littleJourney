@@ -340,7 +340,7 @@
         "Verify tags are searchable"
       ],
       "acceptanceCriteria": "AI auto-generates descriptive tags for photos",
-      "passes": false
+      "passes": true
     },
     {
       "id": "AIDETECT-006",

@@ -154,6 +154,7 @@ async function createTestEntry(
     mediaUris: string[] | undefined;
     caption: string;
     date: string;
+    aiLabels?: string[]; // AIDETECT-005
     aiMilestoneSuggestions?: {
       templateId: string;
       title: string;
@@ -172,6 +173,7 @@ async function createTestEntry(
         "mediaUris" in overrides ? overrides.mediaUris : defaultMediaUris,
       caption: overrides.caption ?? "First steps!",
       date: overrides.date ?? "2024-06-15",
+      aiLabels: overrides.aiLabels, // AIDETECT-005
       aiMilestoneSuggestions: overrides.aiMilestoneSuggestions,
     },
   });
@@ -652,6 +654,77 @@ describe("EntryDetailScreen", () => {
 
       // View-only badge should not be visible for parents
       expect(screen.queryByTestId("view-only-badge")).toBeNull();
+    });
+  });
+
+  // AIDETECT-005: Smart photo tagging
+  describe("AI tags display (AIDETECT-005)", () => {
+    it("displays AI-generated tags when entry has aiLabels", async () => {
+      const entry = await createTestEntry({
+        aiLabels: ["outdoor", "smiling", "park", "baby"],
+      });
+      mockParams = { id: entry.id };
+
+      render(<EntryDetailScreen />, { wrapper: createWrapper() });
+
+      await waitFor(() => {
+        expect(screen.getByTestId("ai-tags-section")).toBeTruthy();
+      });
+
+      // Should show all tags
+      expect(screen.getByText("outdoor")).toBeTruthy();
+      expect(screen.getByText("smiling")).toBeTruthy();
+      expect(screen.getByText("park")).toBeTruthy();
+      expect(screen.getByText("baby")).toBeTruthy();
+    });
+
+    it("hides AI tags section when entry has no aiLabels", async () => {
+      const entry = await createTestEntry({
+        aiLabels: undefined,
+      });
+      mockParams = { id: entry.id };
+
+      render(<EntryDetailScreen />, { wrapper: createWrapper() });
+
+      await waitFor(() => {
+        expect(screen.getByText("First steps!")).toBeTruthy();
+      });
+
+      // Should not show AI tags section
+      expect(screen.queryByTestId("ai-tags-section")).toBeNull();
+    });
+
+    it("hides AI tags section when entry has empty aiLabels array", async () => {
+      const entry = await createTestEntry({
+        aiLabels: [],
+      });
+      mockParams = { id: entry.id };
+
+      render(<EntryDetailScreen />, { wrapper: createWrapper() });
+
+      await waitFor(() => {
+        expect(screen.getByText("First steps!")).toBeTruthy();
+      });
+
+      // Should not show AI tags section
+      expect(screen.queryByTestId("ai-tags-section")).toBeNull();
+    });
+
+    it("shows AI tags for family members with view_only permission", async () => {
+      const entry = await createTestEntry({
+        aiLabels: ["outdoor", "family"],
+      });
+      mockParams = { id: entry.id };
+
+      render(<EntryDetailScreen />, { wrapper: createViewOnlyWrapper() });
+
+      await waitFor(() => {
+        expect(screen.getByTestId("ai-tags-section")).toBeTruthy();
+      });
+
+      // Tags should be visible to all viewers
+      expect(screen.getByText("outdoor")).toBeTruthy();
+      expect(screen.getByText("family")).toBeTruthy();
     });
   });
 
