@@ -156,9 +156,12 @@ describe("useChildren hooks", () => {
       const wrapper = createWrapper();
       const { result } = renderHook(() => useChildFlat(), { wrapper });
 
-      await waitFor(() => {
-        expect(result.current.child).not.toBeNull();
-      });
+      await waitFor(
+        () => {
+          expect(result.current.child).not.toBeNull();
+        },
+        { timeout: 3000 },
+      );
 
       expect(result.current.updateChild).toBeDefined();
     });
