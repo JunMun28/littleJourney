@@ -11,6 +11,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { entryApi, commentApi, clearAllMockData } from "@/services/api-client";
 import { AuthProvider } from "@/contexts/auth-context";
 import { ViewerProvider, useViewer } from "@/contexts/viewer-context";
+import { MilestoneProvider } from "@/contexts/milestone-context";
 
 // Mock expo-secure-store for AuthProvider
 jest.mock("expo-secure-store", () => ({
@@ -72,7 +73,9 @@ function createWrapper() {
     return (
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <ViewerProvider>{children}</ViewerProvider>
+          <ViewerProvider>
+            <MilestoneProvider>{children}</MilestoneProvider>
+          </ViewerProvider>
         </AuthProvider>
       </QueryClientProvider>
     );
@@ -102,7 +105,9 @@ function createViewOnlyWrapper() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <ViewerProvider>
-            <ViewOnlySetup>{children}</ViewOnlySetup>
+            <MilestoneProvider>
+              <ViewOnlySetup>{children}</ViewOnlySetup>
+            </MilestoneProvider>
           </ViewerProvider>
         </AuthProvider>
       </QueryClientProvider>
@@ -132,7 +137,9 @@ function createViewInteractWrapper() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <ViewerProvider>
-            <ViewInteractSetup>{children}</ViewInteractSetup>
+            <MilestoneProvider>
+              <ViewInteractSetup>{children}</ViewInteractSetup>
+            </MilestoneProvider>
           </ViewerProvider>
         </AuthProvider>
       </QueryClientProvider>

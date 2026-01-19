@@ -311,7 +311,7 @@
         "Verify milestone marked as completed"
       ],
       "acceptanceCriteria": "Accepting suggestion links entry to milestone",
-      "passes": false
+      "passes": true
     },
     {
       "id": "AIDETECT-004",

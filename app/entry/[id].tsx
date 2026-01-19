@@ -14,12 +14,14 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 
 import { ThemedText } from "@/components/themed-text";
 import { VideoPlayer } from "@/components/video-player";
 import { useEntry, useUpdateEntry, useDeleteEntry } from "@/hooks/use-entries";
+import { useMilestoneSuggestions } from "@/hooks/use-milestone-suggestions";
 import {
   useComments,
   useReactions,
@@ -67,7 +69,12 @@ export default function EntryDetailScreen() {
   const { data: reactions = [] } = useReactions(id ?? "");
   const deleteCommentMutation = useDeleteComment();
 
+  // AI Milestone Suggestions (AIDETECT-003, AIDETECT-004)
+  const { acceptSuggestion, dismissSuggestion, getPendingSuggestions } =
+    useMilestoneSuggestions();
+
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isAcceptingSuggestion, setIsAcceptingSuggestion] = useState(false);
   const [menuState, setMenuState] = useState<MenuState>("closed");
   const [editCaption, setEditCaption] = useState("");
   const [selectedComment, setSelectedComment] = useState<Comment | null>(null);
@@ -177,6 +184,38 @@ export default function EntryDetailScreen() {
     setSelectedComment(null);
     setMenuState("comments");
   }, []);
+
+  // AI Milestone Suggestion handlers (AIDETECT-003, AIDETECT-004)
+  const handleAcceptSuggestion = useCallback(
+    async (templateId: string) => {
+      if (!entry) return;
+      setIsAcceptingSuggestion(true);
+      try {
+        const result = await acceptSuggestion(entry, templateId);
+        if (result.success) {
+          Alert.alert(
+            "Milestone Created!",
+            "This entry has been linked to the milestone. View it in the Milestones tab.",
+            [{ text: "OK" }],
+          );
+        }
+      } finally {
+        setIsAcceptingSuggestion(false);
+      }
+    },
+    [entry, acceptSuggestion],
+  );
+
+  const handleDismissSuggestion = useCallback(
+    async (templateId: string) => {
+      if (!entry) return;
+      await dismissSuggestion(entry, templateId);
+    },
+    [entry, dismissSuggestion],
+  );
+
+  // Get pending suggestions for current entry
+  const pendingSuggestions = entry ? getPendingSuggestions(entry) : [];
 
   // Loading state
   if (isLoading) {
@@ -331,6 +370,72 @@ export default function EntryDetailScreen() {
               </ThemedText>
             </View>
           </Pressable>
+
+          {/* AI Milestone Suggestions (AIDETECT-003, AIDETECT-004) */}
+          {pendingSuggestions.length > 0 && isParent && (
+            <View
+              style={styles.milestoneSuggestionsContainer}
+              testID="milestone-suggestions"
+            >
+              <View style={styles.milestoneSuggestionsHeader}>
+                <ThemedText style={styles.milestoneSuggestionsIcon}>
+                  🎯
+                </ThemedText>
+                <ThemedText style={styles.milestoneSuggestionsTitle}>
+                  Milestone Detected
+                </ThemedText>
+              </View>
+              <ThemedText style={styles.milestoneSuggestionsHint}>
+                Link this entry to a milestone?
+              </ThemedText>
+              {pendingSuggestions.map((suggestion) => (
+                <View
+                  key={suggestion.templateId}
+                  style={styles.suggestionCard}
+                  testID={`suggestion-${suggestion.templateId}`}
+                >
+                  <View style={styles.suggestionInfo}>
+                    <ThemedText style={styles.suggestionTitle}>
+                      {suggestion.title}
+                    </ThemedText>
+                    <ThemedText style={styles.suggestionConfidence}>
+                      {Math.round(suggestion.confidence * 100)}% match
+                    </ThemedText>
+                  </View>
+                  <View style={styles.suggestionActions}>
+                    <Pressable
+                      style={styles.suggestionAcceptButton}
+                      onPress={() =>
+                        handleAcceptSuggestion(suggestion.templateId)
+                      }
+                      disabled={isAcceptingSuggestion}
+                      testID={`accept-suggestion-${suggestion.templateId}`}
+                    >
+                      {isAcceptingSuggestion ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                      ) : (
+                        <ThemedText style={styles.suggestionAcceptText}>
+                          Accept
+                        </ThemedText>
+                      )}
+                    </Pressable>
+                    <Pressable
+                      style={styles.suggestionDismissButton}
+                      onPress={() =>
+                        handleDismissSuggestion(suggestion.templateId)
+                      }
+                      disabled={isAcceptingSuggestion}
+                      testID={`dismiss-suggestion-${suggestion.templateId}`}
+                    >
+                      <ThemedText style={styles.suggestionDismissText}>
+                        ✕
+                      </ThemedText>
+                    </Pressable>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
       </View>
 
@@ -965,5 +1070,79 @@ const styles = StyleSheet.create({
   },
   confirmButtonDanger: {
     backgroundColor: SemanticColors.errorLight,
+  },
+  // AI Milestone Suggestion styles (AIDETECT-003, AIDETECT-004)
+  milestoneSuggestionsContainer: {
+    marginTop: Spacing.md,
+    padding: Spacing.md,
+    backgroundColor: "rgba(255, 215, 0, 0.15)",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255, 215, 0, 0.3)",
+  },
+  milestoneSuggestionsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: Spacing.xs,
+  },
+  milestoneSuggestionsIcon: {
+    fontSize: 16,
+    marginRight: Spacing.xs,
+  },
+  milestoneSuggestionsTitle: {
+    color: ViewerColors.text,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  milestoneSuggestionsHint: {
+    color: ViewerColors.textMuted,
+    fontSize: 12,
+    marginBottom: Spacing.sm,
+  },
+  suggestionCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: ViewerColors.buttonBackground,
+    borderRadius: 8,
+    padding: Spacing.sm,
+    marginTop: Spacing.xs,
+  },
+  suggestionInfo: {
+    flex: 1,
+  },
+  suggestionTitle: {
+    color: ViewerColors.text,
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  suggestionConfidence: {
+    color: ViewerColors.textMuted,
+    fontSize: 11,
+    marginTop: 2,
+  },
+  suggestionActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+  },
+  suggestionAcceptButton: {
+    backgroundColor: PRIMARY_COLOR,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: 6,
+    minWidth: 60,
+    alignItems: "center",
+  },
+  suggestionAcceptText: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  suggestionDismissButton: {
+    padding: Spacing.sm,
+  },
+  suggestionDismissText: {
+    color: ViewerColors.textMuted,
+    fontSize: 16,
   },
 });

@@ -2008,3 +2008,41 @@ Reasoning: AI Milestone Detection has no infrastructure. Need service layer, typ
 
 ---
 
+### Task Selection
+Selected: AIDETECT-003 (Accept AI milestone suggestion)
+Priority: 2 (Integration points between modules)
+Reasoning: AIDETECT-001 provides AI suggestions. AIDETECT-003 is the natural next step - accepting suggestions links entries to milestones.
+
+### Implementation Complete
+
+**Task:** AIDETECT-003 Accept AI milestone suggestion
+**PRD Ref:** AI Milestone Detection - AIDETECT-003
+
+**Key Decisions:**
+- New useMilestoneSuggestions hook handles accept/dismiss operations
+- acceptSuggestion: Creates milestone from template, marks complete with entry photo, updates entry suggestion status to "accepted", links entry to milestone via milestoneId
+- dismissSuggestion: Updates entry suggestion status to "dismissed" (kept for AI learning feedback)
+- UI shown in entry detail screen below engagement row when pending suggestions exist
+- Only visible to parents (isParent check)
+- Golden-themed suggestion card with Accept/Dismiss buttons
+- Alert confirms milestone creation on accept
+
+**Files Changed:**
+- NEW: hooks/use-milestone-suggestions.ts (hook for accept/dismiss with milestone context integration)
+- NEW: __tests__/hooks/use-milestone-suggestions.test.ts (11 tests)
+- MODIFIED: app/entry/[id].tsx (+suggestion UI, +handlers, +styles)
+- MODIFIED: __tests__/app/entry/entry-detail.test.tsx (+MilestoneProvider to wrappers)
+
+**Verification:**
+- tsc --noEmit: PASS
+- npm run lint: PASS
+- npm test: 1197/1197 PASS
+- npx expo export --platform web: PASS
+
+**Notes:**
+- AIDETECT-003 complete: View entry with pending suggestion, tap Accept, milestone created and linked
+- AIDETECT-004 also partially complete - dismissSuggestion implemented in same hook
+- AI Milestone Detection category now 3/8 complete (AIDETECT-001, AIDETECT-006, AIDETECT-007 + AIDETECT-003)
+
+---
+
