@@ -331,4 +331,81 @@ describe("MilestoneContext", () => {
       });
     });
   });
+
+  // AIDETECT-007: Milestone comparison to typical ranges
+  describe("typical age ranges (AIDETECT-007)", () => {
+    it("provides typicalAgeMonths for developmental milestones", () => {
+      const firstSteps = MILESTONE_TEMPLATES.find(
+        (t) => t.id === "first_steps",
+      );
+      expect(firstSteps?.typicalAgeMonths).toBeDefined();
+      expect(firstSteps?.typicalAgeMonths?.min).toBe(9);
+      expect(firstSteps?.typicalAgeMonths?.max).toBe(15);
+    });
+
+    it("provides typicalAgeMonths for first_smile", () => {
+      const firstSmile = MILESTONE_TEMPLATES.find(
+        (t) => t.id === "first_smile",
+      );
+      expect(firstSmile?.typicalAgeMonths).toBeDefined();
+      expect(firstSmile?.typicalAgeMonths?.min).toBe(1);
+      expect(firstSmile?.typicalAgeMonths?.max).toBe(4);
+    });
+
+    it("provides typicalAgeMonths for first_tooth", () => {
+      const firstTooth = MILESTONE_TEMPLATES.find(
+        (t) => t.id === "first_tooth",
+      );
+      expect(firstTooth?.typicalAgeMonths).toBeDefined();
+      expect(firstTooth?.typicalAgeMonths?.min).toBe(4);
+      expect(firstTooth?.typicalAgeMonths?.max).toBe(10);
+    });
+
+    it("exports getTypicalAgeRange helper function", () => {
+      const { getTypicalAgeRange } = require("@/contexts/milestone-context");
+      expect(getTypicalAgeRange).toBeDefined();
+      expect(typeof getTypicalAgeRange).toBe("function");
+    });
+
+    it("getTypicalAgeRange returns range for known milestone", () => {
+      const { getTypicalAgeRange } = require("@/contexts/milestone-context");
+      const range = getTypicalAgeRange("first_steps");
+      expect(range).toEqual({ min: 9, max: 15 });
+    });
+
+    it("getTypicalAgeRange returns null for milestone without typical range", () => {
+      const { getTypicalAgeRange } = require("@/contexts/milestone-context");
+      const range = getTypicalAgeRange("full_month");
+      expect(range).toBeNull();
+    });
+
+    it("exports isWithinTypicalRange helper function", () => {
+      const { isWithinTypicalRange } = require("@/contexts/milestone-context");
+      expect(isWithinTypicalRange).toBeDefined();
+      expect(typeof isWithinTypicalRange).toBe("function");
+    });
+
+    it("isWithinTypicalRange returns true when child age is within range", () => {
+      const { isWithinTypicalRange } = require("@/contexts/milestone-context");
+      // Child completed first steps at 11 months (typical range 9-15)
+      expect(isWithinTypicalRange("first_steps", 11)).toBe(true);
+    });
+
+    it("isWithinTypicalRange returns false when child age is below range", () => {
+      const { isWithinTypicalRange } = require("@/contexts/milestone-context");
+      // Child completed first steps at 6 months (early, below typical range 9-15)
+      expect(isWithinTypicalRange("first_steps", 6)).toBe(false);
+    });
+
+    it("isWithinTypicalRange returns false when child age is above range", () => {
+      const { isWithinTypicalRange } = require("@/contexts/milestone-context");
+      // Child completed first steps at 18 months (late, above typical range 9-15)
+      expect(isWithinTypicalRange("first_steps", 18)).toBe(false);
+    });
+
+    it("isWithinTypicalRange returns null for milestone without typical range", () => {
+      const { isWithinTypicalRange } = require("@/contexts/milestone-context");
+      expect(isWithinTypicalRange("full_month", 1)).toBeNull();
+    });
+  });
 });

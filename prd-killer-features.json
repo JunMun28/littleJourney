@@ -368,7 +368,7 @@
         "Verify disclaimer about individual variation"
       ],
       "acceptanceCriteria": "Milestones show comparison to typical developmental ranges",
-      "passes": false
+      "passes": true
     },
     {
       "id": "AIDETECT-008",

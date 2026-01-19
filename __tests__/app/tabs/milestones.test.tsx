@@ -594,9 +594,10 @@ describe("MilestonesScreen", () => {
         expect(screen.getByText("Mark as Completed")).toBeTruthy();
       });
 
-      // Should not show community statistics
+      // Should not show community statistics section
       expect(screen.queryByText(/Community Statistics/i)).toBeNull();
-      expect(screen.queryByText(/typical range/i)).toBeNull();
+      // But AIDETECT-007 typical range card should still show (shown regardless of community sharing)
+      expect(screen.getByText(/Developmental Range/i)).toBeTruthy();
     });
 
     it("shows community statistics when sharing is enabled", async () => {
@@ -631,7 +632,7 @@ describe("MilestonesScreen", () => {
       });
     });
 
-    it("shows typical range for milestone", async () => {
+    it("shows typical range for milestone in community stats", async () => {
       const child = await createTestChild();
       await addTestMilestone(child.id!);
 
@@ -654,7 +655,8 @@ describe("MilestonesScreen", () => {
       fireEvent.press(screen.getByText("First Smile"));
 
       await waitFor(() => {
-        expect(screen.getByText(/Typical range/i)).toBeTruthy();
+        // Should show typical range (may be multiple with AIDETECT-007 + COMMUNITY-002)
+        expect(screen.getAllByText(/Typical range/i).length).toBeGreaterThan(0);
       });
     });
 
@@ -681,8 +683,12 @@ describe("MilestonesScreen", () => {
       fireEvent.press(screen.getByText("First Smile"));
 
       await waitFor(() => {
-        // PRD: "Verify disclaimer about individual variation"
-        expect(screen.getByText(/Every child develops/i)).toBeTruthy();
+        // PRD: "Verify disclaimer about individual variation" - Community Statistics specific
+        expect(screen.getByText(/Community Statistics/i)).toBeTruthy();
+        // There should be a disclaimer within the community stats section
+        expect(
+          screen.getAllByText(/Every child develops/i).length,
+        ).toBeGreaterThan(0);
       });
     });
 
@@ -714,6 +720,104 @@ describe("MilestonesScreen", () => {
 
       // Should not show any identifiable data (names, specific dates, etc.)
       expect(screen.queryByText(/Test Baby/i)).toBeNull();
+    });
+  });
+
+  // AIDETECT-007: Typical age range display
+  describe("typical age range display (AIDETECT-007)", () => {
+    it("shows typical range card when completing milestone with range data", async () => {
+      const child = await createTestChild();
+      await addTestMilestone(child.id!);
+
+      render(
+        <TestWrapper>
+          <MilestonesScreen />
+        </TestWrapper>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("First Smile")).toBeTruthy();
+      });
+
+      // Open completion modal for First Smile (has typical range 1-4 months)
+      fireEvent.press(screen.getByText("First Smile"));
+
+      await waitFor(() => {
+        // PRD: "Verify shows typical range (9-15 months)" - but First Smile is 1-4 months
+        expect(screen.getByText(/Developmental Range/i)).toBeTruthy();
+        expect(screen.getByText(/Typical range: 1-4 months/i)).toBeTruthy();
+      });
+    });
+
+    it("shows child age at celebration date", async () => {
+      const child = await createTestChild();
+      await addTestMilestone(child.id!);
+
+      render(
+        <TestWrapper>
+          <MilestonesScreen />
+        </TestWrapper>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("First Smile")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("First Smile"));
+
+      await waitFor(() => {
+        // PRD: Shows child's current age
+        expect(screen.getByText(/Your child:/i)).toBeTruthy();
+      });
+    });
+
+    it("shows within range indicator when child is within typical range", async () => {
+      const child = await createTestChild();
+      await addTestMilestone(child.id!);
+
+      render(
+        <TestWrapper>
+          <MilestonesScreen />
+        </TestWrapper>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("First Smile")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("First Smile"));
+
+      await waitFor(() => {
+        // The test child's age should determine if "Within range" or "Outside typical range" shows
+        // At least one of these should be present
+        const withinRange = screen.queryByText(/Within range/i);
+        const outsideRange = screen.queryByText(/Outside typical range/i);
+        expect(withinRange || outsideRange).toBeTruthy();
+      });
+    });
+
+    it("shows disclaimer about individual variation", async () => {
+      const child = await createTestChild();
+      await addTestMilestone(child.id!);
+
+      render(
+        <TestWrapper>
+          <MilestonesScreen />
+        </TestWrapper>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("First Smile")).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("First Smile"));
+
+      await waitFor(() => {
+        // PRD: "Verify disclaimer about individual variation"
+        expect(
+          screen.getByText(/Every child develops at their own pace/i),
+        ).toBeTruthy();
+      });
     });
   });
 

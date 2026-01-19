@@ -8,6 +8,12 @@ import {
 } from "react";
 import type { CulturalTradition } from "./child-context";
 
+// AIDETECT-007: Typical age range for developmental milestones
+export interface TypicalAgeRange {
+  min: number; // Minimum typical age in months
+  max: number; // Maximum typical age in months
+}
+
 export interface MilestoneTemplate {
   id: string;
   title: string;
@@ -15,6 +21,7 @@ export interface MilestoneTemplate {
   description: string;
   culturalTradition: CulturalTradition | "universal";
   daysFromBirth?: number; // For auto-calculating milestone date
+  typicalAgeMonths?: TypicalAgeRange; // AIDETECT-007: Typical age range for developmental milestones
 }
 
 // Supported languages for bilingual first words (SGLOCAL-002)
@@ -142,48 +149,55 @@ export const MILESTONE_TEMPLATES: MilestoneTemplate[] = [
     culturalTradition: "indian",
   },
 
-  // Universal Milestones
+  // Universal Milestones (with AIDETECT-007 typical age ranges)
   {
     id: "first_smile",
     title: "First Smile",
     description: "Baby's first social smile",
     culturalTradition: "universal",
+    typicalAgeMonths: { min: 1, max: 4 }, // Typically 6-8 weeks to 4 months
   },
   {
     id: "first_laugh",
     title: "First Laugh",
     description: "Baby's first laugh out loud",
     culturalTradition: "universal",
+    typicalAgeMonths: { min: 3, max: 6 }, // Typically 3-4 months
   },
   {
     id: "first_steps",
     title: "First Steps",
     description: "Baby's first independent steps",
     culturalTradition: "universal",
+    typicalAgeMonths: { min: 9, max: 15 }, // Typically 9-15 months
   },
   {
     id: "first_words",
     title: "First Words",
     description: "Baby's first meaningful words",
     culturalTradition: "universal",
+    typicalAgeMonths: { min: 9, max: 15 }, // Typically 9-15 months
   },
   {
     id: "first_tooth",
     title: "First Tooth",
     description: "Baby's first tooth appears",
     culturalTradition: "universal",
+    typicalAgeMonths: { min: 4, max: 10 }, // Typically 4-10 months
   },
   {
     id: "first_haircut",
     title: "First Haircut",
     description: "Baby's first haircut",
     culturalTradition: "universal",
+    // No typical range - varies by family preference
   },
   {
     id: "first_day_school",
     title: "First Day of School",
     description: "Starting preschool or childcare",
     culturalTradition: "universal",
+    typicalAgeMonths: { min: 18, max: 48 }, // Typically 18 months to 4 years
   },
 
   // Singapore Local Milestones (SGLOCAL-003)
@@ -308,4 +322,31 @@ export function useMilestones(): MilestoneContextValue {
     throw new Error("useMilestones must be used within a MilestoneProvider");
   }
   return context;
+}
+
+// AIDETECT-007: Helper functions for typical age range comparison
+
+/**
+ * Get the typical age range for a milestone template
+ * @param templateId - The milestone template ID
+ * @returns The typical age range in months, or null if not defined
+ */
+export function getTypicalAgeRange(templateId: string): TypicalAgeRange | null {
+  const template = MILESTONE_TEMPLATES.find((t) => t.id === templateId);
+  return template?.typicalAgeMonths ?? null;
+}
+
+/**
+ * Check if a child's age at milestone completion is within the typical range
+ * @param templateId - The milestone template ID
+ * @param childAgeMonths - The child's age in months when the milestone was completed
+ * @returns true if within range, false if outside range, null if no typical range defined
+ */
+export function isWithinTypicalRange(
+  templateId: string,
+  childAgeMonths: number,
+): boolean | null {
+  const range = getTypicalAgeRange(templateId);
+  if (!range) return null;
+  return childAgeMonths >= range.min && childAgeMonths <= range.max;
 }
