@@ -46,6 +46,7 @@ import { GamificationProvider } from "@/contexts/gamification-context";
 import { CommunityProvider } from "@/contexts/community-context";
 import { RedPacketProvider } from "@/contexts/red-packet-context";
 import { FamilyDigestProvider } from "@/contexts/family-digest-context";
+import { YearInReviewProvider } from "@/contexts/year-in-review-context";
 
 function RootLayoutNav() {
   const { isAuthenticated, isLoading, hasCompletedOnboarding, user } =
@@ -162,20 +163,22 @@ export default function RootLayout() {
                                         <CommunityProvider>
                                           <RedPacketProvider>
                                             <FamilyDigestProvider>
-                                              <ExportProvider>
-                                                <PhotoBookProvider>
-                                                  <ThemeProvider
-                                                    value={
-                                                      colorScheme === "dark"
-                                                        ? DarkTheme
-                                                        : DefaultTheme
-                                                    }
-                                                  >
-                                                    <RootLayoutNav />
-                                                    <StatusBar style="auto" />
-                                                  </ThemeProvider>
-                                                </PhotoBookProvider>
-                                              </ExportProvider>
+                                              <YearInReviewProvider>
+                                                <ExportProvider>
+                                                  <PhotoBookProvider>
+                                                    <ThemeProvider
+                                                      value={
+                                                        colorScheme === "dark"
+                                                          ? DarkTheme
+                                                          : DefaultTheme
+                                                      }
+                                                    >
+                                                      <RootLayoutNav />
+                                                      <StatusBar style="auto" />
+                                                    </ThemeProvider>
+                                                  </PhotoBookProvider>
+                                                </ExportProvider>
+                                              </YearInReviewProvider>
                                             </FamilyDigestProvider>
                                           </RedPacketProvider>
                                         </CommunityProvider>

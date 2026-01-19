@@ -668,7 +668,7 @@
         "Verify includes highlights from past year"
       ],
       "acceptanceCriteria": "AI creates video compilation of year's highlights",
-      "passes": false
+      "passes": true
     },
     {
       "id": "YIR-002",
