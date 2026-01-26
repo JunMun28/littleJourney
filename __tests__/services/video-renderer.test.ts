@@ -37,12 +37,15 @@ jest.mock("expo-file-system", () => ({
 }));
 
 // Mock ffmpeg-kit-react-native
-const mockExecute = jest.fn();
-const mockCancel = jest.fn();
 jest.mock("ffmpeg-kit-react-native", () => ({
   FFmpegKit: {
-    execute: mockExecute,
-    cancel: mockCancel,
+    execute: jest.fn().mockImplementation(() =>
+      Promise.resolve({
+        getReturnCode: jest.fn().mockResolvedValue(0),
+        getAllLogsAsString: jest.fn().mockResolvedValue(""),
+      }),
+    ),
+    cancel: jest.fn(),
   },
   FFmpegKitConfig: {
     enableStatisticsCallback: jest.fn(),
@@ -101,12 +104,20 @@ const createMockReview = (clipCount: number = 5): YearInReview => ({
   exportQuality: "1080p",
 });
 
+// Get the mocked module
+const { FFmpegKit, ReturnCode } = jest.requireMock("ffmpeg-kit-react-native");
+
 describe("video-renderer", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockExecute.mockResolvedValue({
-      getReturnCode: () => ({ isValueSuccess: () => true }),
-    });
+    // Reset FFmpegKit.execute mock
+    FFmpegKit.execute.mockImplementation(() =>
+      Promise.resolve({
+        getReturnCode: jest.fn().mockResolvedValue(0),
+        getAllLogsAsString: jest.fn().mockResolvedValue(""),
+      }),
+    );
+    ReturnCode.isSuccess.mockReturnValue(true);
   });
 
   describe("QUALITY_PRESETS", () => {
@@ -202,9 +213,10 @@ describe("video-renderer", () => {
 
       const command = buildFfmpegCommand(options);
 
-      expect(command).toContain("-i /path/img1.jpg");
-      expect(command).toContain("-i /path/img2.jpg");
-      expect(command).toContain("-i /path/img3.jpg");
+      // Command uses quoted paths for safety
+      expect(command).toContain("-i '/path/img1.jpg'");
+      expect(command).toContain("-i '/path/img2.jpg'");
+      expect(command).toContain("-i '/path/img3.jpg'");
     });
 
     it("applies correct resolution based on quality", () => {
@@ -333,9 +345,10 @@ describe("video-renderer", () => {
 
       const paths = await prepareAssets(clips, "1080p");
 
-      expect(paths[0]).toContain("photo1");
-      expect(paths[1]).toContain("photo2");
-      expect(paths[2]).toContain("photo3");
+      // Paths are renamed with index for reliable ordering
+      expect(paths[0]).toContain("img_0");
+      expect(paths[1]).toContain("img_1");
+      expect(paths[2]).toContain("img_2");
     });
 
     it("creates cache directory if not exists", async () => {
@@ -375,7 +388,7 @@ describe("video-renderer", () => {
         "/output/final.mp4",
       );
 
-      expect(mockExecute).toHaveBeenCalled();
+      expect(FFmpegKit.execute).toHaveBeenCalled();
       expect(result).toContain("final.mp4");
     });
 
@@ -386,7 +399,7 @@ describe("video-renderer", () => {
         "/output/final.mp4",
       );
 
-      const command = mockExecute.mock.calls[0][0];
+      const command = FFmpegKit.execute.mock.calls[0][0];
       expect(command).toContain("afade");
     });
 
@@ -397,7 +410,7 @@ describe("video-renderer", () => {
         "/output/final.mp4",
       );
 
-      const command = mockExecute.mock.calls[0][0];
+      const command = FFmpegKit.execute.mock.calls[0][0];
       expect(command).toContain("-stream_loop");
     });
 
@@ -409,7 +422,7 @@ describe("video-renderer", () => {
       );
 
       expect(result).toBe("/path/video.mp4");
-      expect(mockExecute).not.toHaveBeenCalled();
+      expect(FFmpegKit.execute).not.toHaveBeenCalled();
     });
   });
 
@@ -491,7 +504,7 @@ describe("video-renderer", () => {
 
       await renderVideo(review);
 
-      const command = mockExecute.mock.calls[0][0];
+      const command = FFmpegKit.execute.mock.calls[0][0];
       expect(command).toContain("1280");
       expect(command).toContain("720");
     });
@@ -502,12 +515,12 @@ describe("video-renderer", () => {
 
       await renderVideo(review);
 
-      const command = mockExecute.mock.calls[0][0];
+      const command = FFmpegKit.execute.mock.calls[0][0];
       expect(command).toContain("slideleft");
     });
 
     it("handles render failure gracefully", async () => {
-      mockExecute.mockRejectedValueOnce(new Error("FFmpeg failed"));
+      FFmpegKit.execute.mockRejectedValueOnce(new Error("FFmpeg failed"));
       const review = createMockReview(2);
 
       const result = await renderVideo(review);
@@ -522,7 +535,7 @@ describe("video-renderer", () => {
       await renderVideo(review);
 
       // Should only process up to 50 clips
-      const command = mockExecute.mock.calls[0][0];
+      const command = FFmpegKit.execute.mock.calls[0][0];
       const inputCount = (command.match(/-i /g) || []).length;
       expect(inputCount).toBeLessThanOrEqual(50);
     });
@@ -572,7 +585,7 @@ describe("video-renderer", () => {
 
       expect(result.success).toBe(true);
       // Single clip should not have transitions
-      const command = mockExecute.mock.calls[0][0];
+      const command = FFmpegKit.execute.mock.calls[0][0];
       expect(command).not.toContain("xfade");
     });
 
@@ -591,8 +604,9 @@ describe("video-renderer", () => {
 
       const result = await renderVideo(review);
 
-      // Should skip invalid clips or fail gracefully
-      expect(result.success).toBe(false);
+      // Should skip invalid clips and proceed with valid ones
+      // With one valid clip remaining, export should succeed
+      expect(result.success).toBe(true);
     });
 
     it("handles special characters in file paths", async () => {

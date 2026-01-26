@@ -64,6 +64,12 @@
           "organization": "little-journey",
           "project": "little-journey-mobile"
         }
+      ],
+      [
+        "ffmpeg-kit-react-native",
+        {
+          "package": "min-gpl"
+        }
       ]
     ],
     "experiments": {

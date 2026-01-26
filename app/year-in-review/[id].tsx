@@ -11,10 +11,11 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Audio } from "expo-av";
-import * as MediaLibrary from "expo-media-library";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { ExportModal } from "@/components/year-in-review/export-modal";
+import { useVideoExport } from "@/hooks/use-video-export";
 import {
   ViewerColors,
   Spacing,
@@ -79,7 +80,19 @@ export default function YearInReviewScreen() {
   const [showTransitionPicker, setShowTransitionPicker] = useState(false);
   const [showQualityPicker, setShowQualityPicker] = useState(false);
   const [showClipManager, setShowClipManager] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+
+  // Video export hook
+  const {
+    status: exportStatus,
+    progress: exportProgress,
+    error: exportError,
+    outputPath: exportOutputPath,
+    isExporting,
+    exportVideo,
+    cancelExport,
+    reset: resetExport,
+  } = useVideoExport();
 
   // Audio
   const [sound, setSound] = useState<Audio.Sound | null>(null);
@@ -218,48 +231,35 @@ export default function YearInReviewScreen() {
     resetToAISuggestion(id);
   }, [id, resetToAISuggestion]);
 
-  // Export to camera roll
-  // Note: True video export would require native video generation (ffmpeg)
-  // For now, we save individual photos from the slideshow
-  const handleExport = useCallback(async () => {
-    if (!review?.clips.length) return;
+  // Open export modal
+  const handleOpenExportModal = useCallback(() => {
+    resetExport();
+    setShowExportModal(true);
+  }, [resetExport]);
 
-    setIsExporting(true);
-    try {
-      // Request media library permission
-      const { status } = await MediaLibrary.requestPermissionsAsync();
-      if (status !== "granted") {
-        alert("Camera roll permission is required to save");
-        setIsExporting(false);
-        return;
-      }
-
-      // Save first photo as representative image
-      // Full video export would require ffmpeg or server-side processing
-      const firstClip = review.clips[0];
-      if (firstClip.photoUri) {
-        const asset = await MediaLibrary.createAssetAsync(firstClip.photoUri);
-
-        // Create album if needed
-        const album = await MediaLibrary.getAlbumAsync("Little Journey");
-        if (album) {
-          await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
-        } else {
-          await MediaLibrary.createAlbumAsync("Little Journey", asset, false);
-        }
-
-        markAsExported(id!, firstClip.photoUri);
-        alert(
-          "Year in Review cover saved to Photos!\n\nVideo export coming soon.",
-        );
-      }
-    } catch (error) {
-      console.error("Export failed:", error);
-      alert("Failed to export. Please try again.");
-    } finally {
-      setIsExporting(false);
+  // Close export modal
+  const handleCloseExportModal = useCallback(() => {
+    setShowExportModal(false);
+    // If export completed, mark as exported
+    if (exportStatus === "complete" && exportOutputPath && id) {
+      markAsExported(id, exportOutputPath);
     }
-  }, [review, id, markAsExported]);
+  }, [exportStatus, exportOutputPath, id, markAsExported]);
+
+  // Start video export
+  const handleStartExport = useCallback(async () => {
+    if (!review) return;
+    await exportVideo(review);
+  }, [review, exportVideo]);
+
+  // Handle quality change from export modal
+  const handleExportQualityChange = useCallback(
+    (quality: VideoQuality) => {
+      if (!id) return;
+      customizeYearInReview({ reviewId: id, exportQuality: quality });
+    },
+    [id, customizeYearInReview],
+  );
 
   // Play/Pause toggle
   const handlePlayPause = useCallback(() => {
@@ -450,18 +450,32 @@ export default function YearInReviewScreen() {
               styles.exportButton,
               isExporting && styles.exportButtonDisabled,
             ]}
-            onPress={handleExport}
+            onPress={handleOpenExportModal}
             disabled={isExporting || review.clips.length === 0}
           >
             <ThemedText style={styles.exportButtonText}>
-              {isExporting ? "Exporting..." : "Save to Photos"}
+              {isExporting ? "Exporting..." : "Export Video"}
             </ThemedText>
           </Pressable>
           <ThemedText style={styles.exportNote}>
-            Saves as images. Video export coming soon!
+            Creates a video with transitions and saves to your camera roll
           </ThemedText>
         </View>
       </ScrollView>
+
+      {/* Export Modal */}
+      <ExportModal
+        visible={showExportModal}
+        onClose={handleCloseExportModal}
+        onExport={handleStartExport}
+        onCancel={cancelExport}
+        status={exportStatus}
+        progress={exportProgress}
+        error={exportError}
+        currentQuality={review.exportQuality}
+        onQualityChange={handleExportQualityChange}
+        outputPath={exportOutputPath}
+      />
 
       {/* Fullscreen Slideshow Modal */}
       <Modal
