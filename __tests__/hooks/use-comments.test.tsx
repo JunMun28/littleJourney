@@ -17,6 +17,9 @@ import {
 } from "@/hooks/use-comments";
 import { commentApi, clearAllMockData } from "@/services/api-client";
 
+// Use actual react-query implementation
+jest.unmock("@tanstack/react-query");
+
 // Create wrapper with QueryClient for testing
 function createWrapper(): ({ children }: { children: ReactNode }) => ReactNode {
   const queryClient = new QueryClient({

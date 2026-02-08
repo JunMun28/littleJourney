@@ -139,7 +139,21 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
 
 // Mock @react-native-community/datetimepicker
 jest.mock("@react-native-community/datetimepicker", () => {
-  return jest.fn(() => null);
+  return jest.fn((props) => {
+    const React = require("react");
+    const { View } = require("react-native");
+    
+    // Create a component that handles the onChange event in tests
+    return React.createElement(View, { 
+      testID: props.testID,
+      onChange: (event) => {
+        // Call the original onChange with the event and the current value
+        if (props.onChange) {
+          props.onChange(event, props.value);
+        }
+      }
+    });
+  });
 });
 
 // Mock react-native-reanimated
@@ -196,11 +210,13 @@ jest.mock("@tanstack/react-query", () => ({
     invalidateQueries: jest.fn(),
     setQueryData: jest.fn(),
     getQueryData: jest.fn(),
+    clear: jest.fn(),
   })),
   QueryClient: jest.fn(() => ({
     invalidateQueries: jest.fn(),
     setQueryData: jest.fn(),
     getQueryData: jest.fn(),
+    clear: jest.fn(),
   })),
   QueryClientProvider: ({ children }) => children,
   dehydrate: jest.fn(),
@@ -214,6 +230,15 @@ jest.mock("expo-auth-session", () => ({
   ResponseType: {
     Token: "token",
   },
+}));
+
+// Mock expo-auth-session/providers/google
+jest.mock("expo-auth-session/providers/google", () => ({
+  useAuthRequest: jest.fn(() => [
+    { type: "success", url: "littlejourney://oauth" },
+    null,
+    jest.fn(() => Promise.resolve({ type: "success" })),
+  ]),
 }));
 
 // Mock expo-apple-authentication
@@ -251,6 +276,14 @@ jest.mock("expo-crypto", () => ({
 jest.mock("expo-web-browser", () => ({
   openAuthSessionAsync: jest.fn(() => Promise.resolve({ type: "success" })),
   maybeCompleteAuthSession: jest.fn(),
+}));
+
+// Mock expo-linking
+jest.mock("expo-linking", () => ({
+  getInitialURL: jest.fn(() => Promise.resolve(null)),
+  addEventListener: jest.fn(() => ({ remove: jest.fn() })),
+  parse: jest.fn((url) => ({ queryParams: {} })),
+  createURL: jest.fn((path) => `littlejourney://${path}`),
 }));
 
 // Global fetch mock

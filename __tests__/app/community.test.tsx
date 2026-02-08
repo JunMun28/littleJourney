@@ -1,6 +1,6 @@
 import { render, fireEvent, waitFor, act } from "@testing-library/react-native";
 import { Alert } from "react-native";
-import CommunityScreen from "@/app/community";
+import CommunityScreen from "@/app/(app)/(settings)/community";
 import { CommunityProvider } from "@/contexts/community-context";
 
 // Mock expo-router

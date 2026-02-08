@@ -17,8 +17,6 @@ import DateTimePicker, {
 } from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
-
-import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Button } from "@/components/ui/button";
 import { useCreateChild } from "@/hooks/use-children";
@@ -26,6 +24,7 @@ import {
   Colors,
   SemanticColors,
   Spacing,
+  PRIMARY_COLOR,
 } from "@/constants/theme";
 
 function formatDate(date: Date): string {

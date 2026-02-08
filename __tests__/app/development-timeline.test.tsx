@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react-native";
 
-import DevelopmentTimelineScreen from "@/app/development-timeline";
+import DevelopmentTimelineScreen from "@/app/(app)/(milestones)/development-timeline";
 import { ChildProvider } from "@/contexts/child-context";
 import { MilestoneProvider, useMilestones } from "@/contexts/milestone-context";
 import { EntryProvider } from "@/contexts/entry-context";

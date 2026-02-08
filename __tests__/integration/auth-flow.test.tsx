@@ -40,11 +40,15 @@ describe("Auth Flow Integration", () => {
       const emailInput = screen.getByPlaceholderText("Enter your email");
       const submitButton = screen.getByText("Send Magic Link");
 
+      // Enter invalid email
       fireEvent.changeText(emailInput, "invalid-email");
+      
+      // Press the button to trigger validation
       fireEvent.press(submitButton);
-
+      
+      // Check that validation error appears after pressing submit
       await waitFor(() => {
-        expect(submitButton.props.accessibilityState.disabled).toBe(true);
+        expect(screen.getByText("Please enter a valid email address")).toBeTruthy();
       });
     });
 

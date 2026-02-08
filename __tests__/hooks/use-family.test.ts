@@ -9,6 +9,9 @@ import {
   useFamilyMembersFlat,
 } from "@/hooks/use-family";
 
+// Use actual react-query implementation
+jest.unmock("@tanstack/react-query");
+
 // Create wrapper with fresh QueryClient for each test
 function createWrapper() {
   const queryClient = new QueryClient({

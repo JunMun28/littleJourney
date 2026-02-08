@@ -9,6 +9,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AddChildScreen from "@/app/(onboarding)/add-child";
 import { clearAllMockData, childApi } from "@/services/api-client";
 
+// Use actual react-query implementation
+jest.unmock("@tanstack/react-query");
+
 // Mock expo-router
 const mockPush = jest.fn();
 jest.mock("expo-router", () => ({

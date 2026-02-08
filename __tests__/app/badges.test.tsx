@@ -53,7 +53,7 @@ jest
   .mockImplementation(() => Promise.resolve({ action: "sharedAction" }));
 
 // Import after mocks
-import BadgesScreen from "@/app/badges";
+import BadgesScreen from "@/app/(app)/(milestones)/badges";
 import { GamificationProvider } from "@/contexts/gamification-context";
 
 describe("BadgesScreen", () => {

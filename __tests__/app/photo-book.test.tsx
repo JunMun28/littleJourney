@@ -1,7 +1,7 @@
 import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import { Alert } from "react-native";
-import PhotoBookScreen from "@/app/photo-book";
+import PhotoBookScreen from "@/app/(app)/(settings)/photo-book";
 
 // Mock expo-router
 jest.mock("expo-router", () => ({

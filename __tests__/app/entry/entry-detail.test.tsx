@@ -9,6 +9,9 @@ import { View } from "react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { entryApi, commentApi, clearAllMockData } from "@/services/api-client";
+
+// Use actual react-query implementation
+jest.unmock("@tanstack/react-query");
 import { AuthProvider } from "@/contexts/auth-context";
 import { ViewerProvider, useViewer } from "@/contexts/viewer-context";
 import { MilestoneProvider } from "@/contexts/milestone-context";

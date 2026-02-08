@@ -4,6 +4,7 @@ import * as ImagePicker from "expo-image-picker";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
 import { PRIMARY_COLOR, Spacing } from "@/constants/theme";
 

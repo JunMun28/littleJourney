@@ -20,8 +20,8 @@ jest.mock("@/contexts/child-context", () => ({
 // Mock Alert
 jest.spyOn(Alert, "alert");
 
-import RedPacketScreen from "../../app/red-packet";
-import { RedPacketProvider } from "../../contexts/red-packet-context";
+import RedPacketScreen from "@/app/(app)/(settings)/red-packet";
+import { RedPacketProvider } from "@/contexts/red-packet-context";
 
 function TestWrapper({ children }: { children: React.ReactNode }) {
   return <RedPacketProvider>{children}</RedPacketProvider>;

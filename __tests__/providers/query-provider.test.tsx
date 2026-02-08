@@ -1,10 +1,14 @@
 import React from "react";
 import { renderHook, waitFor } from "@testing-library/react-native";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, QueryClient } from "@tanstack/react-query";
 import { QueryProvider, queryClient } from "@/providers/query-provider";
+
+// Use the actual implementation for this test, not the mock
+jest.unmock("@tanstack/react-query");
 
 describe("QueryProvider", () => {
   beforeEach(() => {
+    // Clear the actual queryClient
     queryClient.clear();
   });
 
