@@ -3,7 +3,7 @@ import {
   Icon,
   Label,
 } from "expo-router/unstable-native-tabs";
-import { PlatformColor } from "react-native";
+
 
 import { Primary } from "@/constants/design-tokens";
 

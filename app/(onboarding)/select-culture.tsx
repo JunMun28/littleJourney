@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   StyleSheet,
   Pressable,
-  Text,
   View,
   useColorScheme,
 } from "react-native";
@@ -10,6 +9,7 @@ import { router } from "expo-router";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { Button } from "@/components/ui/button";
 import { useChildFlat, useUpdateChild } from "@/hooks/use-children";
 import type { CulturalTradition } from "@/contexts/child-context";
 import { PRIMARY_COLOR, Colors, Spacing } from "@/constants/theme";

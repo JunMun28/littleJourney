@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   StyleSheet,
   Pressable,
-  Text,
   View,
   TextInput,
   KeyboardAvoidingView,
@@ -14,6 +13,7 @@ import { useRouter } from "expo-router";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { Button } from "@/components/ui/button";
 import { useInviteFamilyMember } from "@/hooks/use-family";
 import type { PermissionLevel } from "@/contexts/family-context";
 import { useChild } from "@/contexts/child-context";

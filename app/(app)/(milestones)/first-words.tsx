@@ -75,7 +75,7 @@ export default function FirstWordsScreen() {
       );
 
       router.back();
-    } catch (error) {
+    } catch {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setIsSubmitting(false);
     }

@@ -59,7 +59,7 @@ export default function CreateCustomMilestoneScreen() {
       );
 
       router.back();
-    } catch (error) {
+    } catch {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setIsSubmitting(false);
     }

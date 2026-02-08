@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { StyleSheet, Pressable, Text, View, Alert } from "react-native";
+import { StyleSheet, Text, View, Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 
 import { ThemedText } from "@/components/themed-text";

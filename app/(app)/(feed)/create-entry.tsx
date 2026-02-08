@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState } from "react";
 import {
   StyleSheet,
   View,
@@ -13,7 +13,7 @@ import { router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as Haptics from "expo-haptics";
-import { Camera, Image as ImageIcon, Mic, Type, X } from "lucide-react-native";
+import { Camera, Image as ImageIcon, Mic, Type } from "lucide-react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -24,9 +24,9 @@ import { useChildFlat } from "@/hooks/use-children";
 import { useStorage } from "@/contexts/storage-context";
 import { useNotifications } from "@/contexts/notification-context";
 import { useRateLimit } from "@/hooks/use-rate-limit";
-import { useVideoUpload } from "@/hooks/use-video-upload";
+
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import { Colors, SemanticColors, Spacing } from "@/constants/theme";
+import { Colors, Spacing } from "@/constants/theme";
 import { Primary } from "@/constants/design-tokens";
 import { extractDateFromExif } from "@/utils/exif-date";
 
@@ -44,10 +44,9 @@ export default function CreateEntryScreen() {
   
   const { child } = useChildFlat();
   const createEntry = useCreateEntry();
-  const { canUpload, canUploadVideo, tier } = useStorage();
+  const { canUpload, tier } = useStorage();
   const { recordEntryPosted } = useNotifications();
   const { canUpload: canUploadWithinRateLimit, recordUpload } = useRateLimit();
-  const { uploadVideoFile } = useVideoUpload();
 
   const [step, setStep] = useState<"type" | "media" | "details">("type");
   const [entryType, setEntryType] = useState<EntryType | null>(null);
@@ -175,7 +174,7 @@ export default function CreateEntryScreen() {
           setStep("details");
         }
       }
-    } catch (error) {
+    } catch {
       Alert.alert("Error", "Failed to select media. Please try again.");
     }
   };
@@ -220,7 +219,7 @@ export default function CreateEntryScreen() {
       }
 
       router.back();
-    } catch (error) {
+    } catch {
       Alert.alert("Error", "Failed to create entry. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -402,7 +401,6 @@ export default function CreateEntryScreen() {
                 key={tag}
                 label={tag}
                 onPress={() => handleRemoveTag(tag)}
-                variant="filled"
               />
             ))}
           </View>

@@ -133,7 +133,7 @@ function FeedHeader({ childName, childAge, onAvatarPress }: FeedHeaderProps) {
         </View>
         {childName && (
           <Pressable onPress={onAvatarPress} hitSlop={8}>
-            <Avatar name={childName} size="lg" showActivityIndicator={false} />
+            <Avatar name={childName} size="lg" />
           </Pressable>
         )}
       </View>
@@ -595,7 +595,7 @@ function EntryCard({ entry, onPress, index = 0 }: EntryCardProps) {
         {aiTags.length > 0 && (
           <View style={styles.cardAiTags}>
             {aiTags.map((tag) => (
-              <Chip key={tag} label={tag} size="sm" variant="outlined" />
+              <Chip key={tag} label={tag} />
             ))}
           </View>
         )}

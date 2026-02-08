@@ -95,7 +95,7 @@ export function EntryCardWithMenu({
           : "Check out this moment on Little Journey!",
         title: "Little Journey Memory",
       });
-    } catch (error) {
+    } catch {
       // Share cancelled or failed
     }
   };
@@ -138,7 +138,7 @@ export function EntryCardWithMenu({
         <View style={styles.mediaContainer}>
           <PhotoCarousel images={entry.mediaUris!} onImagePress={onPress} />
           <LinearGradient
-            colors={["transparent", "rgba(0,0,0,0.3)"]]}
+            colors={["transparent", "rgba(0,0,0,0.3)"]}
             style={styles.gradientOverlay}
             pointerEvents="none"
           />

@@ -17,7 +17,6 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Button } from "@/components/ui/button";
 import { useMilestonesFlat, useCompleteMilestone, useDeleteMilestone } from "@/hooks/use-milestones";
-import { useChildFlat } from "@/hooks/use-children";
 import { useNotifications } from "@/contexts/notification-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { Colors, SemanticColors, Spacing } from "@/constants/theme";
@@ -29,7 +28,6 @@ export default function CompleteMilestoneScreen() {
   const colors = Colors[colorScheme];
   
   const { milestones } = useMilestonesFlat();
-  const { child } = useChildFlat();
   const completeMilestone = useCompleteMilestone();
   const deleteMilestone = useDeleteMilestone();
   const { cancelMilestoneReminder } = useNotifications();
@@ -72,7 +70,7 @@ export default function CompleteMilestoneScreen() {
       setTimeout(() => {
         router.back();
       }, 1500);
-    } catch (error) {
+    } catch {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setIsSubmitting(false);
     }
@@ -83,7 +81,7 @@ export default function CompleteMilestoneScreen() {
       await deleteMilestone.mutateAsync(milestone.id);
       await cancelMilestoneReminder(milestone.id);
       router.back();
-    } catch (error) {
+    } catch {
       // Error handled by mutation
     }
   };

@@ -14,6 +14,7 @@ import { router } from "expo-router";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { Button } from "@/components/ui/button";
 import { useUserPreferences } from "@/contexts/user-preferences-context";
 import { useNotifications } from "@/contexts/notification-context";
 import { PRIMARY_COLOR, Colors, Spacing } from "@/constants/theme";
