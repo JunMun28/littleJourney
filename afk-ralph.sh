@@ -59,6 +59,7 @@ Identify the highest priority task from progress-killer-features.txt and prd-kil
    - Files changed \
    - Any blockers or notes for next iteration \
    *Keep entries concise. Sacrifice grammar for the sake of concision.* \
+   - update the status of the task in prd-killer-features.json to passes: true \
 \
 5. **Commit**: Make a git commit of that feature. \
 \

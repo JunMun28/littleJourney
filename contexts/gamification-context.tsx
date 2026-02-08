@@ -482,21 +482,35 @@ export function GamificationProvider({ children }: GamificationProviderProps) {
     });
   }, []);
 
-  const value: GamificationContextValue = {
-    allBadges: BADGE_DEFINITIONS,
-    unlockedBadges,
-    lockedBadges,
-    newlyUnlockedBadges,
-    seenBadgeIds,
-    totalBadges: BADGE_DEFINITIONS.length,
-    unlockedCount: unlockedBadges.length,
-    streakData,
-    monthlyGoalData,
-    firstYearData,
-    getBadgeById,
-    isBadgeUnlocked,
-    markBadgeAsSeen,
-  };
+  const value = useMemo<GamificationContextValue>(
+    () => ({
+      allBadges: BADGE_DEFINITIONS,
+      unlockedBadges,
+      lockedBadges,
+      newlyUnlockedBadges,
+      seenBadgeIds,
+      totalBadges: BADGE_DEFINITIONS.length,
+      unlockedCount: unlockedBadges.length,
+      streakData,
+      monthlyGoalData,
+      firstYearData,
+      getBadgeById,
+      isBadgeUnlocked,
+      markBadgeAsSeen,
+    }),
+    [
+      unlockedBadges,
+      lockedBadges,
+      newlyUnlockedBadges,
+      seenBadgeIds,
+      streakData,
+      monthlyGoalData,
+      firstYearData,
+      getBadgeById,
+      isBadgeUnlocked,
+      markBadgeAsSeen,
+    ],
+  );
 
   return (
     <GamificationContext.Provider value={value}>

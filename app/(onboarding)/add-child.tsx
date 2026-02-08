@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   StyleSheet,
   Pressable,
-  Text,
   TextInput,
   View,
   Platform,
@@ -12,6 +11,7 @@ import {
   Alert,
   useColorScheme,
 } from "react-native";
+import { ThemedText } from "@/components/themed-text";
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
@@ -20,9 +20,9 @@ import { router } from "expo-router";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { Button } from "@/components/ui/button";
 import { useCreateChild } from "@/hooks/use-children";
 import {
-  PRIMARY_COLOR,
   Colors,
   SemanticColors,
   Spacing,
@@ -168,15 +168,15 @@ export default function AddChildScreen() {
                     ]}
                     testID="photo-placeholder"
                   >
-                    <Text style={styles.photoPlaceholderIcon}>📷</Text>
-                    <Text
+                    <ThemedText style={styles.photoPlaceholderIcon}>📷</ThemedText>
+                    <ThemedText
                       style={[
                         styles.photoPlaceholderText,
                         { color: colors.textSecondary },
                       ]}
                     >
                       Add Photo
-                    </Text>
+                    </ThemedText>
                   </View>
                 )}
               </Pressable>
@@ -190,7 +190,7 @@ export default function AddChildScreen() {
             {/* Name field */}
             <View style={styles.field}>
               <ThemedText style={styles.label}>
-                Name <Text style={styles.required}>*</Text>
+                Name <ThemedText style={styles.required}>*</ThemedText>
               </ThemedText>
               <TextInput
                 style={[
@@ -216,7 +216,7 @@ export default function AddChildScreen() {
                 testID="name-input"
               />
               {errors.name && (
-                <Text style={styles.errorText}>{errors.name}</Text>
+                <ThemedText type="caption" style={styles.errorText}>{errors.name}</ThemedText>
               )}
             </View>
 
@@ -224,9 +224,9 @@ export default function AddChildScreen() {
             <View style={styles.field}>
               <ThemedText style={styles.label}>
                 Nickname{" "}
-                <Text style={[styles.optional, { color: colors.textMuted }]}>
+                <ThemedText style={[styles.optional, { color: colors.textMuted }]}>
                   (optional)
-                </Text>
+                </ThemedText>
               </ThemedText>
               <TextInput
                 style={[
@@ -249,7 +249,7 @@ export default function AddChildScreen() {
             {/* Date of birth field */}
             <View style={styles.field}>
               <ThemedText style={styles.label}>
-                Date of Birth <Text style={styles.required}>*</Text>
+                Date of Birth <ThemedText style={styles.required}>*</ThemedText>
               </ThemedText>
               <Pressable
                 style={[
@@ -264,16 +264,16 @@ export default function AddChildScreen() {
                 onPress={() => setShowDatePicker(true)}
                 testID="dob-button"
               >
-                <Text
+                <ThemedText
                   style={[
                     styles.dateButtonText,
                     { color: dateOfBirth ? colors.text : colors.placeholder },
                   ]}
                 >
                   {dateOfBirth ? formatDate(dateOfBirth) : "Select date"}
-                </Text>
+                </ThemedText>
               </Pressable>
-              {errors.dob && <Text style={styles.errorText}>{errors.dob}</Text>}
+              {errors.dob && <ThemedText type="caption" style={styles.errorText}>{errors.dob}</ThemedText>}
 
               {showDatePicker && (
                 <View style={styles.datePickerContainer}>
@@ -290,7 +290,7 @@ export default function AddChildScreen() {
                       style={styles.datePickerDone}
                       onPress={() => setShowDatePicker(false)}
                     >
-                      <Text style={styles.datePickerDoneText}>Done</Text>
+                      <ThemedText type="bodyMedium" style={[styles.datePickerDoneText, { color: PRIMARY_COLOR }]}>Done</ThemedText>
                     </Pressable>
                   )}
                 </View>
@@ -298,14 +298,16 @@ export default function AddChildScreen() {
             </View>
           </View>
 
-          <Pressable
-            style={[styles.button, !isFormValid && styles.buttonDisabled]}
-            onPress={handleContinue}
+          <Button
+            variant="primary"
+            size="lg"
+            fullWidth
             disabled={!isFormValid}
+            onPress={handleContinue}
             testID="continue-button"
           >
-            <Text style={styles.buttonText}>Continue</Text>
-          </Pressable>
+            Continue
+          </Button>
         </ThemedView>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -402,7 +404,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   datePickerDoneText: {
-    color: PRIMARY_COLOR,
     fontSize: 16,
     fontWeight: "600",
   },
@@ -411,20 +412,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: Spacing.xs,
   },
-  button: {
-    paddingHorizontal: Spacing.xxl,
-    paddingVertical: Spacing.lg,
-    borderRadius: Spacing.md,
-    marginBottom: Spacing.lg,
-    alignItems: "center",
-    backgroundColor: PRIMARY_COLOR,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    fontWeight: "600",
-    fontSize: 16,
-    color: "#fff",
-  },
+
 });

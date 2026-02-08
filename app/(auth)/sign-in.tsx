@@ -1,21 +1,18 @@
 import { useState, useCallback } from "react";
 import {
   StyleSheet,
-  Pressable,
-  Text,
   TextInput,
   View,
   useColorScheme,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  ActivityIndicator,
 } from "react-native";
-
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
-import { Colors, PRIMARY_COLOR, Spacing } from "@/constants/theme";
+import { Colors, Spacing } from "@/constants/theme";
 import { trackEvent, AnalyticsEvent } from "@/services/analytics";
 import { useGoogleAuth, type GoogleAuthResult } from "@/hooks/use-google-auth";
 import { useAppleAuth, type AppleAuthResult } from "@/hooks/use-apple-auth";
@@ -154,7 +151,7 @@ export default function SignInScreen() {
           style={[styles.sentMessage, { color: colors.textSecondary }]}
         >
           We sent a magic link to{"\n"}
-          <Text style={{ fontWeight: "600", color: colors.text }}>{email}</Text>
+          <ThemedText type="bodyMedium" style={{ color: colors.text }}>{email}</ThemedText>
         </ThemedText>
         <ThemedText style={[styles.hint, { color: colors.textMuted }]}>
           Click the link in your email to sign in
@@ -166,9 +163,9 @@ export default function SignInScreen() {
             setEmail("");
           }}
         >
-          <Text style={[styles.backButtonText, { color: PRIMARY_COLOR }]}>
+          <ThemedText type="bodyMedium" style={{ color: PRIMARY_COLOR }}>
             Use a different email
-          </Text>
+          </ThemedText>
         </Pressable>
       </ThemedView>
     );
@@ -218,23 +215,20 @@ export default function SignInScreen() {
               editable={!anyLoading}
             />
             {displayError && (
-              <Text style={styles.errorText}>{displayError}</Text>
+              <ThemedText type="caption" style={styles.errorText}>{displayError}</ThemedText>
             )}
 
-            <Pressable
+            <Button
               testID="send-magic-link-button"
-              style={[
-                styles.primaryButton,
-                (!canSubmit || anyLoading) && styles.buttonDisabled,
-              ]}
-              onPress={handleSendMagicLink}
+              variant="primary"
+              size="lg"
+              fullWidth
+              loading={magicLinkLoading}
               disabled={!canSubmit || anyLoading}
-              accessibilityState={{ disabled: !canSubmit || anyLoading }}
+              onPress={handleSendMagicLink}
             >
-              <Text style={styles.primaryButtonText}>
-                {magicLinkLoading ? "Sending..." : "Send Magic Link"}
-              </Text>
-            </Pressable>
+              Send Magic Link
+            </Button>
           </View>
 
           {/* Divider */}
@@ -242,9 +236,9 @@ export default function SignInScreen() {
             <View
               style={[styles.dividerLine, { backgroundColor: colors.border }]}
             />
-            <Text style={[styles.dividerText, { color: colors.textMuted }]}>
+            <ThemedText type="caption" style={[styles.dividerText, { color: colors.textMuted }]}>
               or
-            </Text>
+            </ThemedText>
             <View
               style={[styles.dividerLine, { backgroundColor: colors.border }]}
             />
@@ -252,52 +246,30 @@ export default function SignInScreen() {
 
           {/* OAuth Buttons */}
           <View style={styles.oauthSection}>
-            <Pressable
+            <Button
               testID="google-signin-button"
-              style={[
-                styles.oauthButton,
-                {
-                  backgroundColor: colors.backgroundSecondary,
-                  borderColor: colors.border,
-                },
-                anyLoading && styles.buttonDisabled,
-              ]}
-              onPress={googleSignIn}
+              variant="secondary"
+              size="lg"
+              fullWidth
+              loading={googleLoading}
               disabled={anyLoading}
+              onPress={googleSignIn}
             >
-              {googleLoading ? (
-                <ActivityIndicator size="small" color={colors.text} />
-              ) : (
-                <Text style={[styles.oauthButtonText, { color: colors.text }]}>
-                  Continue with Google
-                </Text>
-              )}
-            </Pressable>
+              Continue with Google
+            </Button>
 
             {appleAvailable && (
-              <Pressable
+              <Button
                 testID="apple-signin-button"
-                style={[
-                  styles.oauthButton,
-                  {
-                    backgroundColor: colors.backgroundSecondary,
-                    borderColor: colors.border,
-                  },
-                  anyLoading && styles.buttonDisabled,
-                ]}
-                onPress={appleSignIn}
+                variant="secondary"
+                size="lg"
+                fullWidth
+                loading={appleLoading}
                 disabled={anyLoading}
+                onPress={appleSignIn}
               >
-                {appleLoading ? (
-                  <ActivityIndicator size="small" color={colors.text} />
-                ) : (
-                  <Text
-                    style={[styles.oauthButtonText, { color: colors.text }]}
-                  >
-                    Continue with Apple
-                  </Text>
-                )}
-              </Pressable>
+                Continue with Apple
+              </Button>
             )}
           </View>
 
@@ -347,20 +319,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginBottom: Spacing.sm,
   },
-  primaryButton: {
-    backgroundColor: PRIMARY_COLOR,
-    paddingVertical: Spacing.md + 2,
-    borderRadius: Spacing.sm,
-    alignItems: "center",
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  primaryButtonText: {
-    fontWeight: "600",
-    fontSize: 16,
-    color: "#fff",
-  },
+
   divider: {
     flexDirection: "row",
     alignItems: "center",
@@ -381,16 +340,7 @@ const styles = StyleSheet.create({
     maxWidth: 320,
     gap: Spacing.md,
   },
-  oauthButton: {
-    borderWidth: 1,
-    borderRadius: Spacing.sm,
-    paddingVertical: Spacing.md + 2,
-    alignItems: "center",
-  },
-  oauthButtonText: {
-    fontWeight: "500",
-    fontSize: 16,
-  },
+
   terms: {
     marginTop: Spacing.xl,
     fontSize: 12,
@@ -409,8 +359,5 @@ const styles = StyleSheet.create({
   backButton: {
     padding: Spacing.md,
   },
-  backButtonText: {
-    fontSize: 14,
-    fontWeight: "500",
-  },
+
 });

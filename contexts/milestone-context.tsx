@@ -321,15 +321,26 @@ export function MilestoneProvider({ children }: MilestoneProviderProps) {
     [milestones],
   );
 
-  const value: MilestoneContextValue = {
-    milestones,
-    completedMilestones,
-    upcomingMilestones,
-    addMilestone,
-    completeMilestone,
-    deleteMilestone,
-    getMilestonesForChild,
-  };
+  const value = useMemo<MilestoneContextValue>(
+    () => ({
+      milestones,
+      completedMilestones,
+      upcomingMilestones,
+      addMilestone,
+      completeMilestone,
+      deleteMilestone,
+      getMilestonesForChild,
+    }),
+    [
+      milestones,
+      completedMilestones,
+      upcomingMilestones,
+      addMilestone,
+      completeMilestone,
+      deleteMilestone,
+      getMilestonesForChild,
+    ],
+  );
 
   return (
     <MilestoneContext.Provider value={value}>

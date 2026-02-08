@@ -82,17 +82,30 @@ export function StorageProvider({ children }: StorageProviderProps) {
     // TODO: Persist to backend (handled by Stripe webhook in production)
   }, []);
 
-  const value: StorageContextValue = {
-    usedBytes,
-    limitBytes,
-    usagePercent,
-    tier,
-    canUpload,
-    canUploadVideo,
-    addUsage,
-    removeUsage,
-    setTier,
-  };
+  const value = useMemo<StorageContextValue>(
+    () => ({
+      usedBytes,
+      limitBytes,
+      usagePercent,
+      tier,
+      canUpload,
+      canUploadVideo,
+      addUsage,
+      removeUsage,
+      setTier,
+    }),
+    [
+      usedBytes,
+      limitBytes,
+      usagePercent,
+      tier,
+      canUpload,
+      canUploadVideo,
+      addUsage,
+      removeUsage,
+      setTier,
+    ],
+  );
 
   return (
     <StorageContext.Provider value={value}>{children}</StorageContext.Provider>

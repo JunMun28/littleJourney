@@ -4,6 +4,7 @@ import {
   useState,
   useCallback,
   useRef,
+  useMemo,
   type ReactNode,
 } from "react";
 import { Audio } from "expo-av";
@@ -332,27 +333,50 @@ export function VoiceJournalProvider({ children }: VoiceJournalProviderProps) {
     [],
   );
 
-  const value: VoiceJournalContextValue = {
-    isRecording,
-    isPlaying,
-    recordings,
-    currentRecording,
-    permissionDenied,
-    playbackProgress,
-    currentPlayingId,
-    transcriptionState, // VOICE-002
-    startRecording,
-    stopRecording,
-    saveRecording,
-    discardRecording,
-    playRecording,
-    pausePlayback,
-    stopPlayback,
-    transcribeRecording, // VOICE-002
-    clearTranscriptionError, // VOICE-002
-    deleteRecording,
-    updateRecording,
-  };
+  const value = useMemo<VoiceJournalContextValue>(
+    () => ({
+      isRecording,
+      isPlaying,
+      recordings,
+      currentRecording,
+      permissionDenied,
+      playbackProgress,
+      currentPlayingId,
+      transcriptionState, // VOICE-002
+      startRecording,
+      stopRecording,
+      saveRecording,
+      discardRecording,
+      playRecording,
+      pausePlayback,
+      stopPlayback,
+      transcribeRecording, // VOICE-002
+      clearTranscriptionError, // VOICE-002
+      deleteRecording,
+      updateRecording,
+    }),
+    [
+      isRecording,
+      isPlaying,
+      recordings,
+      currentRecording,
+      permissionDenied,
+      playbackProgress,
+      currentPlayingId,
+      transcriptionState,
+      startRecording,
+      stopRecording,
+      saveRecording,
+      discardRecording,
+      playRecording,
+      pausePlayback,
+      stopPlayback,
+      transcribeRecording,
+      clearTranscriptionError,
+      deleteRecording,
+      updateRecording,
+    ],
+  );
 
   return (
     <VoiceJournalContext.Provider value={value}>

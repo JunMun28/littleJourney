@@ -134,21 +134,25 @@ export default function SetPromptTimeScreen() {
       </View>
 
       <View style={styles.footer}>
-        <Pressable
-          style={styles.button}
+        <Button
+          variant="primary"
+          size="lg"
+          fullWidth
           onPress={handleContinue}
           testID="continue-button"
         >
-          <Text style={styles.buttonText}>Continue</Text>
-        </Pressable>
+          Continue
+        </Button>
 
-        <Pressable
-          style={styles.skipButton}
+        <Button
+          variant="ghost"
+          size="md"
+          fullWidth
           onPress={handleSkip}
           testID="skip-button"
         >
-          <ThemedText style={styles.skipButtonText}>Skip for now</ThemedText>
-        </Pressable>
+          Skip for now
+        </Button>
       </View>
     </ThemedView>
   );
@@ -204,25 +208,5 @@ const styles = StyleSheet.create({
     marginTop: "auto",
     paddingTop: Spacing.lg,
     gap: Spacing.md,
-  },
-  button: {
-    paddingHorizontal: Spacing.xxl,
-    paddingVertical: Spacing.lg,
-    borderRadius: Spacing.md,
-    alignItems: "center",
-    backgroundColor: PRIMARY_COLOR,
-  },
-  buttonText: {
-    fontWeight: "600",
-    fontSize: 16,
-    color: "#fff",
-  },
-  skipButton: {
-    paddingVertical: Spacing.md,
-    alignItems: "center",
-  },
-  skipButtonText: {
-    fontSize: 16,
-    opacity: 0.7,
   },
 });

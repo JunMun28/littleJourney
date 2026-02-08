@@ -1,0 +1,49 @@
+name: Production Deploy
+
+on:
+  push:
+    branches: [main, master]
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    steps:
+      - name: Checkout
+        uses: eas/checkout@v1
+
+      - name: Setup Node.js
+        uses: eas/use-npm-token@v1
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run Tests
+        run: npm test -- --ci
+
+      - name: Create Production Update
+        uses: expo/expo-github-action/preview@v8
+        with:
+          command: eas update --auto --branch production
+
+  build-ios:
+    name: Build iOS
+    needs: deploy
+    steps:
+      - name: Checkout
+        uses: eas/checkout@v1
+
+      - name: Build iOS
+        run: eas build --platform ios --profile production --non-interactive
+
+  build-android:
+    name: Build Android
+    needs: deploy
+    steps:
+      - name: Checkout
+        uses: eas/checkout@v1
+
+      - name: Build Android
+        run: eas build --platform android --profile production --non-interactive

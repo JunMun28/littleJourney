@@ -71,12 +71,15 @@ export function FamilyProvider({ children }: FamilyProviderProps) {
     [familyMembers],
   );
 
-  const value: FamilyContextValue = {
-    familyMembers,
-    hasPendingInvites,
-    inviteFamilyMember,
-    removeFamilyMember,
-  };
+  const value = useMemo<FamilyContextValue>(
+    () => ({
+      familyMembers,
+      hasPendingInvites,
+      inviteFamilyMember,
+      removeFamilyMember,
+    }),
+    [familyMembers, hasPendingInvites, inviteFamilyMember, removeFamilyMember],
+  );
 
   return (
     <FamilyContext.Provider value={value}>{children}</FamilyContext.Provider>

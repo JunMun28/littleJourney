@@ -1,75 +1,146 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Theme Configuration for Little Journey
+ *
+ * This file maintains backward compatibility while using the new design tokens.
+ * New code should import directly from '@/constants/design-tokens' for the full API.
+ *
+ * @see ./design-tokens.ts for the complete design system
  */
 
 import { Platform } from "react-native";
+import {
+  Primary,
+  Neutral,
+  ThemeColors,
+  Semantic,
+  Accent,
+  Shadows as NewShadows,
+  Spacing as NewSpacing,
+  FontFamily,
+} from "./design-tokens";
 
-// Primary brand color
-export const PRIMARY_COLOR = "#0a7ea4";
+// ============================================================================
+// PRIMARY BRAND COLOR
+// ============================================================================
 
-const tintColorLight = PRIMARY_COLOR;
-const tintColorDark = "#fff";
+/**
+ * Primary brand color - warm rose for Little Journey
+ * @deprecated Use `Primary[500]` from design-tokens for full color scale
+ */
+export const PRIMARY_COLOR = Primary[500];
 
+// ============================================================================
+// THEME COLORS
+// ============================================================================
+
+/**
+ * Light and dark mode color schemes
+ * Now using warm, nurturing colors from design-tokens
+ */
 export const Colors = {
   light: {
-    text: "#11181C",
-    textSecondary: "#666666",
-    textMuted: "#999999",
-    background: "#fff",
-    backgroundSecondary: "#f5f5f5",
-    backgroundTertiary: "#e8e8e8",
-    tint: tintColorLight,
-    icon: "#687076",
-    tabIconDefault: "#687076",
-    tabIconSelected: tintColorLight,
-    border: "#e0e0e0",
-    borderLight: "#f0f0f0",
-    inputBorder: "#ddd",
-    placeholder: "#999999",
-    card: "#ffffff",
-    cardBorder: "#e0e0e0",
-    overlay: "rgba(0, 0, 0, 0.5)",
-    overlayLight: "rgba(0, 0, 0, 0.3)",
+    // Text colors
+    text: ThemeColors.light.text,
+    textSecondary: ThemeColors.light.textSecondary,
+    textMuted: ThemeColors.light.textMuted,
+
+    // Backgrounds
+    background: ThemeColors.light.background,
+    backgroundSecondary: ThemeColors.light.backgroundSecondary,
+    backgroundTertiary: ThemeColors.light.backgroundTertiary,
+
+    // Brand/tint
+    tint: ThemeColors.light.tint,
+    tintLight: ThemeColors.light.tintLight,
+
+    // Icons
+    icon: ThemeColors.light.icon,
+    tabIconDefault: ThemeColors.light.tabIconDefault,
+    tabIconSelected: ThemeColors.light.tabIconSelected,
+
+    // Borders
+    border: ThemeColors.light.border,
+    borderLight: ThemeColors.light.borderLight,
+    inputBorder: ThemeColors.light.inputBorder,
+
+    // Inputs
+    placeholder: ThemeColors.light.placeholder,
+
+    // Cards
+    card: ThemeColors.light.card,
+    cardBorder: ThemeColors.light.cardBorder,
+
+    // Overlays
+    overlay: ThemeColors.light.overlay,
+    overlayLight: ThemeColors.light.overlayLight,
   },
   dark: {
-    text: "#ECEDEE",
-    textSecondary: "#9BA1A6",
-    textMuted: "#687076",
-    background: "#151718",
-    backgroundSecondary: "#1e2022",
-    backgroundTertiary: "#2a2d2f",
-    tint: tintColorDark,
-    icon: "#9BA1A6",
-    tabIconDefault: "#9BA1A6",
-    tabIconSelected: tintColorDark,
-    border: "#333333",
-    borderLight: "#222222",
-    inputBorder: "#444444",
-    placeholder: "#666666",
-    card: "#1e2022",
-    cardBorder: "#333333",
-    overlay: "rgba(0, 0, 0, 0.7)",
-    overlayLight: "rgba(0, 0, 0, 0.5)",
+    // Text colors
+    text: ThemeColors.dark.text,
+    textSecondary: ThemeColors.dark.textSecondary,
+    textMuted: ThemeColors.dark.textMuted,
+
+    // Backgrounds
+    background: ThemeColors.dark.background,
+    backgroundSecondary: ThemeColors.dark.backgroundSecondary,
+    backgroundTertiary: ThemeColors.dark.backgroundTertiary,
+
+    // Brand/tint
+    tint: ThemeColors.dark.tint,
+    tintLight: ThemeColors.dark.tintLight,
+
+    // Icons
+    icon: ThemeColors.dark.icon,
+    tabIconDefault: ThemeColors.dark.tabIconDefault,
+    tabIconSelected: ThemeColors.dark.tabIconSelected,
+
+    // Borders
+    border: ThemeColors.dark.border,
+    borderLight: ThemeColors.dark.borderLight,
+    inputBorder: ThemeColors.dark.inputBorder,
+
+    // Inputs
+    placeholder: ThemeColors.dark.placeholder,
+
+    // Cards
+    card: ThemeColors.dark.card,
+    cardBorder: ThemeColors.dark.cardBorder,
+
+    // Overlays
+    overlay: ThemeColors.dark.overlay,
+    overlayLight: ThemeColors.dark.overlayLight,
   },
 };
 
-// Semantic colors (same in light/dark for now - can be theme-specific if needed)
+// ============================================================================
+// SEMANTIC COLORS
+// ============================================================================
+
+/**
+ * Semantic colors for feedback states
+ */
 export const SemanticColors = {
-  success: "#4CAF50",
-  successLight: "#e8f5e9",
-  warning: "#ff9800",
-  warningLight: "#fff3cd",
-  warningText: "#856404",
-  error: "#ff3b30",
-  errorLight: "#ffebee",
-  info: PRIMARY_COLOR,
-  infoLight: "#e3f2fd",
-  gold: "#FFD700",
-  goldLight: "rgba(255, 215, 0, 0.15)",
+  success: Semantic.success,
+  successLight: Semantic.successLight,
+  warning: Semantic.warning,
+  warningLight: Semantic.warningLight,
+  warningText: "#92400E", // Amber-800 for warning text
+  error: Semantic.error,
+  errorLight: Semantic.errorLight,
+  info: Semantic.info,
+  infoLight: Semantic.infoLight,
+  // Accent colors for special features
+  gold: Accent.gold,
+  goldLight: Accent.goldLight,
 };
 
-// Full-screen viewer colors (dark by design for media viewing)
+// ============================================================================
+// VIEWER COLORS (for full-screen media viewing)
+// ============================================================================
+
+/**
+ * Dark theme colors for media viewing contexts
+ */
 export const ViewerColors = {
   background: "#000000",
   overlay: "rgba(0, 0, 0, 0.5)",
@@ -85,63 +156,60 @@ export const ViewerColors = {
   buttonBackground: "rgba(255, 255, 255, 0.2)",
 };
 
-// Spacing scale for consistency
+// ============================================================================
+// SPACING
+// ============================================================================
+
+/**
+ * Spacing scale for consistent layouts
+ */
 export const Spacing = {
-  xs: 4,
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 24,
-  xxl: 32,
+  xs: NewSpacing.xs,
+  sm: NewSpacing.sm,
+  md: NewSpacing.md,
+  lg: NewSpacing.lg,
+  xl: NewSpacing["2xl"],
+  xxl: NewSpacing["3xl"],
 } as const;
 
-// Shadow presets for elevation
+// ============================================================================
+// SHADOWS (now with warm gray instead of pure black)
+// ============================================================================
+
+/**
+ * Shadow presets for elevation
+ * Using warm gray (#78716C) for a softer, more nurturing feel
+ */
 export const Shadows = {
-  small: {
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  medium: {
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
-    elevation: 4,
-  },
-  large: {
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 8,
-  },
+  small: NewShadows.sm,
+  medium: NewShadows.md,
+  large: NewShadows.lg,
 } as const;
 
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: "system-ui",
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: "ui-serif",
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: "ui-rounded",
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: "ui-monospace",
-  },
-  default: {
-    sans: "normal",
-    serif: "serif",
-    rounded: "normal",
-    mono: "monospace",
-  },
-  web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    serif: "Georgia, 'Times New Roman', serif",
-    rounded:
-      "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
-  },
-});
+// ============================================================================
+// FONTS
+// ============================================================================
+
+/**
+ * Font family configuration
+ */
+export const Fonts = FontFamily;
+
+// ============================================================================
+// RE-EXPORTS FROM DESIGN TOKENS
+// ============================================================================
+
+// Export new design system for gradual migration
+export {
+  Primary,
+  Neutral,
+  Accent,
+  ThemeColors,
+  Semantic,
+  Radius,
+  Typography,
+  Animation,
+  ButtonTokens,
+  CardTokens,
+  InputTokens,
+} from "./design-tokens";

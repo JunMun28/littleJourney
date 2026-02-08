@@ -120,14 +120,16 @@ export default function SelectCultureScreen() {
       </View>
 
       <View style={styles.footer}>
-        <Pressable
-          style={[styles.button, !isFormValid && styles.buttonDisabled]}
-          onPress={handleContinue}
+        <Button
+          variant="primary"
+          size="lg"
+          fullWidth
           disabled={!isFormValid}
+          onPress={handleContinue}
           testID="continue-button"
         >
-          <Text style={styles.buttonText}>Continue</Text>
-        </Pressable>
+          Continue
+        </Button>
       </View>
     </ThemedView>
   );
@@ -187,19 +189,5 @@ const styles = StyleSheet.create({
   footer: {
     paddingTop: Spacing.lg,
   },
-  button: {
-    paddingHorizontal: Spacing.xxl,
-    paddingVertical: Spacing.lg,
-    borderRadius: Spacing.md,
-    alignItems: "center",
-    backgroundColor: PRIMARY_COLOR,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    fontWeight: "600",
-    fontSize: 16,
-    color: "#fff",
-  },
+
 });

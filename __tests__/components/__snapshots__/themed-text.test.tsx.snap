@@ -1,0 +1,107 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ThemedText Snapshots matches default snapshot 1`] = `
+<Text
+  style={
+    [
+      {
+        "color": "#292524",
+      },
+      {
+        "fontFamily": undefined,
+      },
+      {
+        "fontSize": 17,
+        "lineHeight": 25.5,
+      },
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      undefined,
+    ]
+  }
+>
+  Default
+</Text>
+`;
+
+exports[`ThemedText Snapshots matches hero snapshot 1`] = `
+<Text
+  style={
+    [
+      {
+        "color": "#292524",
+      },
+      {
+        "fontFamily": undefined,
+      },
+      false,
+      false,
+      false,
+      false,
+      false,
+      {
+        "fontSize": 40,
+        "fontWeight": "700",
+        "letterSpacing": -0.5,
+        "lineHeight": 48,
+      },
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      undefined,
+    ]
+  }
+>
+  Hero
+</Text>
+`;
+
+exports[`ThemedText Snapshots matches title snapshot 1`] = `
+<Text
+  style={
+    [
+      {
+        "color": "#292524",
+      },
+      {
+        "fontFamily": undefined,
+      },
+      false,
+      {
+        "fontSize": 32,
+        "fontWeight": "700",
+        "letterSpacing": -0.3,
+        "lineHeight": 38.4,
+      },
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      undefined,
+    ]
+  }
+>
+  Title
+</Text>
+`;

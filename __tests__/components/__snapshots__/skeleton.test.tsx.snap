@@ -1,0 +1,499 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Skeleton Components Snapshots matches Skeleton snapshot 1`] = `
+<View
+  style={
+    [
+      {
+        "backgroundColor": "#F5F5F4",
+        "borderRadius": 8,
+        "height": 16,
+        "width": "100%",
+      },
+      {
+        "opacity": undefined,
+      },
+      undefined,
+    ]
+  }
+/>
+`;
+
+exports[`Skeleton Components Snapshots matches SkeletonAvatar snapshot 1`] = `
+<View
+  style={
+    [
+      {
+        "backgroundColor": "#F5F5F4",
+        "borderRadius": 24,
+        "height": 48,
+        "width": 48,
+      },
+      {
+        "opacity": undefined,
+      },
+      undefined,
+    ]
+  }
+/>
+`;
+
+exports[`Skeleton Components Snapshots matches SkeletonCard snapshot 1`] = `
+<View
+  style={
+    [
+      {
+        "borderRadius": 12,
+        "marginBottom": 16,
+        "overflow": "hidden",
+      },
+      {
+        "backgroundColor": "#FAFAF9",
+      },
+    ]
+  }
+>
+  <View
+    style={
+      [
+        {
+          "backgroundColor": "#F5F5F4",
+          "borderRadius": 12,
+          "height": 200,
+          "width": "100%",
+        },
+        {
+          "opacity": undefined,
+        },
+        undefined,
+      ]
+    }
+  />
+  <View
+    style={
+      {
+        "padding": 16,
+      }
+    }
+  >
+    <View
+      style={
+        [
+          {
+            "flexDirection": "column",
+          },
+          {
+            "gap": 8,
+          },
+          undefined,
+        ]
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "backgroundColor": "#F5F5F4",
+              "borderRadius": 4,
+              "height": 14,
+              "width": "100%",
+            },
+            {
+              "opacity": undefined,
+            },
+            undefined,
+          ]
+        }
+      />
+      <View
+        style={
+          [
+            {
+              "backgroundColor": "#F5F5F4",
+              "borderRadius": 4,
+              "height": 14,
+              "width": "80%",
+            },
+            {
+              "opacity": undefined,
+            },
+            undefined,
+          ]
+        }
+      />
+    </View>
+    <View
+      style={
+        {
+          "flexDirection": "row",
+          "justifyContent": "space-between",
+          "marginTop": 12,
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "backgroundColor": "#F5F5F4",
+              "borderRadius": 4,
+              "height": 12,
+              "width": 80,
+            },
+            {
+              "opacity": undefined,
+            },
+            undefined,
+          ]
+        }
+      />
+      <View
+        style={
+          [
+            {
+              "backgroundColor": "#F5F5F4",
+              "borderRadius": 4,
+              "height": 12,
+              "width": 60,
+            },
+            {
+              "opacity": undefined,
+            },
+            undefined,
+          ]
+        }
+      />
+    </View>
+  </View>
+</View>
+`;
+
+exports[`Skeleton Components Snapshots matches SkeletonFeed snapshot 1`] = `
+<View
+  style={
+    {
+      "padding": 16,
+    }
+  }
+>
+  <View
+    style={
+      [
+        {
+          "borderRadius": 12,
+          "marginBottom": 16,
+          "overflow": "hidden",
+        },
+        {
+          "backgroundColor": "#FAFAF9",
+        },
+      ]
+    }
+  >
+    <View
+      style={
+        [
+          {
+            "backgroundColor": "#F5F5F4",
+            "borderRadius": 12,
+            "height": 200,
+            "width": "100%",
+          },
+          {
+            "opacity": undefined,
+          },
+          undefined,
+        ]
+      }
+    />
+    <View
+      style={
+        {
+          "padding": 16,
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "flexDirection": "column",
+            },
+            {
+              "gap": 8,
+            },
+            undefined,
+          ]
+        }
+      >
+        <View
+          style={
+            [
+              {
+                "backgroundColor": "#F5F5F4",
+                "borderRadius": 4,
+                "height": 14,
+                "width": "100%",
+              },
+              {
+                "opacity": undefined,
+              },
+              undefined,
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "backgroundColor": "#F5F5F4",
+                "borderRadius": 4,
+                "height": 14,
+                "width": "80%",
+              },
+              {
+                "opacity": undefined,
+              },
+              undefined,
+            ]
+          }
+        />
+      </View>
+      <View
+        style={
+          {
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+            "marginTop": 12,
+          }
+        }
+      >
+        <View
+          style={
+            [
+              {
+                "backgroundColor": "#F5F5F4",
+                "borderRadius": 4,
+                "height": 12,
+                "width": 80,
+              },
+              {
+                "opacity": undefined,
+              },
+              undefined,
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "backgroundColor": "#F5F5F4",
+                "borderRadius": 4,
+                "height": 12,
+                "width": 60,
+              },
+              {
+                "opacity": undefined,
+              },
+              undefined,
+            ]
+          }
+        />
+      </View>
+    </View>
+  </View>
+  <View
+    style={
+      [
+        {
+          "borderRadius": 12,
+          "marginBottom": 16,
+          "overflow": "hidden",
+        },
+        {
+          "backgroundColor": "#FAFAF9",
+        },
+      ]
+    }
+  >
+    <View
+      style={
+        [
+          {
+            "backgroundColor": "#F5F5F4",
+            "borderRadius": 12,
+            "height": 200,
+            "width": "100%",
+          },
+          {
+            "opacity": undefined,
+          },
+          undefined,
+        ]
+      }
+    />
+    <View
+      style={
+        {
+          "padding": 16,
+        }
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "flexDirection": "column",
+            },
+            {
+              "gap": 8,
+            },
+            undefined,
+          ]
+        }
+      >
+        <View
+          style={
+            [
+              {
+                "backgroundColor": "#F5F5F4",
+                "borderRadius": 4,
+                "height": 14,
+                "width": "100%",
+              },
+              {
+                "opacity": undefined,
+              },
+              undefined,
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "backgroundColor": "#F5F5F4",
+                "borderRadius": 4,
+                "height": 14,
+                "width": "80%",
+              },
+              {
+                "opacity": undefined,
+              },
+              undefined,
+            ]
+          }
+        />
+      </View>
+      <View
+        style={
+          {
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+            "marginTop": 12,
+          }
+        }
+      >
+        <View
+          style={
+            [
+              {
+                "backgroundColor": "#F5F5F4",
+                "borderRadius": 4,
+                "height": 12,
+                "width": 80,
+              },
+              {
+                "opacity": undefined,
+              },
+              undefined,
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "backgroundColor": "#F5F5F4",
+                "borderRadius": 4,
+                "height": 12,
+                "width": 60,
+              },
+              {
+                "opacity": undefined,
+              },
+              undefined,
+            ]
+          }
+        />
+      </View>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`Skeleton Components Snapshots matches SkeletonText snapshot 1`] = `
+<View
+  style={
+    [
+      {
+        "flexDirection": "column",
+      },
+      {
+        "gap": 8,
+      },
+      undefined,
+    ]
+  }
+>
+  <View
+    style={
+      [
+        {
+          "backgroundColor": "#F5F5F4",
+          "borderRadius": 4,
+          "height": 14,
+          "width": "100%",
+        },
+        {
+          "opacity": undefined,
+        },
+        undefined,
+      ]
+    }
+  />
+  <View
+    style={
+      [
+        {
+          "backgroundColor": "#F5F5F4",
+          "borderRadius": 4,
+          "height": 14,
+          "width": "100%",
+        },
+        {
+          "opacity": undefined,
+        },
+        undefined,
+      ]
+    }
+  />
+  <View
+    style={
+      [
+        {
+          "backgroundColor": "#F5F5F4",
+          "borderRadius": 4,
+          "height": 14,
+          "width": "60%",
+        },
+        {
+          "opacity": undefined,
+        },
+        undefined,
+      ]
+    }
+  />
+</View>
+`;

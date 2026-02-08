@@ -62,7 +62,7 @@ export function useEntry(id: string | undefined) {
 }
 
 /**
- * Create a new entry
+ * Create a new entry with optimistic updates
  */
 export function useCreateEntry() {
   const queryClient = useQueryClient();
@@ -75,15 +75,80 @@ export function useCreateEntry() {
       }
       return result.data;
     },
-    onSuccess: () => {
-      // Invalidate entries list to trigger refetch
+    onMutate: async (newEntry) => {
+      // Cancel any outgoing refetches to avoid overwriting optimistic update
+      await queryClient.cancelQueries({ queryKey: entryKeys.lists() });
+
+      // Snapshot previous value for rollback
+      const previousData = queryClient.getQueriesData({
+        queryKey: entryKeys.lists(),
+      });
+
+      // Create optimistic entry with temporary ID
+      const optimisticEntry: Entry = {
+        id: `temp_${Date.now()}`,
+        ...newEntry,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      // Optimistically update all entry list caches
+      queryClient.setQueriesData(
+        { queryKey: entryKeys.lists() },
+        (old: unknown) => {
+          if (!old) return old;
+
+          // Handle infinite query data structure
+          if (typeof old === "object" && "pages" in (old as object)) {
+            const infiniteData = old as {
+              pages: Array<{
+                items: Entry[];
+                hasMore: boolean;
+                cursor?: string;
+              }>;
+            };
+            return {
+              ...infiniteData,
+              pages: infiniteData.pages.map((page, index) =>
+                index === 0
+                  ? { ...page, items: [optimisticEntry, ...page.items] }
+                  : page,
+              ),
+            };
+          }
+
+          // Handle regular query data structure
+          const regularData = old as {
+            items: Entry[];
+            hasMore: boolean;
+            cursor?: string;
+          };
+          return {
+            ...regularData,
+            items: [optimisticEntry, ...regularData.items],
+          };
+        },
+      );
+
+      return { previousData };
+    },
+    onError: (_err, _newEntry, context) => {
+      // Rollback to previous state on error
+      if (context?.previousData) {
+        context.previousData.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+    },
+    onSettled: () => {
+      // Always refetch after mutation to ensure consistency
       queryClient.invalidateQueries({ queryKey: entryKeys.lists() });
     },
   });
 }
 
 /**
- * Update an existing entry
+ * Update an existing entry with optimistic updates
  */
 export function useUpdateEntry() {
   const queryClient = useQueryClient();
@@ -102,17 +167,94 @@ export function useUpdateEntry() {
       }
       return result.data;
     },
-    onSuccess: (data) => {
-      // Update cache for this specific entry
-      queryClient.setQueryData(entryKeys.detail(data.id), data);
-      // Invalidate lists to reflect change
+    onMutate: async ({ id, updates }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: entryKeys.detail(id) });
+      await queryClient.cancelQueries({ queryKey: entryKeys.lists() });
+
+      // Snapshot previous values
+      const previousEntry = queryClient.getQueryData(entryKeys.detail(id));
+      const previousLists = queryClient.getQueriesData({
+        queryKey: entryKeys.lists(),
+      });
+
+      // Optimistically update the entry detail cache
+      if (previousEntry) {
+        queryClient.setQueryData(entryKeys.detail(id), {
+          ...(previousEntry as Entry),
+          ...updates,
+          updatedAt: new Date().toISOString(),
+        });
+      }
+
+      // Optimistically update entry in list caches
+      queryClient.setQueriesData(
+        { queryKey: entryKeys.lists() },
+        (old: unknown) => {
+          if (!old) return old;
+
+          const updateEntryInItems = (items: Entry[]) =>
+            items.map((entry) =>
+              entry.id === id
+                ? { ...entry, ...updates, updatedAt: new Date().toISOString() }
+                : entry,
+            );
+
+          // Handle infinite query data structure
+          if (typeof old === "object" && "pages" in (old as object)) {
+            const infiniteData = old as {
+              pages: Array<{
+                items: Entry[];
+                hasMore: boolean;
+                cursor?: string;
+              }>;
+            };
+            return {
+              ...infiniteData,
+              pages: infiniteData.pages.map((page) => ({
+                ...page,
+                items: updateEntryInItems(page.items),
+              })),
+            };
+          }
+
+          // Handle regular query data structure
+          const regularData = old as {
+            items: Entry[];
+            hasMore: boolean;
+            cursor?: string;
+          };
+          return {
+            ...regularData,
+            items: updateEntryInItems(regularData.items),
+          };
+        },
+      );
+
+      return { previousEntry, previousLists };
+    },
+    onError: (_err, { id }, context) => {
+      // Rollback on error
+      if (context?.previousEntry) {
+        queryClient.setQueryData(entryKeys.detail(id), context.previousEntry);
+      }
+      if (context?.previousLists) {
+        context.previousLists.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+    },
+    onSettled: (data) => {
+      if (data) {
+        queryClient.setQueryData(entryKeys.detail(data.id), data);
+      }
       queryClient.invalidateQueries({ queryKey: entryKeys.lists() });
     },
   });
 }
 
 /**
- * Delete an entry
+ * Delete an entry with optimistic updates
  */
 export function useDeleteEntry() {
   const queryClient = useQueryClient();
@@ -125,10 +267,75 @@ export function useDeleteEntry() {
       }
       return result.data;
     },
-    onSuccess: (_, id) => {
-      // Remove from cache
+    onMutate: async (id) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: entryKeys.detail(id) });
+      await queryClient.cancelQueries({ queryKey: entryKeys.lists() });
+
+      // Snapshot previous values
+      const previousEntry = queryClient.getQueryData(entryKeys.detail(id));
+      const previousLists = queryClient.getQueriesData({
+        queryKey: entryKeys.lists(),
+      });
+
+      // Optimistically remove entry from lists
+      queryClient.setQueriesData(
+        { queryKey: entryKeys.lists() },
+        (old: unknown) => {
+          if (!old) return old;
+
+          const removeEntryFromItems = (items: Entry[]) =>
+            items.filter((entry) => entry.id !== id);
+
+          // Handle infinite query data structure
+          if (typeof old === "object" && "pages" in (old as object)) {
+            const infiniteData = old as {
+              pages: Array<{
+                items: Entry[];
+                hasMore: boolean;
+                cursor?: string;
+              }>;
+            };
+            return {
+              ...infiniteData,
+              pages: infiniteData.pages.map((page) => ({
+                ...page,
+                items: removeEntryFromItems(page.items),
+              })),
+            };
+          }
+
+          // Handle regular query data structure
+          const regularData = old as {
+            items: Entry[];
+            hasMore: boolean;
+            cursor?: string;
+          };
+          return {
+            ...regularData,
+            items: removeEntryFromItems(regularData.items),
+          };
+        },
+      );
+
+      // Remove detail cache
       queryClient.removeQueries({ queryKey: entryKeys.detail(id) });
-      // Invalidate lists
+
+      return { previousEntry, previousLists };
+    },
+    onError: (_err, id, context) => {
+      // Rollback on error
+      if (context?.previousEntry) {
+        queryClient.setQueryData(entryKeys.detail(id), context.previousEntry);
+      }
+      if (context?.previousLists) {
+        context.previousLists.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+    },
+    onSettled: (_, _err, id) => {
+      queryClient.removeQueries({ queryKey: entryKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: entryKeys.lists() });
     },
   });

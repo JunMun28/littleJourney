@@ -5,6 +5,7 @@ import {
   useCallback,
   useEffect,
   useRef,
+  useMemo,
   type ReactNode,
 } from "react";
 import * as Notifications from "expo-notifications";
@@ -487,36 +488,60 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     return getIntervalFromFrequency(promptFrequency);
   }, [promptFrequency]);
 
-  const value: NotificationContextValue = {
-    settings,
-    updateSettings,
-    permissionStatus,
-    requestPermissions,
-    expoPushToken,
-    scheduleDailyPrompt,
-    cancelDailyPrompt,
-    // On This Day memories
-    sendMemoriesNotification,
-    // Milestone reminders
-    scheduleMilestoneReminder,
-    cancelMilestoneReminder,
-    // Storage warning
-    sendStorageWarningNotification,
-    // Photo book birthday prompt
-    sendPhotoBookBirthdayPrompt,
-    // Family activity
-    sendFamilyActivityNotification,
-    // Time capsule unlock
-    sendCapsuleUnlockedNotification,
-    // Growth milestone alert
-    sendGrowthAlertNotification,
-    // Smart frequency
-    promptFrequency,
-    consecutiveIgnoredDays,
-    recordIgnoredPrompt,
-    recordEntryPosted,
-    getScheduleInterval,
-  };
+  const value = useMemo<NotificationContextValue>(
+    () => ({
+      settings,
+      updateSettings,
+      permissionStatus,
+      requestPermissions,
+      expoPushToken,
+      scheduleDailyPrompt,
+      cancelDailyPrompt,
+      // On This Day memories
+      sendMemoriesNotification,
+      // Milestone reminders
+      scheduleMilestoneReminder,
+      cancelMilestoneReminder,
+      // Storage warning
+      sendStorageWarningNotification,
+      // Photo book birthday prompt
+      sendPhotoBookBirthdayPrompt,
+      // Family activity
+      sendFamilyActivityNotification,
+      // Time capsule unlock
+      sendCapsuleUnlockedNotification,
+      // Growth milestone alert
+      sendGrowthAlertNotification,
+      // Smart frequency
+      promptFrequency,
+      consecutiveIgnoredDays,
+      recordIgnoredPrompt,
+      recordEntryPosted,
+      getScheduleInterval,
+    }),
+    [
+      settings,
+      updateSettings,
+      permissionStatus,
+      requestPermissions,
+      expoPushToken,
+      scheduleDailyPrompt,
+      cancelDailyPrompt,
+      sendMemoriesNotification,
+      scheduleMilestoneReminder,
+      cancelMilestoneReminder,
+      sendStorageWarningNotification,
+      sendPhotoBookBirthdayPrompt,
+      sendFamilyActivityNotification,
+      sendCapsuleUnlockedNotification,
+      sendGrowthAlertNotification,
+      promptFrequency,
+      consecutiveIgnoredDays,
+      recordIgnoredPrompt,
+      recordEntryPosted,
+      getScheduleInterval,
+    ],
+  );
 
   return (
     <NotificationContext.Provider value={value}>

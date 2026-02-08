@@ -3,6 +3,7 @@ import {
   useContext,
   useState,
   useCallback,
+  useMemo,
   type ReactNode,
 } from "react";
 
@@ -121,14 +122,24 @@ export function EntryProvider({ children }: EntryProviderProps) {
     });
   }, [entries]);
 
-  const value: EntryContextValue = {
-    entries,
-    addEntry,
-    updateEntry,
-    deleteEntry,
-    getEntry,
-    getOnThisDayEntries,
-  };
+  const value = useMemo<EntryContextValue>(
+    () => ({
+      entries,
+      addEntry,
+      updateEntry,
+      deleteEntry,
+      getEntry,
+      getOnThisDayEntries,
+    }),
+    [
+      entries,
+      addEntry,
+      updateEntry,
+      deleteEntry,
+      getEntry,
+      getOnThisDayEntries,
+    ],
+  );
 
   return (
     <EntryContext.Provider value={value}>{children}</EntryContext.Provider>

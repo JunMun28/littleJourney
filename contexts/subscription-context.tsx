@@ -3,6 +3,7 @@ import {
   useContext,
   useState,
   useCallback,
+  useMemo,
   type ReactNode,
 } from "react";
 import type { SubscriptionTier } from "@/contexts/storage-context";
@@ -307,30 +308,53 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     }
   }, []);
 
-  const value: SubscriptionContextValue = {
-    currentPlan,
-    billingCycle,
-    isSubscribed,
-    currentPeriodStart,
-    currentPeriodEnd,
-    cancelledAt,
-    // PAY-008: Grace period state
-    paymentStatus,
-    paymentFailedAt,
-    gracePeriodEndsAt,
-    isInGracePeriod,
-    // Methods
-    subscribe,
-    upgradePlan,
-    calculateProratedAmount,
-    cancelSubscription,
-    restoreSubscription,
-    // PAY-008: Grace period methods
-    simulatePaymentFailure,
-    handleGracePeriodExpiry,
-    retryPayment,
-    isLoading,
-  };
+  const value = useMemo<SubscriptionContextValue>(
+    () => ({
+      currentPlan,
+      billingCycle,
+      isSubscribed,
+      currentPeriodStart,
+      currentPeriodEnd,
+      cancelledAt,
+      // PAY-008: Grace period state
+      paymentStatus,
+      paymentFailedAt,
+      gracePeriodEndsAt,
+      isInGracePeriod,
+      // Methods
+      subscribe,
+      upgradePlan,
+      calculateProratedAmount,
+      cancelSubscription,
+      restoreSubscription,
+      // PAY-008: Grace period methods
+      simulatePaymentFailure,
+      handleGracePeriodExpiry,
+      retryPayment,
+      isLoading,
+    }),
+    [
+      currentPlan,
+      billingCycle,
+      isSubscribed,
+      currentPeriodStart,
+      currentPeriodEnd,
+      cancelledAt,
+      paymentStatus,
+      paymentFailedAt,
+      gracePeriodEndsAt,
+      isInGracePeriod,
+      subscribe,
+      upgradePlan,
+      calculateProratedAmount,
+      cancelSubscription,
+      restoreSubscription,
+      simulatePaymentFailure,
+      handleGracePeriodExpiry,
+      retryPayment,
+      isLoading,
+    ],
+  );
 
   return (
     <SubscriptionContext.Provider value={value}>

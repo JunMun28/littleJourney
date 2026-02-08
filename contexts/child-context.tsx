@@ -3,6 +3,7 @@ import {
   useContext,
   useState,
   useCallback,
+  useMemo,
   type ReactNode,
 } from "react";
 
@@ -50,12 +51,15 @@ export function ChildProvider({ children }: ChildProviderProps) {
     setChildState(null);
   }, []);
 
-  const value: ChildContextValue = {
-    child,
-    setChild,
-    updateChild,
-    clearChild,
-  };
+  const value = useMemo<ChildContextValue>(
+    () => ({
+      child,
+      setChild,
+      updateChild,
+      clearChild,
+    }),
+    [child, setChild, updateChild, clearChild],
+  );
 
   return (
     <ChildContext.Provider value={value}>{children}</ChildContext.Provider>

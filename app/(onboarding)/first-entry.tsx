@@ -70,26 +70,27 @@ export default function FirstEntryScreen() {
       </View>
 
       <View style={styles.footer}>
-        <Pressable
-          style={[styles.button, isLoading && styles.buttonDisabled]}
-          onPress={handleAddPhoto}
+        <Button
+          variant="primary"
+          size="lg"
+          fullWidth
+          loading={isLoading}
           disabled={isLoading}
+          onPress={handleAddPhoto}
           testID="add-photo-button"
         >
-          <Text style={styles.buttonText}>
-            {isLoading ? "Loading..." : "Choose from Gallery"}
-          </Text>
-        </Pressable>
+          Choose from Gallery
+        </Button>
 
-        <Pressable
-          style={styles.skipButton}
+        <Button
+          variant="ghost"
+          size="md"
+          fullWidth
           onPress={handleSkip}
           testID="skip-button"
         >
-          <ThemedText style={styles.skipButtonText}>
-            I&apos;ll do this later
-          </ThemedText>
-        </Pressable>
+          I&apos;ll do this later
+        </Button>
       </View>
     </ThemedView>
   );
@@ -131,27 +132,5 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.lg,
     gap: Spacing.md,
   },
-  button: {
-    paddingHorizontal: Spacing.xxl,
-    paddingVertical: Spacing.lg,
-    borderRadius: Spacing.md,
-    alignItems: "center",
-    backgroundColor: PRIMARY_COLOR,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    fontWeight: "600",
-    fontSize: 16,
-    color: "#fff",
-  },
-  skipButton: {
-    paddingVertical: Spacing.md,
-    alignItems: "center",
-  },
-  skipButtonText: {
-    fontSize: 16,
-    opacity: 0.7,
-  },
+
 });

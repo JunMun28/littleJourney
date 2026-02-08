@@ -1,15 +1,9 @@
-import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
-} from "@react-navigation/native";
 import { Slot, useSegments, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { View, StyleSheet } from "react-native";
 import "react-native-reanimated";
 
-import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
   initSentry,
   setUserContext,
@@ -23,30 +17,12 @@ import {
   trackScreenView,
 } from "@/services/analytics";
 import { OfflineBanner } from "@/components/offline-banner";
-import { QueryProvider } from "@/providers/query-provider";
-import { AppStateProvider } from "@/providers/app-state-provider";
-import { AuthProvider, useAuth } from "@/contexts/auth-context";
-import { ExportProvider } from "@/contexts/export-context";
-import { PhotoBookProvider } from "@/contexts/photo-book-context";
-import { NotificationProvider } from "@/contexts/notification-context";
-import { StorageProvider } from "@/contexts/storage-context";
-import { SubscriptionProvider } from "@/contexts/subscription-context";
-import { UserPreferencesProvider } from "@/contexts/user-preferences-context";
-import { StripeProvider } from "@/providers/stripe-provider";
-import { ViewerProvider } from "@/contexts/viewer-context";
-import { ChildProvider } from "@/contexts/child-context";
-import { EntryProvider } from "@/contexts/entry-context";
-import { FamilyProvider } from "@/contexts/family-context";
-import { MilestoneProvider } from "@/contexts/milestone-context";
-import { GrowthTrackingProvider } from "@/contexts/growth-tracking-context";
-import { TimeCapsuleProvider } from "@/contexts/time-capsule-context";
-import { OnThisDayProvider } from "@/contexts/on-this-day-context";
-import { VoiceJournalProvider } from "@/contexts/voice-journal-context";
-import { GamificationProvider } from "@/contexts/gamification-context";
-import { CommunityProvider } from "@/contexts/community-context";
-import { RedPacketProvider } from "@/contexts/red-packet-context";
-import { FamilyDigestProvider } from "@/contexts/family-digest-context";
-import { YearInReviewProvider } from "@/contexts/year-in-review-context";
+import { useAuth } from "@/contexts/auth-context";
+import { CoreProviders } from "@/providers/core-providers";
+import { AuthProviders } from "@/providers/auth-providers";
+import { DataProviders } from "@/providers/data-providers";
+import { FeatureProviders } from "@/providers/feature-providers";
+import { AggregateProviders } from "@/providers/aggregate-providers";
 
 function RootLayoutNav() {
   const { isAuthenticated, isLoading, hasCompletedOnboarding, user } =
@@ -103,7 +79,7 @@ function RootLayoutNav() {
     } else {
       // Authenticated and onboarded - go to main app
       if (inAuthGroup || inOnboardingGroup) {
-        router.replace("/(tabs)");
+        router.replace("/(app)/(feed)");
       }
     }
   }, [isAuthenticated, isLoading, hasCompletedOnboarding, segments]);
@@ -128,8 +104,6 @@ const styles = StyleSheet.create({
 });
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-
   // Initialize Sentry and PostHog after first render to avoid blocking app launch
   useEffect(() => {
     // Use requestAnimationFrame to defer initialization to next frame
@@ -142,63 +116,17 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <QueryProvider>
-      <AppStateProvider>
-        <AuthProvider>
-          <UserPreferencesProvider>
-            <NotificationProvider>
-              <StorageProvider>
-                <SubscriptionProvider>
-                  <StripeProvider>
-                    <ViewerProvider>
-                      <ChildProvider>
-                        <EntryProvider>
-                          <FamilyProvider>
-                            <MilestoneProvider>
-                              <GrowthTrackingProvider>
-                                <TimeCapsuleProvider>
-                                  <OnThisDayProvider>
-                                    <VoiceJournalProvider>
-                                      <GamificationProvider>
-                                        <CommunityProvider>
-                                          <RedPacketProvider>
-                                            <FamilyDigestProvider>
-                                              <YearInReviewProvider>
-                                                <ExportProvider>
-                                                  <PhotoBookProvider>
-                                                    <ThemeProvider
-                                                      value={
-                                                        colorScheme === "dark"
-                                                          ? DarkTheme
-                                                          : DefaultTheme
-                                                      }
-                                                    >
-                                                      <RootLayoutNav />
-                                                      <StatusBar style="auto" />
-                                                    </ThemeProvider>
-                                                  </PhotoBookProvider>
-                                                </ExportProvider>
-                                              </YearInReviewProvider>
-                                            </FamilyDigestProvider>
-                                          </RedPacketProvider>
-                                        </CommunityProvider>
-                                      </GamificationProvider>
-                                    </VoiceJournalProvider>
-                                  </OnThisDayProvider>
-                                </TimeCapsuleProvider>
-                              </GrowthTrackingProvider>
-                            </MilestoneProvider>
-                          </FamilyProvider>
-                        </EntryProvider>
-                      </ChildProvider>
-                    </ViewerProvider>
-                  </StripeProvider>
-                </SubscriptionProvider>
-              </StorageProvider>
-            </NotificationProvider>
-          </UserPreferencesProvider>
-        </AuthProvider>
-      </AppStateProvider>
-    </QueryProvider>
+    <CoreProviders>
+      <AuthProviders>
+        <DataProviders>
+          <FeatureProviders>
+            <AggregateProviders>
+              <RootLayoutNav />
+              <StatusBar style="auto" />
+            </AggregateProviders>
+          </FeatureProviders>
+        </DataProviders>
+      </AuthProviders>
+    </CoreProviders>
   );
 }

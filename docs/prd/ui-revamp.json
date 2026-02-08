@@ -1,0 +1,498 @@
+[
+  {
+    "id": "UI-001",
+    "category": "Animation",
+    "description": "Apply consistent card press animations across all touchable cards using cardPressIn/cardPressOut from animations.ts",
+    "stepsToVerify": [
+      "Tap any card on Feed screen - should scale to 0.98 on press",
+      "Tap milestone cards - should have same press feedback",
+      "Tap growth measurement cards - should have same press feedback",
+      "Tap time capsule cards - should have same press feedback",
+      "Verify haptic feedback fires on press (test on physical device)"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-002",
+    "category": "Animation",
+    "description": "Apply staggered list entrance animations using Entering.listItem(index) to all scrollable lists",
+    "stepsToVerify": [
+      "Open Feed screen - entries should fade in with 50ms stagger delay",
+      "Open Milestones screen - milestone cards should animate in sequence",
+      "Open Settings screen - setting rows should animate in sequence",
+      "Pull-to-refresh any list - items should re-animate on load",
+      "Verify animations respect reduceMotion accessibility setting"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-003",
+    "category": "Component",
+    "description": "Create Toast notification component with slide-in animation and auto-dismiss, replacing Alert.alert throughout app",
+    "stepsToVerify": [
+      "components/ui/toast.tsx exists with success/error/info/warning variants",
+      "Toast slides in from top with FadeInDown animation",
+      "Toast auto-dismisses after 3 seconds with progress indicator",
+      "Toast has action button support for undo/retry actions",
+      "All Alert.alert calls replaced with Toast throughout codebase",
+      "Toast respects dark mode color scheme"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-004",
+    "category": "Animation",
+    "description": "Custom pull-to-refresh indicator with app rose colors and bounce animation",
+    "stepsToVerify": [
+      "Pull down on Feed screen - see rose-colored refresh indicator",
+      "Indicator has bounce animation when releasing",
+      "Indicator uses Primary[500] color from design tokens",
+      "Works consistently across all scrollable screens"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-005",
+    "category": "Component",
+    "description": "Create Avatar component with size variants, initials fallback, and activity indicators",
+    "stepsToVerify": [
+      "components/ui/avatar.tsx exists",
+      "Supports sizes: xs (24px), sm (32px), md (40px), lg (56px), xl (80px)",
+      "Shows initials when no image provided (first letter of name)",
+      "Has optional online/activity dot indicator",
+      "Image loads with fade-in animation",
+      "Fallback shows themed background color based on name hash",
+      "Works in both light and dark mode"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-006",
+    "category": "Component",
+    "description": "Create Badge component for streaks, achievements, and status indicators with animated entrance",
+    "stepsToVerify": [
+      "components/ui/badge.tsx exists",
+      "Supports variants: primary (rose), success (green), warning (amber), gold",
+      "Has size variants: sm, md, lg",
+      "Supports optional icon (Lucide) on left side",
+      "Has animated entrance using scale + fade",
+      "Works in both light and dark mode"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-007",
+    "category": "Component",
+    "description": "Create Chip component for selectable filters with toggle states and multi-select support",
+    "stepsToVerify": [
+      "components/ui/chip.tsx exists",
+      "Has unselected state with outlined style",
+      "Has selected state with filled background",
+      "Press animation with scale feedback",
+      "Supports multi-select mode (multiple chips can be selected)",
+      "Has optional dismiss X button for removable chips",
+      "Works in both light and dark mode"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-008",
+    "category": "Component",
+    "description": "Create themed TextInput component with focus animations, icon support, and validation states",
+    "stepsToVerify": [
+      "components/ui/text-input.tsx exists",
+      "Has animated border color on focus (Primary[500])",
+      "Supports left and right icon slots (Lucide icons)",
+      "Has error state with red border and error message",
+      "Has optional character count display",
+      "Has optional floating label that animates on focus",
+      "Meets 44px minimum touch target",
+      "Works in both light and dark mode"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-009",
+    "category": "Component",
+    "description": "Create ListItem component for consistent list rows with swipe actions and press animation",
+    "stepsToVerify": [
+      "components/ui/list-item.tsx exists",
+      "Has left content slot (icon, avatar)",
+      "Has main content area (title, subtitle)",
+      "Has right content slot (value, chevron, toggle)",
+      "Has press animation using cardPressIn/cardPressOut",
+      "Supports swipe-to-reveal actions (delete, edit)",
+      "Has optional divider below",
+      "Works in both light and dark mode"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-010",
+    "category": "Component",
+    "description": "Create EmptyState component with Lottie illustration, title, description, and action button",
+    "stepsToVerify": [
+      "components/ui/empty-state.tsx exists",
+      "Accepts Lottie animation source prop",
+      "Has title and description text with warm, encouraging tone",
+      "Has optional action button (primary style)",
+      "Animation loops or plays once based on prop",
+      "Centered layout with appropriate spacing",
+      "Works in both light and dark mode"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-011",
+    "category": "Component",
+    "description": "Create BottomSheet component with gesture drag-to-dismiss and snap points",
+    "stepsToVerify": [
+      "components/ui/bottom-sheet.tsx exists",
+      "Has handle indicator at top",
+      "Supports drag gesture to dismiss (velocity-based)",
+      "Supports snap points (e.g., 50%, 90%)",
+      "Has backdrop overlay that dims background",
+      "Animates in with spring physics",
+      "Blocks touch events on background when open",
+      "Works in both light and dark mode"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-012",
+    "category": "Screen",
+    "description": "Enhance Feed screen entry cards with gradient overlay, AI tag chips, and improved shadows",
+    "stepsToVerify": [
+      "Entry cards have subtle gradient overlay on photos for text legibility",
+      "AI-detected tags display as small Chip components below photo",
+      "Cards use Shadows.sm with warm gray color",
+      "Photo corners are rounded using Radius.md (12px)",
+      "Date shows relative format (e.g., '3 days ago') with full date on tap",
+      "Press animation scales card to 0.98"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-013",
+    "category": "Screen",
+    "description": "Enhance Feed screen 'On This Day' card with full-width gradient, photo stack effect, and sparkles",
+    "stepsToVerify": [
+      "Card has full-width gradient background (rose to peach)",
+      "Photos display in stacked effect showing depth (3D-like)",
+      "Has animated sparkle/star icon near title",
+      "Memories swipe horizontally to browse multiple years",
+      "Year tabs animate sliding indicator on selection",
+      "Card has entrance animation when scrolling into view"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-014",
+    "category": "Screen",
+    "description": "Enhance Feed screen gamification cards (streak, monthly goal) with illustrated icons and progress animations",
+    "stepsToVerify": [
+      "Streak card has illustrated fire/flame Lottie icon",
+      "Monthly goal card has animated progress ring/bar",
+      "Progress animations trigger when card enters viewport",
+      "Celebration animation plays when goal/streak milestone reached",
+      "Cards have warm, encouraging micro-copy",
+      "Lucide icons used for secondary indicators"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-015",
+    "category": "Screen",
+    "description": "Add Feed screen header with greeting, child name/age, and avatar",
+    "stepsToVerify": [
+      "Header shows personalized greeting (e.g., 'Good morning')",
+      "Displays active child's name and age",
+      "Shows child Avatar component (tappable for multi-child switch)",
+      "Greeting changes based on time of day",
+      "Header animates in with FadeInDown"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-016",
+    "category": "Screen",
+    "description": "Enhance Milestones screen with horizontal category filter using icons",
+    "stepsToVerify": [
+      "Horizontal scroll filter at top of screen",
+      "Each category has Lucide icon + label",
+      "Categories: All, Motor, Cognitive, Language, Social, Cultural",
+      "Selected category has filled background, unselected is outlined",
+      "Press animation on category chips",
+      "Filtering animates list items in/out"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-017",
+    "category": "Screen",
+    "description": "Enhance Milestone cards with illustrated icons and age range indicator",
+    "stepsToVerify": [
+      "Each milestone type has distinct Lucide icon or small illustration",
+      "Age range displayed as subtle badge (e.g., '6-9 months')",
+      "Child's current age highlighted if within range",
+      "Completed milestones have checkmark overlay",
+      "Cards use consistent spacing from design tokens"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-018",
+    "category": "Screen",
+    "description": "Add milestone completion celebration with confetti burst and animated checkmark",
+    "stepsToVerify": [
+      "Completing milestone triggers confetti burst animation",
+      "Checkmark icon animates from circle to checkmark",
+      "celebrationBounce animation applied to completion badge",
+      "Optional sound effect plays (if enabled in settings)",
+      "Haptic feedback fires on completion",
+      "Photo attachment prompt appears with pulsing camera icon"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-019",
+    "category": "Screen",
+    "description": "Add Milestones tab switcher with sliding indicator for Upcoming/Completed",
+    "stepsToVerify": [
+      "Two tabs: 'Upcoming' and 'Completed'",
+      "Sliding indicator animates between tabs",
+      "Tab text changes color when selected",
+      "List content animates when switching tabs",
+      "Completed tab shows golden checkmark icon"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-020",
+    "category": "Screen",
+    "description": "Enhance Growth screen measurement cards with icon badges and percentile mini-chart",
+    "stepsToVerify": [
+      "Height cards have ruler Lucide icon",
+      "Weight cards have scale Lucide icon",
+      "Head circumference cards have appropriate icon",
+      "Each card shows small inline percentile indicator",
+      "Date displays relative format (e.g., '2 weeks ago')",
+      "Swipe-to-delete with spring animation and confirmation"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-021",
+    "category": "Screen",
+    "description": "Enhance Growth chart with animated curve drawing and tap interaction",
+    "stepsToVerify": [
+      "Chart curve animates drawing from left to right on load",
+      "Tap on any point shows exact value in tooltip",
+      "WHO reference curves visible with toggle",
+      "Pinch-to-zoom supported on chart",
+      "Pan gesture to scroll through time",
+      "Chart respects dark mode colors"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-022",
+    "category": "Screen",
+    "description": "Add Growth percentile badges with color-coded indicators",
+    "stepsToVerify": [
+      "Percentile badge shows current percentile (e.g., '75th')",
+      "Green color for normal range (15th-85th)",
+      "Amber color for attention range (<15th or >85th)",
+      "Badge has info icon that shows tooltip explaining percentiles",
+      "Badge animates in with entrance animation"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-023",
+    "category": "Screen",
+    "description": "Enhance Time Capsule sealed capsules with envelope visual and countdown timer",
+    "stepsToVerify": [
+      "Sealed capsules show envelope/letter illustration",
+      "Animated lock icon with subtle pulse on sealed capsules",
+      "Countdown displays prominently (e.g., '5y 3m until open')",
+      "Countdown digits animate when changing",
+      "Card has sealed/locked visual treatment (opacity, blur)"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-024",
+    "category": "Screen",
+    "description": "Enhance Time Capsule opened capsules with warm glow and reveal animation",
+    "stepsToVerify": [
+      "Opened capsules show open envelope illustration",
+      "Warm glow effect around opened capsule cards",
+      "Content reveals with blur-lift animation when opening",
+      "Opened date displayed with celebration icon",
+      "Content preview visible without full expansion"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-025",
+    "category": "Screen",
+    "description": "Enhance Time Capsule creation flow with wax seal animation on save",
+    "stepsToVerify": [
+      "Template selection shows card carousel",
+      "Typing shows animated quill/pen icon",
+      "Save triggers wax seal stamp animation",
+      "Confirmation shows flutter/confetti animation",
+      "Haptic feedback on seal completion"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-026",
+    "category": "Screen",
+    "description": "Enhance Settings screen profile section with large avatar, family row, and quick stats",
+    "stepsToVerify": [
+      "Large Avatar (xl size) at top with edit overlay button",
+      "Family members shown as horizontal row of smaller avatars",
+      "Quick stats displayed: total entries, milestones completed, capsules",
+      "Stats have subtle animation when loading",
+      "Section has appropriate card grouping"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-027",
+    "category": "Screen",
+    "description": "Enhance Settings screen with grouped cards, headers, and Lucide icons",
+    "stepsToVerify": [
+      "Settings organized into logical groups (Account, Preferences, etc.)",
+      "Each group has subtle header label",
+      "Each row has appropriate Lucide icon on left",
+      "Chevron indicators for drill-down items",
+      "ListItem component used for consistent styling",
+      "Groups have card container with subtle border"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-028",
+    "category": "Screen",
+    "description": "Enhance Settings toggle switches with smooth animation",
+    "stepsToVerify": [
+      "Toggle switches use themed colors (Primary for on)",
+      "Toggle has smooth sliding animation",
+      "Haptic feedback on toggle change",
+      "Disabled state clearly visually distinct",
+      "Toggle respects system accessibility settings"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-029",
+    "category": "Component",
+    "description": "Create Confetti celebration effect component for milestone completion and achievements",
+    "stepsToVerify": [
+      "components/ui/confetti.tsx exists",
+      "Triggers confetti burst animation on call",
+      "Uses Reanimated for performant particle animation",
+      "Configurable particle count and colors",
+      "Particles use physics-based falling motion",
+      "Auto-cleans up after animation completes"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-030",
+    "category": "Animation",
+    "description": "Add optional sound effects controlled via settings",
+    "stepsToVerify": [
+      "Sound effects setting toggle exists in Settings",
+      "Celebration sound plays on milestone completion (when enabled)",
+      "Subtle click sound on button press (when enabled)",
+      "Sounds respect device mute/silent mode",
+      "Sound files are small and optimized (<50KB each)"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-031",
+    "category": "Animation",
+    "description": "Ensure haptic feedback on all interactive elements",
+    "stepsToVerify": [
+      "Light haptic on button press",
+      "Medium haptic on FAB press",
+      "Success haptic on form submission",
+      "Warning haptic on destructive action",
+      "Haptics can be disabled in Settings",
+      "Haptics work correctly on physical iOS/Android devices"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-032",
+    "category": "Animation",
+    "description": "Add shared element transitions for photo zoom from card to detail",
+    "stepsToVerify": [
+      "Tapping photo on entry card zooms to full screen",
+      "Photo position animates smoothly between views",
+      "Background fades to dark during transition",
+      "Reverse animation on dismiss (pinch or swipe)",
+      "Transition works with photo carousel"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-033",
+    "category": "Infrastructure",
+    "description": "Install and configure lucide-react-native for consistent iconography",
+    "stepsToVerify": [
+      "lucide-react-native package installed",
+      "Icon component wrapper created for consistent sizing",
+      "Icon sizes defined in design-tokens.ts (16, 20, 24, 28, 32)",
+      "Icons use theme colors correctly",
+      "At least 20 icons used across app replacing emoji where appropriate"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-034",
+    "category": "Infrastructure",
+    "description": "Install and configure lottie-react-native for Lottie animations",
+    "stepsToVerify": [
+      "lottie-react-native package installed",
+      "At least 5 Lottie animations added to assets/",
+      "EmptyState components use Lottie illustrations",
+      "Animations load without blocking render",
+      "Animations respect reduceMotion setting"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-035",
+    "category": "Accessibility",
+    "description": "Ensure all animations respect reduceMotion accessibility setting",
+    "stepsToVerify": [
+      "Enable 'Reduce Motion' in iOS/Android settings",
+      "Entrance animations are instant (no motion)",
+      "Press animations are instant (no scale)",
+      "Confetti and celebration effects are disabled",
+      "Lottie animations are static or disabled",
+      "App remains fully functional with reduced motion"
+    ],
+    "passes": false
+  },
+  {
+    "id": "UI-036",
+    "category": "Theme",
+    "description": "Verify all new components work correctly in dark mode",
+    "stepsToVerify": [
+      "Toggle device to dark mode",
+      "All new UI components render with correct dark colors",
+      "Shadows use appropriate dark mode values",
+      "Text remains legible with proper contrast",
+      "Gradients adjusted for dark backgrounds",
+      "No white flash or theme inconsistencies"
+    ],
+    "passes": false
+  }
+]

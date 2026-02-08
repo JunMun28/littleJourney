@@ -9,6 +9,9 @@ import {
 } from "react";
 import * as SecureStore from "expo-secure-store";
 
+// DEV_BYPASS_KEY removed - was a security risk allowing unauthenticated access
+// Use proper development tools like Expo Dev Client for testing auth flows
+
 // Storage key for auth session
 const AUTH_SESSION_KEY = "auth_session";
 
@@ -224,23 +227,40 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // CAPSULE-006: Computed property for child view check
   const isChildView = useMemo(() => userRole === "child", [userRole]);
 
-  const value: AuthContextValue = {
-    user,
-    isLoading,
-    isAuthenticated: user !== null,
-    hasCompletedOnboarding,
-    deletionScheduledAt,
-    signIn,
-    signInAsChild,
-    signOut,
-    completeOnboarding,
-    requestAccountDeletion,
-    cancelAccountDeletion,
-    // CAPSULE-006: Child access properties
-    userRole,
-    isChildView,
-    linkedChildId,
-  };
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      user,
+      isLoading,
+      isAuthenticated: user !== null,
+      hasCompletedOnboarding,
+      deletionScheduledAt,
+      signIn,
+      signInAsChild,
+      signOut,
+      completeOnboarding,
+      requestAccountDeletion,
+      cancelAccountDeletion,
+      // CAPSULE-006: Child access properties
+      userRole,
+      isChildView,
+      linkedChildId,
+    }),
+    [
+      user,
+      isLoading,
+      hasCompletedOnboarding,
+      deletionScheduledAt,
+      signIn,
+      signInAsChild,
+      signOut,
+      completeOnboarding,
+      requestAccountDeletion,
+      cancelAccountDeletion,
+      userRole,
+      isChildView,
+      linkedChildId,
+    ],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
